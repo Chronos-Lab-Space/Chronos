@@ -42,4 +42,14 @@ test.describe("Chronos user workflows", () => {
     await expect(page.getByText("18-month roadmap")).toBeVisible();
     await expect(page.getByText("Other futures that almost won.")).toBeVisible();
   });
+
+  test("the mobile menu opens on a non-home page", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto("/#/core");
+
+    await page.getByRole("button", { name: "Toggle menu" }).click();
+    const mobileMenu = page.locator("header div.border-t");
+    await expect(mobileMenu).toBeVisible();
+    await expect(mobileMenu.getByRole("link", { name: "Core" })).toBeVisible();
+  });
 });

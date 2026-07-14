@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChronosCMark } from "./ChronosCMark";
 import { useAccessModal } from "../features/access/AccessModal";
@@ -13,14 +13,12 @@ export function Nav() {
     { label: "Simulate", to: "/simulate" },
     { label: "Platform", to: "/platform" },
     { label: "Roadmap", to: "/roadmap" },
-    { label: "Docs", to: "/docs" },
     { label: "About", to: "/about" },
   ];
 
-  // Close mobile menu on route change
-  if (mobileOpen && links.some((l) => l.to === pathname)) {
-    setTimeout(() => setMobileOpen(false), 0);
-  }
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-bg/60 backdrop-blur-xl">
@@ -59,17 +57,6 @@ export function Nav() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          {/* Status pill (desktop only) */}
-          <div className="hidden items-center gap-2 rounded-full border border-line bg-bg-soft/60 px-3 py-1.5 md:flex">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70 ticker-dot" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider text-ink-dim">
-              Docs
-            </span>
-          </div>
-
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
