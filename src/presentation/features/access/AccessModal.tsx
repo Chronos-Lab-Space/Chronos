@@ -59,7 +59,7 @@ function AccessModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-opacity duration-300 ${
+      className={`fixed inset-0 z-[100] flex items-start sm:items-center justify-center overflow-y-auto p-4 pt-8 pb-8tify-center overflow-y-auto p-4 pt-8 pb-8tify-center overflow-y-auto p-4 pt-8 pb-8 transition-opacity duration-300 ${
         visible ? "opacity-100" : "opacity-0"
       }`}
       role="dialog"
