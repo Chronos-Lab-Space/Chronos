@@ -13,6 +13,8 @@ export function Nav() {
     { label: "Simulate", to: "/simulate" },
     { label: "Platform", to: "/platform" },
     { label: "Roadmap", to: "/roadmap" },
+    { label: "Docs", to: "/docs" },
+    { label: "About", to: "/about" },
   ];
 
   // Close mobile menu on route change
@@ -64,7 +66,7 @@ export function Nav() {
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
             </span>
             <span className="font-mono text-[11px] uppercase tracking-wider text-ink-dim">
-              Systems nominal
+              Docs
             </span>
           </div>
 

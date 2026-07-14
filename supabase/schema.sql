@@ -143,24 +143,32 @@ create index if not exists simulation_cache_expires_at_idx
 -- RLS (Row-Level Security) policies
 -- ------------------------------------------------------------
 
+-- Ensure browser clients can submit public form data.
+grant usage on schema public to anon;
+grant insert on table public.access_requests to anon;
+grant insert on table public.events to anon;
+
 -- access_requests: allow anonymous insert, no read/update/delete from client
-alter table access_requests enable row level security;
+drop policy if exists "Allow anonymous inserts" on public.access_requests;
+alter table public.access_requests enable row level security;
 
 create policy "Allow anonymous inserts"
-  on access_requests for insert
+  on public.access_requests for insert
   to anon
   with check (true);
 
 -- events: allow anonymous insert, no read from client
-alter table events enable row level security;
+drop policy if exists "Allow anonymous event inserts" on public.events;
+alter table public.events enable row level security;
 
 create policy "Allow anonymous event inserts"
-  on events for insert
+  on public.events for insert
   to anon
   with check (true);
 
 -- chronos_records: user-owned records. Service-role server processes bypass
 -- RLS; browser clients can only access their own authenticated records.
+drop policy if exists "Users manage their own Chronos records" on chronos_records;
 alter table chronos_records enable row level security;
 
 create policy "Users manage their own Chronos records"

@@ -40,20 +40,16 @@ export class SupabaseAccessRequestRepository {
     }
 
     try {
-      const { data, error } = await this.client
-        .from("access_requests")
-        .insert({
-          email,
-          identity,
-          agent_project: agentProject,
-          chronos_motivation: chronosMotivation,
-          source: input.source ?? "unknown",
-          user_agent:
-            input.userAgent ??
-            (typeof navigator !== "undefined" ? navigator.userAgent : null),
-        })
-        .select("id")
-        .single();
+      const { error } = await this.client.from("access_requests").insert({
+        email,
+        identity,
+        agent_project: agentProject,
+        chronos_motivation: chronosMotivation,
+        source: input.source ?? "unknown",
+        user_agent:
+          input.userAgent ??
+          (typeof navigator !== "undefined" ? navigator.userAgent : null),
+      });
 
       if (error) {
         // The queue is idempotent by email. A second request is still success.
@@ -61,7 +57,7 @@ export class SupabaseAccessRequestRepository {
         return { ok: false, error: error.message };
       }
 
-      return { ok: true, id: data?.id };
+      return { ok: true };
     } catch (error) {
       return { ok: false, error: (error as Error).message };
     }

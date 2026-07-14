@@ -103,7 +103,7 @@ export function Footer() {
               </svg>
             </a>
             <a
-              href="https://github.com/ChronosLab-Space"
+              href="https://github.com/Chronos-Lab-Space"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"
