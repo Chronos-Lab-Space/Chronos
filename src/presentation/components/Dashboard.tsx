@@ -31,7 +31,7 @@ export function Dashboard() {
             <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-12">
               <div className="space-y-4 lg:col-span-4">
                 <PreviewPanel title="Objective" rows={["Launch startup", "18 month runway", "Decision: strategy"]} />
-                <PreviewPanel title="Task graph" rows={["Research competitors", "Estimate market", "Build roadmap", "Predict adoption", "Financial simulation", "Risk analysis"]} />
+                <PreviewPanel title="Planner task graph" rows={["Research competitors", "Estimate market", "Build roadmap", "Predict adoption", "Financial simulation", "Risk analysis"]} />
               </div>
               <div className="lg:col-span-5"><PreviewTopology /></div>
               <div className="space-y-4 lg:col-span-3"><PreviewPanel title="Timeline ranking" rows={["branch_0x4a · 0.942", "branch_0x1f · 0.718", "branch_0x2b · 0.603"]} /><PreviewPanel title="Workspace intelligence" rows={["Past simulations: 24", "Success signals: 8", "Failure patterns: 5"]} /></div>

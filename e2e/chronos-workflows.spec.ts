@@ -9,18 +9,18 @@ test.describe("Chronos user workflows", () => {
     await page.getByLabel("Simulation objective").fill("I want to build an AI meeting assistant");
     await page.getByRole("button", { name: "Simulate", exact: true }).click();
 
-    await expect(page.getByText("Planner task graph")).toBeVisible();
-    await expect(page.getByText("Research competitors")).toBeVisible();
-    await expect(page.getByText("Financial simulation")).toBeVisible();
-    await expect(page.getByText("Best path", { exact: false })).toBeVisible({ timeout: 6_000 });
+    await expect(page.getByText("Planner task graph", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Research competitors", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Financial simulation", { exact: true }).first()).toBeVisible();
+    await expect(page.locator("text=Best path").filter({ hasNot: page.locator("text=This is not a chatbot response") }).first()).toBeVisible({ timeout: 6_000 });
   });
 
   test("a dashboard visitor provides the required context before requesting access", async ({ page }) => {
     await page.goto("/#/dashboard");
 
-    await expect(page.getByText("Private workspace dashboard")).toBeVisible();
-    await expect(page.getByText("Request workspace access.")).toBeVisible();
-    await expect(page.getByText("Planner task graph")).toBeVisible();
+    await expect(page.getByText("Private workspace dashboard", { exact: true })).toBeVisible();
+    await expect(page.getByText("Request workspace access.", { exact: true })).toBeVisible();
+    await expect(page.getByText("Planner task graph", { exact: true }).first()).toBeVisible();
 
     await page.getByLabel("Email address").fill("builder@example.com");
     await page.getByLabel("Name or organization").fill("Acme Labs");
