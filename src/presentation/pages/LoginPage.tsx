@@ -34,7 +34,7 @@ export function LoginPage() {
     async function redirectIfSignedIn() {
       const session = await authService.currentSession();
       if (isMounted && session?.user) {
-        navigate("/dashboard", { replace: true });
+        navigate("/workspace", { replace: true });
       }
     }
 
@@ -43,7 +43,7 @@ export function LoginPage() {
     const { data } = authService.onAuthStateChange((event, session) => {
       if (!isMounted) return;
       if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        navigate("/dashboard", { replace: true });
+        navigate("/workspace", { replace: true });
       }
     });
 
@@ -69,7 +69,7 @@ export function LoginPage() {
         showMessage(formatAuthError(error.message), true);
         return;
       }
-      navigate("/dashboard", { replace: true });
+      navigate("/workspace", { replace: true });
     } catch {
       showMessage("Failed to sign in", true);
     } finally {

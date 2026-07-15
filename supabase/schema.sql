@@ -182,6 +182,62 @@ create policy "Users manage their own Chronos records"
 -- one workspace's prompt to another browser client.
 alter table simulation_cache enable row level security;
 
+-- ------------------------------------------------------------
+-- Phase 1 Workspace MVP (relational product tables)
+-- See also: supabase/migrations/20260715123000_workspace_mvp.sql
+-- ------------------------------------------------------------
+create table if not exists public.workspaces (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  owner_id uuid not null references auth.users (id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.workspace_goals (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces (id) on delete cascade,
+  title text not null,
+  description text not null default '',
+  status text not null default 'active'
+    check (status in ('active', 'paused', 'completed', 'archived')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.simulations (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces (id) on delete cascade,
+  goal_id uuid references public.workspace_goals (id) on delete set null,
+  status text not null default 'queued'
+    check (status in ('queued', 'running', 'completed', 'failed')),
+  confidence numeric(5, 4)
+    check (confidence is null or (confidence >= 0 and confidence <= 1)),
+  title text not null default '',
+  best_outcome text,
+  futures_count integer not null default 0 check (futures_count >= 0),
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.knowledge (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces (id) on delete cascade,
+  type text not null
+    check (type in ('pdf', 'note', 'website', 'research', 'other')),
+  title text not null,
+  content text not null default '',
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.notes (
+  id uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces (id) on delete cascade,
+  title text not null,
+  content text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- ============================================================
 -- Done. Verify with:
 --   select * from access_requests order by submitted_at desc limit 10;

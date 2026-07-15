@@ -15,19 +15,28 @@ test.describe("Chronos user workflows", () => {
     await expect(page.locator("text=Best path").filter({ hasNot: page.locator("text=This is not a chatbot response") }).first()).toBeVisible({ timeout: 6_000 });
   });
 
-  test("an unauthenticated dashboard visitor is redirected to login", async ({ page }) => {
-    await page.goto("/dashboard");
+  test("an unauthenticated workspace visitor is redirected to login", async ({ page }) => {
+    await page.goto("/workspace");
 
-    // Private dashboard requires a session; send visitors to magic-link sign-in
+    // Private workspace requires a session
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
   });
 
-  test("legacy hash dashboard URL redirects unauthenticated users to login", async ({ page }) => {
-    await page.goto("/#/dashboard");
+  test("legacy dashboard URL redirects unauthenticated users to login", async ({ page }) => {
+    await page.goto("/dashboard");
 
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+  });
+
+  test("login page shows password sign-in by default", async ({ page }) => {
+    await page.goto("/login");
+
+    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page.getByLabel("Password")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Magic link" })).toBeVisible();
   });
 
   test("a visitor simulates a startup idea through to a best path", async ({ page }) => {

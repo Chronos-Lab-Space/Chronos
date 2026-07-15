@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useNavigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { HomePage } from "./components/HomePage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -26,10 +26,31 @@ const PrivacyPage = lazy(async () => ({ default: (await import("./pages")).Priva
 const TermsPage = lazy(async () => ({ default: (await import("./pages")).TermsPage }));
 const SecurityPage = lazy(async () => ({ default: (await import("./pages")).SecurityPage }));
 const AccessPage = lazy(async () => ({ default: (await import("./pages")).AccessPage }));
-const Dashboard = lazy(async () => ({ default: (await import("./components/Dashboard")).Dashboard }));
 const Docs = lazy(async () => ({ default: (await import("./components/Docs")).Docs }));
 const ChangelogPage = lazy(async () => ({
   default: (await import("./components/Changelog")).ChangelogPage,
+}));
+
+const WorkspaceShell = lazy(async () => ({
+  default: (await import("./features/workspace/WorkspaceShell")).WorkspaceShell,
+}));
+const WorkspaceDashboard = lazy(async () => ({
+  default: (await import("./features/workspace/WorkspaceDashboard")).WorkspaceDashboard,
+}));
+const WorkspaceKnowledgePage = lazy(async () => ({
+  default: (await import("./features/workspace/WorkspaceSubpages")).WorkspaceKnowledgePage,
+}));
+const WorkspaceSimulationsPage = lazy(async () => ({
+  default: (await import("./features/workspace/WorkspaceSubpages")).WorkspaceSimulationsPage,
+}));
+const WorkspaceSimulationDetailPage = lazy(async () => ({
+  default: (await import("./features/workspace/WorkspaceSubpages")).WorkspaceSimulationDetailPage,
+}));
+const WorkspaceNotesPage = lazy(async () => ({
+  default: (await import("./features/workspace/WorkspaceSubpages")).WorkspaceNotesPage,
+}));
+const WorkspaceSettingsPage = lazy(async () => ({
+  default: (await import("./features/workspace/WorkspaceSubpages")).WorkspaceSettingsPage,
 }));
 
 function RouteFallback() {
@@ -77,10 +98,30 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+        {/* Authenticated product: Workspace is the foundation */}
+        <Route
+          path="/workspace"
+          element={lazyRoute(
+            <ProtectedRoute>
+              <WorkspaceShell />
+            </ProtectedRoute>
+          )}
+        >
+          <Route index element={lazyRoute(<WorkspaceDashboard />)} />
+          <Route path="knowledge" element={lazyRoute(<WorkspaceKnowledgePage />)} />
+          <Route path="simulations" element={lazyRoute(<WorkspaceSimulationsPage />)} />
+          <Route path="simulations/:simulationId" element={lazyRoute(<WorkspaceSimulationDetailPage />)} />
+          <Route path="notes" element={lazyRoute(<WorkspaceNotesPage />)} />
+          <Route path="settings" element={lazyRoute(<WorkspaceSettingsPage />)} />
+        </Route>
+
+        {/* Legacy dashboard entry → workspace home */}
+        <Route path="/dashboard" element={<Navigate to="/workspace" replace />} />
+
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="/core" element={lazyRoute(<CorePage />)} />
-          <Route path="/dashboard" element={lazyRoute(<ProtectedRoute><Dashboard /></ProtectedRoute>)} />
           <Route path="/simulate" element={lazyRoute(<SimulatePage />)} />
           <Route path="/playground" element={lazyRoute(<PlaygroundPage />)} />
           <Route path="/platform" element={lazyRoute(<PlatformPage />)} />

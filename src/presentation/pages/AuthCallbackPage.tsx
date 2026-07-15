@@ -21,7 +21,7 @@ export function AuthCallbackPage() {
         (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED")
       ) {
         if (timeoutId !== undefined) window.clearTimeout(timeoutId);
-        navigate("/dashboard", { replace: true });
+        navigate("/workspace", { replace: true });
       }
     });
 
@@ -31,7 +31,7 @@ export function AuthCallbackPage() {
       if (!isMounted) return;
 
       if (session?.user) {
-        navigate("/dashboard", { replace: true });
+        navigate("/workspace", { replace: true });
         return;
       }
 
@@ -39,7 +39,7 @@ export function AuthCallbackPage() {
         if (!isMounted) return;
         const retry = await authService.currentSession();
         if (retry?.user) {
-          navigate("/dashboard", { replace: true });
+          navigate("/workspace", { replace: true });
           return;
         }
         setError(
