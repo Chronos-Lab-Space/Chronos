@@ -31,59 +31,63 @@ const phases = [
   },
 ];
 
+/** Runtime lifecycle — mobile-safe layout (no clipped copy). */
 export function Timeline() {
   return (
-    <section className="relative py-24 lg:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        {/* Timeline */}
+    <section className="relative overflow-x-hidden py-16 sm:py-24 lg:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         <div className="relative">
-          {/* Spine */}
-          <div className="absolute left-8 top-0 bottom-0 w-px bg-gradient-to-b from-line via-line-strong to-line lg:left-1/2 lg:-translate-x-1/2" />
+          {/* Spine — desktop only to avoid clipping text on small screens */}
+          <div className="pointer-events-none absolute bottom-0 left-1/2 top-0 hidden w-px -translate-x-1/2 bg-gradient-to-b from-line via-line-strong to-line lg:block" />
 
-          <div className="space-y-20 lg:space-y-32">
+          <div className="space-y-12 sm:space-y-16 lg:space-y-28">
             {phases.map((p, i) => (
-              <ScrollReveal key={p.num} delay={i * 80}>
+              <ScrollReveal key={p.num} delay={i * 60}>
                 <div
-                  className={`relative grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-20 ${
+                  className={`relative grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-20 ${
                     i % 2 === 0 ? "" : "lg:[&>*:first-child]:order-2"
                   }`}
                 >
-                {/* Node on spine — clean, no halo */}
-                <div className="absolute left-8 top-3 h-3 w-3 -translate-x-1/2 lg:left-1/2">
-                  <div
-                    className="absolute inset-0 rounded-full"
-                    style={{ background: p.color }}
-                  />
-                  <div
-                    className="absolute -inset-1.5 rounded-full border"
-                    style={{ borderColor: p.color, opacity: 0.3 }}
-                  />
-                </div>
-
-                {/* Text side */}
-                <div className="pl-20 lg:pl-0 lg:pr-16 lg:text-right">
-                  <div
-                    className="inline-flex items-center gap-3"
-                    style={{ color: p.color }}
-                  >
-                    <span className="font-mono text-[11px] uppercase tracking-[0.25em]">
-                      Phase {p.num}
-                    </span>
-                    <span className="h-px w-8 bg-current opacity-40" />
+                  {/* Desktop node on spine */}
+                  <div className="absolute left-1/2 top-4 hidden h-3 w-3 -translate-x-1/2 lg:block">
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: p.color }}
+                    />
+                    <div
+                      className="absolute -inset-1.5 rounded-full border"
+                      style={{ borderColor: p.color, opacity: 0.3 }}
+                    />
                   </div>
-                  <h3 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">
-                    {p.title}
-                    <span className="ml-2 text-ink-faint">.</span>
-                  </h3>
-                  <p className="mt-5 max-w-md text-[14px] leading-[1.75] text-ink-dim lg:ml-auto">
-                    {p.body}
-                  </p>
-                </div>
 
-                {/* Visual side */}
-                <div className="pl-20 lg:pl-16">
-                  <PhaseVisual index={i} color={p.color} />
-                </div>
+                  {/* Copy — no left padding collision on mobile */}
+                  <div className="min-w-0 lg:pr-16 lg:text-right">
+                    <div
+                      className="inline-flex items-center gap-3"
+                      style={{ color: p.color }}
+                    >
+                      <span className="inline-flex h-2 w-2 rounded-full lg:hidden" style={{ background: p.color }} />
+                      <span className="font-mono text-[11px] uppercase tracking-[0.25em]">
+                        Phase {p.num}
+                      </span>
+                      <span className="hidden h-px w-8 bg-current opacity-40 sm:inline-block" />
+                      <span className="font-mono text-[10px] uppercase tracking-[0.18em] opacity-70">
+                        {p.time}
+                      </span>
+                    </div>
+                    <h3 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl md:text-5xl">
+                      {p.title}
+                      <span className="ml-2 text-ink-faint">.</span>
+                    </h3>
+                    <p className="mt-4 max-w-md text-[14px] leading-[1.75] text-ink-dim lg:ml-auto">
+                      {p.body}
+                    </p>
+                  </div>
+
+                  {/* Visual */}
+                  <div className="min-w-0 lg:pl-16">
+                    <PhaseVisual index={i} color={p.color} />
+                  </div>
                 </div>
               </ScrollReveal>
             ))}
@@ -95,14 +99,16 @@ export function Timeline() {
 }
 
 function PhaseVisual({ index, color }: { index: number; color: string }) {
-  const wrapper = "relative h-[230px] overflow-hidden rounded-xl border border-line bg-bg-soft/60 sm:h-[250px]";
-  const footer = "absolute bottom-3 left-4 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint";
+  const wrapper =
+    "relative h-[200px] overflow-hidden rounded-xl border border-line bg-bg-soft/60 sm:h-[230px] md:h-[250px]";
+  const footer =
+    "absolute bottom-3 left-3 right-3 truncate font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint sm:left-4 sm:right-4";
 
   if (index === 0) {
     return (
       <div className={wrapper}>
-        <div className="flex h-full items-center justify-center">
-          <svg viewBox="0 0 200 120" className="h-full w-full">
+        <div className="flex h-full items-center justify-center p-2">
+          <svg viewBox="0 0 200 120" className="h-auto max-h-full w-full" preserveAspectRatio="xMidYMid meet">
             <rect x="25" y="25" width="55" height="70" rx="2" stroke={color} strokeWidth="0.8" fill="none" opacity="0.5" />
             <rect x="120" y="25" width="55" height="70" rx="2" stroke={color} strokeWidth="0.8" fill="none" opacity="0.5" />
             <path d="M85 60 L115 60" stroke={color} strokeWidth="0.8" fill="none" />
@@ -119,8 +125,8 @@ function PhaseVisual({ index, color }: { index: number; color: string }) {
   if (index === 1) {
     return (
       <div className={wrapper}>
-        <div className="flex h-full items-center justify-center">
-          <svg viewBox="0 0 200 120" className="h-full w-full">
+        <div className="flex h-full items-center justify-center p-2">
+          <svg viewBox="0 0 200 120" className="h-auto max-h-full w-full" preserveAspectRatio="xMidYMid meet">
             <line x1="25" y1="60" x2="65" y2="60" stroke={color} strokeWidth="0.8" />
             <circle cx="25" cy="60" r="3" fill={color} />
             {[25, 60, 95].map((y, i) => (
@@ -139,8 +145,8 @@ function PhaseVisual({ index, color }: { index: number; color: string }) {
   if (index === 2) {
     return (
       <div className={wrapper}>
-        <div className="flex h-full items-center justify-center">
-          <svg viewBox="0 0 200 120" className="h-full w-full">
+        <div className="flex h-full items-center justify-center p-2">
+          <svg viewBox="0 0 200 120" className="h-auto max-h-full w-full" preserveAspectRatio="xMidYMid meet">
             {Array.from({ length: 7 }).map((_, r) =>
               Array.from({ length: 13 }).map((_, c) => {
                 const active = (r + c) % 3 === 0 || (r * c) % 5 === 0;
@@ -167,8 +173,8 @@ function PhaseVisual({ index, color }: { index: number; color: string }) {
 
   return (
     <div className={wrapper}>
-      <div className="flex h-full items-center justify-center">
-        <svg viewBox="0 0 200 120" className="h-full w-full">
+      <div className="flex h-full items-center justify-center p-2">
+        <svg viewBox="0 0 200 120" className="h-auto max-h-full w-full" preserveAspectRatio="xMidYMid meet">
           {[25, 60, 95].map((y, i) => (
             <path
               key={i}

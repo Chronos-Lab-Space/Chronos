@@ -5,7 +5,7 @@ const actions = [
   { to: "/workspace/knowledge?upload=1", label: "+ Upload Knowledge" },
   { to: "/workspace/notes?new=1", label: "+ Create Note" },
   { to: "/workspace/knowledge?import=url", label: "+ Import URL" },
-  { to: "/workspace/knowledge", label: "Open Library" },
+  { to: "/workspace/advisor", label: "Ask Grok" },
 ] as const;
 
 /** Primary CTAs — no hidden menus. */

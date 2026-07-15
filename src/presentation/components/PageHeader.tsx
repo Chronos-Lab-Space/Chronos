@@ -9,12 +9,12 @@ type PageHeaderProps = {
 
 export function PageHeader({ eyebrow, title, subtitle, breadcrumb }: PageHeaderProps) {
   return (
-    <section className="relative border-b border-line pt-20 pb-16 lg:pt-28 lg:pb-20">
+    <section className="relative overflow-x-hidden border-b border-line pt-16 pb-12 sm:pt-20 sm:pb-16 lg:pt-28 lg:pb-20">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 line-grid opacity-40" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         {/* Breadcrumb */}
         {breadcrumb && (
           <div className="mb-8 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
@@ -43,12 +43,12 @@ export function PageHeader({ eyebrow, title, subtitle, breadcrumb }: PageHeaderP
           <div className="h-px w-10 bg-line" />
         </div>
 
-        <h1 className="font-serif text-[clamp(2.5rem,6vw,5.5rem)] leading-[0.98] tracking-tight">
+        <h1 className="max-w-full break-words font-serif text-[clamp(2rem,7vw,5.5rem)] leading-[1.05] tracking-tight">
           {title}
         </h1>
 
         {subtitle && (
-          <p className="mt-6 max-w-2xl text-[15px] leading-[1.7] text-ink-dim sm:text-[16px]">
+          <p className="mt-5 max-w-2xl text-[14px] leading-[1.7] text-ink-dim sm:mt-6 sm:text-[16px]">
             {subtitle}
           </p>
         )}

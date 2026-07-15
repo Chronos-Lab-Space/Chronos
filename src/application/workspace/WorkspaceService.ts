@@ -68,10 +68,23 @@ export class WorkspaceService {
     }
   }
 
-  async load(ownerId: string): Promise<WorkspaceHome | null> {
+  async listWorkspaces(ownerId: string): Promise<WorkspaceRecord[]> {
     if (this.remote) {
       try {
-        const remote = await this.remote.load(ownerId);
+        const remote = await this.remote.list(ownerId);
+        if (remote.length) return remote;
+      } catch (err) {
+        console.warn("[workspace] Supabase list failed; using local store.", err);
+      }
+    }
+    return this.local.list(ownerId);
+  }
+
+  async load(ownerId: string, workspaceId?: string): Promise<WorkspaceHome | null> {
+    const preferredId = workspaceId ?? this.local.getActiveId(ownerId) ?? undefined;
+    if (this.remote) {
+      try {
+        const remote = await this.remote.load(ownerId, preferredId);
         if (remote) {
           this.local.save(ownerId, remote);
           return this.normalize(remote);
@@ -80,8 +93,15 @@ export class WorkspaceService {
         console.warn("[workspace] Supabase load failed; using local store.", err);
       }
     }
-    const local = this.local.get(ownerId);
+    const local = this.local.get(ownerId, preferredId);
     return local ? this.normalize(local) : null;
+  }
+
+  async switchWorkspace(ownerId: string, workspaceId: string): Promise<WorkspaceHome> {
+    this.local.setActiveId(ownerId, workspaceId);
+    const home = await this.load(ownerId, workspaceId);
+    if (!home) throw new Error("Workspace not found.");
+    return home;
   }
 
   async createWorkspace(
@@ -92,6 +112,7 @@ export class WorkspaceService {
     const trimmed = name.trim();
     if (!trimmed) throw new Error("Workspace name is required.");
 
+    // Always create a fresh workspace (does not overwrite existing ones).
     const workspace: WorkspaceRecord = {
       id: uuid(),
       owner_id: ownerId,

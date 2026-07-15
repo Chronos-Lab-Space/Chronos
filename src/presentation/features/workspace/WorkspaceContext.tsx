@@ -7,15 +7,21 @@ import {
   useState,
 } from "react";
 import { workspaceService } from "../../../application/workspace/WorkspaceService";
-import type { KnowledgeType, WorkspaceHome } from "../../../domain/workspace/types";
+import type {
+  KnowledgeType,
+  WorkspaceHome,
+  WorkspaceRecord,
+} from "../../../domain/workspace/types";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 
 type WorkspaceContextValue = {
   ownerId: string | null;
   home: WorkspaceHome | null;
+  workspaces: WorkspaceRecord[];
   loading: boolean;
   error: string | null;
-  createWorkspace: (name: string) => Promise<void>;
+  createWorkspace: (name: string, description?: string) => Promise<void>;
+  switchWorkspace: (workspaceId: string) => Promise<void>;
   setGoal: (title: string, description?: string) => Promise<void>;
   addKnowledge: (input: {
     type: KnowledgeType;
@@ -34,6 +40,7 @@ const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [home, setHome] = useState<WorkspaceHome | null>(null);
+  const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,12 +52,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       if (!user) {
         setOwnerId(null);
         setHome(null);
+        setWorkspaces([]);
         return;
       }
       setOwnerId(user.id);
-      // Prefers Supabase; falls back to localStorage
-      const loaded = await workspaceService.load(user.id);
+      const [loaded, list] = await Promise.all([
+        workspaceService.load(user.id),
+        workspaceService.listWorkspaces(user.id),
+      ]);
       setHome(loaded);
+      setWorkspaces(list);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -73,6 +84,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       try {
         const next = await action(ownerId);
         setHome(next);
+        const list = await workspaceService.listWorkspaces(ownerId);
+        setWorkspaces(list);
         return next;
       } catch (err) {
         setError((err as Error).message);
@@ -86,11 +99,28 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     () => ({
       ownerId,
       home,
+      workspaces,
       loading,
       error,
       refresh,
-      createWorkspace: async (name) => {
-        await withOwner((id) => workspaceService.createWorkspace(id, name));
+      createWorkspace: async (name, description) => {
+        await withOwner((id) => workspaceService.createWorkspace(id, name, description ?? ""));
+      },
+      switchWorkspace: async (workspaceId) => {
+        if (!ownerId) throw new Error("Not signed in.");
+        setLoading(true);
+        setError(null);
+        try {
+          const next = await workspaceService.switchWorkspace(ownerId, workspaceId);
+          setHome(next);
+          const list = await workspaceService.listWorkspaces(ownerId);
+          setWorkspaces(list);
+        } catch (err) {
+          setError((err as Error).message);
+          throw err;
+        } finally {
+          setLoading(false);
+        }
       },
       setGoal: async (title, description) => {
         await withOwner((id) => workspaceService.setGoal(id, title, description ?? ""));
@@ -111,7 +141,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         return next.recentSimulations[0]?.id ?? null;
       },
     }),
-    [ownerId, home, loading, error, refresh, withOwner]
+    [ownerId, home, workspaces, loading, error, refresh, withOwner]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

@@ -18,45 +18,66 @@ import { supabase } from "../supabase/client";
 export class SupabaseWorkspaceRepository {
   constructor(private readonly client: SupabaseClient = supabase) {}
 
-  async load(ownerId: string): Promise<WorkspaceHome | null> {
-    const { data: workspaces, error: wsError } = await this.client
+  async list(ownerId: string): Promise<WorkspaceRecord[]> {
+    const { data, error } = await this.client
+      .from("workspaces")
+      .select("*")
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapWorkspace);
+  }
+
+  async load(ownerId: string, workspaceId?: string): Promise<WorkspaceHome | null> {
+    let query = this.client
       .from("workspaces")
       .select("*")
       .eq("owner_id", ownerId)
       .order("created_at", { ascending: false })
       .limit(1);
 
+    if (workspaceId) {
+      query = this.client
+        .from("workspaces")
+        .select("*")
+        .eq("owner_id", ownerId)
+        .eq("id", workspaceId)
+        .limit(1);
+    }
+
+    const { data: workspaces, error: wsError } = await query;
+
     if (wsError) throw wsError;
     const wsRow = workspaces?.[0];
     if (!wsRow) return null;
 
     const workspace = mapWorkspace(wsRow);
-    const workspaceId = workspace.id;
+    const workspaceIdResolved = workspace.id;
 
     const [goalRes, simRes, knowledgeRes, notesRes] = await Promise.all([
       this.client
         .from("goals")
         .select("*")
-        .eq("workspace_id", workspaceId)
+        .eq("workspace_id", workspaceIdResolved)
         .eq("status", "active")
         .order("priority", { ascending: false })
         .limit(1),
       this.client
         .from("simulations")
         .select("*")
-        .eq("workspace_id", workspaceId)
+        .eq("workspace_id", workspaceIdResolved)
         .order("created_at", { ascending: false })
         .limit(50),
       this.client
         .from("knowledge")
         .select("*")
-        .eq("workspace_id", workspaceId)
+        .eq("workspace_id", workspaceIdResolved)
         .order("created_at", { ascending: false })
         .limit(200),
       this.client
         .from("notes")
         .select("*")
-        .eq("workspace_id", workspaceId)
+        .eq("workspace_id", workspaceIdResolved)
         .order("created_at", { ascending: false })
         .limit(200),
     ]);

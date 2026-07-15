@@ -5,6 +5,7 @@ import {
   formatCreatedAt,
 } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
+import { workspaceGrokService } from "../../../application/workspace/WorkspaceGrokService";
 import { FutureTimelineCards } from "../timeline/FutureTimelineCards";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 
@@ -173,6 +174,9 @@ export function SimulationDetailPage() {
   const sim = home?.recentSimulations.find((s) => s.id === simulationId);
   const futures = simulationId ? home?.futuresBySimulation[simulationId] ?? [] : [];
   const [rerunning, setRerunning] = useState(false);
+  const [grokBusy, setGrokBusy] = useState(false);
+  const [grokBrief, setGrokBrief] = useState<string | null>(null);
+  const [grokError, setGrokError] = useState<string | null>(null);
 
   const tasks = useMemo(() => {
     const raw = sim?.result.tasks;
@@ -220,6 +224,19 @@ export function SimulationDetailPage() {
     }
   };
 
+  const handleGrokEnhance = async () => {
+    setGrokBusy(true);
+    setGrokError(null);
+    try {
+      const brief = await workspaceGrokService.enhanceSimulationReport(home, sim.id);
+      setGrokBrief(brief);
+    } catch (err) {
+      setGrokError((err as Error).message);
+    } finally {
+      setGrokBusy(false);
+    }
+  };
+
   const wantsRerun = params.get("rerun") === "1";
 
   return (
@@ -264,7 +281,25 @@ export function SimulationDetailPage() {
           >
             Memory
           </Link>
+          <button
+            type="button"
+            onClick={() => void handleGrokEnhance()}
+            disabled={grokBusy}
+            className="rounded-full border border-chronos/40 px-4 py-2 text-sm text-chronos transition hover:bg-chronos/10 disabled:opacity-50"
+          >
+            {grokBusy ? "Grok…" : "Enhance with Grok"}
+          </button>
         </div>
+
+        {grokError && <p className="mt-3 text-sm text-red-400">{grokError}</p>}
+        {grokBrief && (
+          <div className="mt-4 rounded-xl border border-chronos/30 bg-chronos/5 p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
+              Grok brief
+            </div>
+            <div className="mt-2 whitespace-pre-wrap text-sm text-ink-dim">{grokBrief}</div>
+          </div>
+        )}
 
         {wantsRerun && (
           <p className="mt-3 text-sm text-ink-dim">

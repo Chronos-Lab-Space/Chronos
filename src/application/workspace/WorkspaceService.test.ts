@@ -88,4 +88,21 @@ describe("WorkspaceService success metric", () => {
     await expect(service.setGoal(ownerId, "  ")).rejects.toThrow(/goal/i);
     await expect(service.runSimulation(ownerId, "")).rejects.toThrow(/objective/i);
   });
+
+  it("creates additional workspaces without overwriting the first", async () => {
+    const first = await service.createWorkspace(ownerId, "Alpha");
+    await service.setGoal(ownerId, "Goal A");
+    const second = await service.createWorkspace(ownerId, "Beta");
+    expect(second.workspace.name).toBe("Beta");
+    expect(second.goal).toBeNull();
+    expect(second.workspace.id).not.toBe(first.workspace.id);
+
+    const list = await service.listWorkspaces(ownerId);
+    expect(list.map((w) => w.name).sort()).toEqual(["Alpha", "Beta"]);
+
+    const switched = await service.switchWorkspace(ownerId, first.workspace.id);
+    expect(switched.workspace.name).toBe("Alpha");
+    expect(switched.goal?.title).toBe("Goal A");
+  });
 });
+

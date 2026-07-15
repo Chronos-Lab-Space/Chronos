@@ -14,34 +14,37 @@ export function HomePage() {
   return (
     <>
       {/* HERO: what it is, why it matters, and why it is different. */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-x-hidden">
         <div className="pointer-events-none absolute inset-0"><div className="absolute inset-0 line-grid opacity-30" /></div>
-        <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-20 lg:px-10 lg:pt-28 lg:pb-28">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
-            <div className="lg:col-span-6">
-              <div className="mb-8 flex items-center gap-3">
-                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-chronos blink" />
-                <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-dim">Temporal Compute Platform</span>
+        <div className="relative mx-auto max-w-7xl px-4 pt-14 pb-16 sm:px-6 sm:pt-20 sm:pb-20 lg:px-10 lg:pt-28 lg:pb-28">
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-16">
+            <div className="min-w-0 lg:col-span-6">
+              <div className="mb-6 flex items-center gap-3 sm:mb-8">
+                <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-chronos blink" />
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim sm:text-[11px] sm:tracking-[0.25em]">Temporal Compute Platform</span>
               </div>
-              <h1 className="font-serif text-[clamp(3.1rem,7vw,6.5rem)] leading-[0.94] tracking-[-0.025em]">
+              <h1 className="font-serif text-[clamp(2.4rem,8vw,6.5rem)] leading-[0.98] tracking-[-0.025em]">
                 Make agents think
                 <br />
                 <span className="gradient-text italic">before they act.</span>
               </h1>
-              <p className="mt-8 max-w-xl text-[17px] leading-[1.75] text-ink-dim">
+              <p className="mt-6 max-w-xl text-[15px] leading-[1.7] text-ink-dim sm:mt-8 sm:text-[17px] sm:leading-[1.75]">
                 Chronos turns one objective into ranked possible futures. Instead of producing a single response, it plans tasks, simulates outcomes, and commits the strongest path before execution.
               </p>
-              <div className="mt-10 flex flex-wrap items-center gap-4">
-                <button type="button" onClick={openAccessModal} className="group inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-medium text-bg transition hover:bg-chronos">
+              <div className="mt-8 flex flex-wrap items-center gap-3 sm:mt-10 sm:gap-4">
+                <button type="button" onClick={openAccessModal} className="group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos sm:px-6 sm:py-3">
                   Request access
                   <svg width="14" height="14" viewBox="0 0 14 14" className="transition group-hover:translate-x-0.5"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
-                <button type="button" onClick={scrollToDemo} className="inline-flex items-center gap-2 rounded-full border border-line px-6 py-3 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink">
+                <button type="button" onClick={scrollToDemo} className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:px-6 sm:py-3">
                   Try it live
                 </button>
+                <Link to="/login" className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:px-6 sm:py-3">
+                  Sign in
+                </Link>
               </div>
             </div>
-            <div className="relative lg:col-span-6"><BranchingAnimation /></div>
+            <div className="relative min-w-0 overflow-hidden lg:col-span-6"><BranchingAnimation /></div>
           </div>
         </div>
       </section>
@@ -57,7 +60,7 @@ export function HomePage() {
             title={<>One objective.<br /><span className="italic text-ink-dim">A decision system.</span></>}
             body="Chronos treats an objective as work to be decomposed, simulated, evaluated, and ranked — not a prompt to answer once."
           />
-          <div className="mt-14 grid grid-cols-1 divide-y divide-line border-y border-line md:grid-cols-4 md:divide-x md:divide-y-0">
+          <div className="mt-10 grid grid-cols-1 gap-0 divide-y divide-line border-y border-line sm:mt-14 md:grid-cols-2 md:divide-x lg:grid-cols-4 lg:divide-y-0">
             <ProcessStep number="01" title="Plan" detail="The Planner turns a goal into a dependency-aware task graph." color="#60899B" />
             <ProcessStep number="02" title="Simulate" detail="The Runtime forks tasks into branches and executes registered capabilities." color="#CDCAB2" />
             <ProcessStep number="03" title="Evaluate" detail="Outcomes are scored for reward, risk, confidence, and constraints." color="#E2DDDA" />
@@ -131,7 +134,13 @@ function SectionHeading({ eyebrow, title, body }: { eyebrow: string; title: Reac
 }
 
 function ProcessStep({ number, title, detail, color }: { number: string; title: string; detail: string; color: string }) {
-  return <div className="p-6 md:p-7"><div className="font-mono text-[10px] uppercase tracking-[0.23em]" style={{ color }}>{number}</div><h3 className="mt-3 font-serif text-3xl text-ink">{title}</h3><p className="mt-3 text-[13px] leading-[1.7] text-ink-dim">{detail}</p></div>;
+  return (
+    <div className="min-w-0 p-5 sm:p-6 md:p-7">
+      <div className="font-mono text-[10px] uppercase tracking-[0.23em]" style={{ color }}>{number}</div>
+      <h3 className="mt-3 font-serif text-2xl text-ink sm:text-3xl">{title}</h3>
+      <p className="mt-3 text-[13px] leading-[1.7] text-ink-dim">{detail}</p>
+    </div>
+  );
 }
 
 function UseCase({ index, title, question, output, color }: { index: string; title: string; question: string; output: string; color: string }) {
