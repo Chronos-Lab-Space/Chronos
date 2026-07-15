@@ -1,10 +1,9 @@
 import { Link } from "react-router-dom";
 import { ChronosCMark } from "./ChronosCMark";
-import { RequestAccessForm } from "../features/access/RequestAccessForm";
 
 /**
- * Private-dashboard preview. The public route deliberately shows the system
- * shape behind a soft access gate; execution surfaces unlock after review.
+ * Private-dashboard. Protected by Supabase authentication.
+ * Only authenticated users can access this route.
  */
 export function Dashboard() {
   return (
@@ -22,8 +21,8 @@ export function Dashboard() {
         </div>
 
         <div className="relative min-h-[680px] overflow-hidden rounded-2xl border border-line bg-bg-soft">
-          {/* A deliberately non-interactive dashboard preview keeps the product tangible without exposing execution. */}
-          <div className="pointer-events-none select-none p-5 opacity-35 blur-[2px] sm:p-7">
+          {/* Authenticated users see the full dashboard. */}
+          <div className="select-none p-5 sm:p-7">
             <div className="flex items-center justify-between border-b border-line pb-4">
               <div className="flex gap-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-dim"><span className="rounded bg-chronos/15 px-3 py-2 text-chronos">Task OS</span><span className="px-3 py-2">Workspace</span><span className="px-3 py-2">Language</span></div>
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">workspace: acme</div>
@@ -35,15 +34,6 @@ export function Dashboard() {
               </div>
               <div className="lg:col-span-5"><PreviewTopology /></div>
               <div className="space-y-4 lg:col-span-3"><PreviewPanel title="Timeline ranking" rows={["branch_0x4a · 0.942", "branch_0x1f · 0.718", "branch_0x2b · 0.603"]} /><PreviewPanel title="Workspace intelligence" rows={["Past simulations: 24", "Success signals: 8", "Failure patterns: 5"]} /></div>
-            </div>
-          </div>
-
-          <div className="absolute inset-0 flex items-center justify-center bg-bg/70 p-5 backdrop-blur-md">
-            <div className="w-full max-w-xl rounded-2xl border border-line bg-bg-soft/95 p-6 shadow-2xl sm:p-8">
-              <div className="mb-5 flex items-center gap-3"><div className="h-px w-8 bg-chronos/60" /><span className="font-mono text-[10px] uppercase tracking-[0.24em] text-chronos">Private preview</span><div className="h-px w-8 bg-chronos/60" /></div>
-              <h1 className="font-serif text-4xl leading-[1] text-ink">Request workspace access<span className="text-ink-faint">.</span></h1>
-              <p className="mt-4 text-[14px] leading-[1.7] text-ink-dim">Chronos workspaces contain task graphs, branch traces, memory, and ranked timelines. Tell us what you are building so we can provision the right environment.</p>
-              <div className="mt-6"><RequestAccessForm source="dashboard-gate" compact /></div>
             </div>
           </div>
         </div>

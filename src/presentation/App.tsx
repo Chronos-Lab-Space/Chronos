@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { HomePage } from "./components/HomePage";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Route-level code splitting: the marketing shell ships first; large product,
 // documentation, and legal page compositions load only after navigation.
@@ -53,7 +54,7 @@ function App() {
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="/core" element={lazyRoute(<CorePage />)} />
-          <Route path="/dashboard" element={lazyRoute(<Dashboard />)} />
+          <Route path="/dashboard" element={lazyRoute(<ProtectedRoute><Dashboard /></ProtectedRoute>)} />
           <Route path="/simulate" element={lazyRoute(<SimulatePage />)} />
           <Route path="/playground" element={lazyRoute(<PlaygroundPage />)} />
           <Route path="/platform" element={lazyRoute(<PlatformPage />)} />
