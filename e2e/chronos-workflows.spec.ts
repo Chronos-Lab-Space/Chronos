@@ -15,20 +15,12 @@ test.describe("Chronos user workflows", () => {
     await expect(page.locator("text=Best path").filter({ hasNot: page.locator("text=This is not a chatbot response") }).first()).toBeVisible({ timeout: 6_000 });
   });
 
-  test("a dashboard visitor provides the required context before requesting access", async ({ page }) => {
+  test("an unauthenticated dashboard visitor is redirected to home", async ({ page }) => {
     await page.goto("/#/dashboard");
 
-    await expect(page.getByText("Private workspace dashboard", { exact: true })).toBeVisible();
-    await expect(page.getByText("Request workspace access.", { exact: true })).toBeVisible();
-    await expect(page.getByText("Planner task graph", { exact: true }).first()).toBeVisible();
-
-    await page.getByLabel("Email address").fill("builder@example.com");
-    await page.getByLabel("Name or organization").fill("Acme Labs");
-    await page.getByLabel("What are you building with AI agents?").fill("A planning system for operations teams.");
-    await page.getByLabel("Why does Chronos matter for it?").fill("We need to simulate consequences before dispatching work.");
-    await page.locator("form").getByRole("button", { name: "Request access", exact: true }).click();
-
-    await expect(page.getByText("Request received")).toBeVisible();
+    // Should redirect to home since not authenticated
+    await expect(page).toHaveURL("/#/");
+    await expect(page.getByRole("heading", { name: /make agents think/i })).toBeVisible();
   });
 
   test("a visitor simulates a startup idea through to a best path", async ({ page }) => {
