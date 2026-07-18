@@ -13,10 +13,10 @@ const faqs: FaqItem[] = [
       "Chronos is a decision intelligence platform that helps people and AI explore multiple possible futures before making important decisions.",
   },
   {
-    question: "How is Chronos different from ChatGPT?",
+    question: "How is Chronos different from LLM models?",
     answer: (
       <>
-        <p>Most AI generates a single response.</p>
+        <p>Most LLM models generate a single response.</p>
         <p className="mt-3">
           Chronos evaluates multiple possible strategies, compares trade-offs, and
           recommends the strongest path based on your goals and context.
