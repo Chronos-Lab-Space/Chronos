@@ -26,6 +26,7 @@ export function KnowledgePage() {
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [justSaved, setJustSaved] = useState(false);
   const [selected, setSelected] = useState<KnowledgeSearchHit | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [paste, setPaste] = useState("");
@@ -68,6 +69,7 @@ export function KnowledgePage() {
       setFile(null);
       setPaste("");
       openPanel(null);
+      setJustSaved(true);
     } catch (err) {
       setLocalError((err as Error).message);
     } finally {
@@ -84,6 +86,7 @@ export function KnowledgePage() {
       await addKnowledge(prepared);
       setImportUrl("https://");
       openPanel(null);
+      setJustSaved(true);
     } catch (err) {
       setLocalError((err as Error).message);
     } finally {
@@ -227,12 +230,43 @@ export function KnowledgePage() {
 
       {err && <p className="mt-4 text-sm text-red-400">{err}</p>}
 
+      {justSaved && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-chronos/30 bg-chronos/5 px-4 py-3">
+          <p className="text-sm text-ink-dim">
+            Context saved. Run a simulation to rank futures against your goal.
+          </p>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/workspace/simulations?new=1"
+              className="rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-bg transition hover:bg-chronos"
+            >
+              Run simulation
+            </Link>
+            <button
+              type="button"
+              onClick={() => setJustSaved(false)}
+              className="text-[12px] text-ink-faint hover:text-ink"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       <ul className="mt-8 divide-y divide-line border-y border-line">
         {hits.length === 0 ? (
           <li className="py-6 text-sm text-ink-dim">
-            {query
-              ? "No matches."
-              : "Library is empty. Upload a file, import a URL, or create a note."}
+            {query ? (
+              "No matches."
+            ) : (
+              <>
+                Library is empty. Upload a file, import a URL, or{" "}
+                <Link to="/workspace/notes?new=1" className="text-chronos">
+                  create a note
+                </Link>
+                .
+              </>
+            )}
           </li>
         ) : (
           hits.map((hit) => (

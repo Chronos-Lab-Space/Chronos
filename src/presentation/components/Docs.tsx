@@ -77,7 +77,7 @@ export function Docs() {
         eyebrow="/ documentation"
         title={
           <>
-            Product manual<span className="text-ink-faint">.</span>
+            Cerebrum<span className="text-ink-faint">.</span>
           </>
         }
         subtitle="How Chronos works — from workspaces and knowledge to simulations, timelines, and decision reports."

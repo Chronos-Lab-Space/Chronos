@@ -33,15 +33,15 @@ export function Nav() {
           </span>
         </Link>
 
-        {/* Desktop nav links */}
-        <nav className="hidden items-center gap-8 md:flex">
+        {/* Desktop nav — lg+ only (tablet keeps the drawer; 6 links collide at md) */}
+        <nav className="hidden items-center gap-5 lg:flex xl:gap-7">
           {links.map((l) => {
             const active = pathname === l.to;
             return (
               <Link
                 key={l.label}
                 to={l.to}
-                className={`group relative text-[13px] font-medium transition ${
+                className={`group relative shrink-0 text-[13px] font-medium transition ${
                   active ? "text-ink" : "text-ink-dim hover:text-ink"
                 }`}
               >
@@ -57,11 +57,11 @@ export function Nav() {
         </nav>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
-          {/* Mobile menu button */}
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {/* Mobile / tablet menu button */}
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-dim transition hover:border-line-strong hover:text-ink md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-dim transition hover:border-line-strong hover:text-ink lg:hidden"
             aria-label="Toggle menu"
           >
             {mobileOpen ? (
@@ -103,9 +103,9 @@ export function Nav() {
         </div>
       </div>
 
-      {/* Mobile menu panel */}
+      {/* Mobile / tablet menu panel */}
       {mobileOpen && (
-        <div className="border-t border-line bg-bg-soft md:hidden">
+        <div className="border-t border-line bg-bg-soft lg:hidden">
           <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-6 py-4">
             {links.map((l) => {
               const active = pathname === l.to;
@@ -127,7 +127,7 @@ export function Nav() {
             <Link
               to="/login"
               onClick={() => setMobileOpen(false)}
-              className="rounded-md px-3 py-2.5 text-[14px] font-medium text-ink-dim transition hover:bg-bg hover:text-ink"
+              className="rounded-md px-3 py-2.5 text-[14px] font-medium text-ink-dim transition hover:bg-bg hover:text-ink sm:hidden"
             >
               Sign in
             </Link>

@@ -25,8 +25,8 @@ export function RecentSimulations({ simulations }: Props) {
         </Link>
       </div>
 
-      <div className="mt-4 overflow-x-auto border-y border-line">
-        <table className="w-full min-w-[520px] text-left text-sm">
+      <div className="mt-4 -mx-1 overflow-x-auto border-y border-line px-1">
+        <table className="w-full min-w-[480px] text-left text-sm sm:min-w-[520px]">
           <thead>
             <tr className="border-b border-line font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
               <th className="py-3 pr-3 font-medium">Simulation</th>
@@ -39,7 +39,10 @@ export function RecentSimulations({ simulations }: Props) {
             {simulations.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-6 text-ink-dim">
-                  No simulations yet. Run one from Quick actions.
+                  No simulations yet.{" "}
+                  <Link to="/workspace/simulations?new=1" className="text-chronos hover:text-ink">
+                    Run your first simulation →
+                  </Link>
                 </td>
               </tr>
             ) : (

@@ -14,7 +14,15 @@ export function TimelinePreview({ latest }: Props) {
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Timeline preview
         </div>
-        <p className="mt-3 text-sm text-ink-dim">Run a simulation to see future cards.</p>
+        <p className="mt-3 text-sm text-ink-dim">
+          Future cards appear after your first run.
+        </p>
+        <Link
+          to="/workspace/simulations?new=1"
+          className="mt-4 inline-flex font-mono text-[11px] uppercase tracking-[0.16em] text-chronos transition hover:text-ink"
+        >
+          Run simulation →
+        </Link>
       </section>
     );
   }

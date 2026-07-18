@@ -11,14 +11,19 @@ import type {
   WorkspaceHome,
   WorkspaceRecord,
 } from "../../domain/workspace/types";
+import { hasLocalMemory, mergeWorkspaceHomes } from "../../domain/workspace/sync";
 import {
   LocalWorkspaceStore,
   localWorkspaceStore,
 } from "../../infrastructure/repositories/LocalWorkspaceStore";
-import {
-  SupabaseWorkspaceRepository,
-  supabaseWorkspaceRepository,
-} from "../../infrastructure/repositories/SupabaseWorkspaceRepository";
+import { supabaseWorkspaceRepository } from "../../infrastructure/repositories/SupabaseWorkspaceRepository";
+
+/** Minimal cloud port used for dual-write + sync (Supabase or test double). */
+export type WorkspaceCloudStore = {
+  list(ownerId: string): Promise<WorkspaceRecord[]>;
+  load(ownerId: string, workspaceId?: string): Promise<WorkspaceHome | null>;
+  save(home: WorkspaceHome): Promise<void>;
+};
 
 function nowIso() {
   return new Date().toISOString();
@@ -44,17 +49,17 @@ function emptyRelations(): Pick<WorkspaceHome, "futuresBySimulation" | "timeline
 export type WorkspaceServiceOptions = {
   local?: LocalWorkspaceStore;
   /** Pass null to disable remote (unit tests). */
-  remote?: SupabaseWorkspaceRepository | null;
+  remote?: WorkspaceCloudStore | null;
 };
 
 /**
  * Workspace HQ service.
  * Dual-write: localStorage (instant resume) + Supabase (cloud persistence when online/auth'd).
- * Load prefers Supabase, falls back to local.
+ * Load merges remote + local memory; empty cloud is backfilled from local when present.
  */
 export class WorkspaceService {
   private readonly local: LocalWorkspaceStore;
-  private readonly remote: SupabaseWorkspaceRepository | null;
+  private readonly remote: WorkspaceCloudStore | null;
 
   constructor(options: WorkspaceServiceOptions | LocalWorkspaceStore = {}) {
     // Back-compat: tests pass LocalWorkspaceStore directly
@@ -64,7 +69,9 @@ export class WorkspaceService {
     } else {
       this.local = options.local ?? localWorkspaceStore;
       this.remote =
-        options.remote === undefined ? supabaseWorkspaceRepository : options.remote;
+        options.remote === undefined
+          ? (supabaseWorkspaceRepository as WorkspaceCloudStore)
+          : options.remote;
     }
   }
 
@@ -82,18 +89,43 @@ export class WorkspaceService {
 
   async load(ownerId: string, workspaceId?: string): Promise<WorkspaceHome | null> {
     const preferredId = workspaceId ?? this.local.getActiveId(ownerId) ?? undefined;
+    const local = this.local.get(ownerId, preferredId);
+
     if (this.remote) {
       try {
         const remote = await this.remote.load(ownerId, preferredId);
         if (remote) {
-          this.local.save(ownerId, remote);
-          return this.normalize(remote);
+          // Merge so local-only sims/knowledge that never synced are not dropped.
+          const merged = local
+            ? this.normalize(mergeWorkspaceHomes(remote, local))
+            : this.normalize(remote);
+          this.local.save(ownerId, merged);
+          // Best-effort write-through so merged local memory reaches the cloud.
+          if (local) {
+            try {
+              await this.remote.save(merged);
+            } catch (err) {
+              console.warn("[workspace] Supabase merge save failed; local merged copy kept.", err);
+            }
+          }
+          return merged;
+        }
+
+        // Cloud empty: backfill local workspace memory (first device → cloud).
+        if (local && hasLocalMemory(local)) {
+          const normalized = this.normalize(local);
+          try {
+            await this.remote.save(normalized);
+          } catch (err) {
+            console.warn("[workspace] Supabase backfill failed; local copy kept.", err);
+          }
+          return normalized;
         }
       } catch (err) {
         console.warn("[workspace] Supabase load failed; using local store.", err);
       }
     }
-    const local = this.local.get(ownerId, preferredId);
+
     return local ? this.normalize(local) : null;
   }
 

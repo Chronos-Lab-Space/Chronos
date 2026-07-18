@@ -1,6 +1,28 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import type { WorkspaceHome, WorkspaceRecord } from "../../domain/workspace/types";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
-import { WorkspaceService } from "./WorkspaceService";
+import { WorkspaceService, type WorkspaceCloudStore } from "./WorkspaceService";
+
+/** In-memory cloud double for sync tests. */
+class FakeCloudStore implements WorkspaceCloudStore {
+  homes = new Map<string, WorkspaceHome>();
+
+  async list(ownerId: string): Promise<WorkspaceRecord[]> {
+    return [...this.homes.values()]
+      .filter((h) => h.workspace.owner_id === ownerId)
+      .map((h) => h.workspace);
+  }
+
+  async load(ownerId: string, workspaceId?: string): Promise<WorkspaceHome | null> {
+    const matches = [...this.homes.values()].filter((h) => h.workspace.owner_id === ownerId);
+    if (workspaceId) return matches.find((h) => h.workspace.id === workspaceId) ?? null;
+    return matches[0] ?? null;
+  }
+
+  async save(home: WorkspaceHome): Promise<void> {
+    this.homes.set(home.workspace.id, structuredClone(home));
+  }
+}
 
 describe("WorkspaceService success metric", () => {
   const ownerId = "user-test-1";
@@ -103,6 +125,86 @@ describe("WorkspaceService success metric", () => {
     const switched = await service.switchWorkspace(ownerId, first.workspace.id);
     expect(switched.workspace.name).toBe("Alpha");
     expect(switched.goal?.title).toBe("Goal A");
+  });
+});
+
+describe("WorkspaceService cloud memory sync", () => {
+  const ownerId = "user-cloud-1";
+  let local: LocalWorkspaceStore;
+  let cloud: FakeCloudStore;
+
+  beforeEach(() => {
+    localStorage.clear();
+    local = new LocalWorkspaceStore();
+    cloud = new FakeCloudStore();
+  });
+
+  it("backfills local workspace to empty cloud on load", async () => {
+    const offline = new WorkspaceService({ local, remote: null });
+    let home = await offline.createWorkspace(ownerId, "Local Lab");
+    home = await offline.setGoal(ownerId, "Ship beta");
+    home = await offline.runSimulation(ownerId, "What is the best launch path?");
+    expect(home.recentSimulations).toHaveLength(1);
+    expect(cloud.homes.size).toBe(0);
+
+    const online = new WorkspaceService({ local, remote: cloud });
+    const loaded = await online.load(ownerId);
+    expect(loaded?.recentSimulations).toHaveLength(1);
+    expect(cloud.homes.size).toBe(1);
+    const cloudHome = await cloud.load(ownerId);
+    expect(cloudHome?.recentSimulations[0]?.title).toContain("launch");
+    expect(cloudHome?.futuresBySimulation[home.recentSimulations[0].id]?.length).toBe(5);
+  });
+
+  it("merges local-only simulations with remote home on load", async () => {
+    const online = new WorkspaceService({ local, remote: cloud });
+    const remoteHome = await online.createWorkspace(ownerId, "Synced");
+    await online.setGoal(ownerId, "Cloud goal");
+    const afterRemoteSim = await online.runSimulation(ownerId, "Remote path A");
+    const remoteSimId = afterRemoteSim.recentSimulations[0].id;
+
+    // Simulate offline local-only run after a failed remote save by writing only to local
+    const offline = new WorkspaceService({ local, remote: null });
+    const afterLocalSim = await offline.runSimulation(ownerId, "Local path B");
+    const localSimId = afterLocalSim.recentSimulations[0].id;
+    expect(localSimId).not.toBe(remoteSimId);
+
+    // Cloud still only has the first sim
+    const cloudOnly = await cloud.load(ownerId);
+    expect(cloudOnly?.recentSimulations).toHaveLength(1);
+
+    const merged = await online.load(ownerId);
+    const ids = merged?.recentSimulations.map((s) => s.id) ?? [];
+    expect(ids).toContain(remoteSimId);
+    expect(ids).toContain(localSimId);
+    expect(merged?.futuresBySimulation[remoteSimId]?.length).toBe(5);
+    expect(merged?.futuresBySimulation[localSimId]?.length).toBe(5);
+
+    // Merge write-through should push the union back to cloud
+    const cloudAfter = await cloud.load(ownerId);
+    expect(cloudAfter?.recentSimulations.map((s) => s.id).sort()).toEqual(
+      [localSimId, remoteSimId].sort()
+    );
+  });
+
+  it("keeps local futures when remote save fails after a run", async () => {
+    const flaky: WorkspaceCloudStore = {
+      list: (id) => cloud.list(id),
+      load: (id, ws) => cloud.load(id, ws),
+      save: async () => {
+        throw new Error("network down");
+      },
+    };
+    const svc = new WorkspaceService({ local, remote: flaky });
+    await svc.createWorkspace(ownerId, "Flaky");
+    await svc.setGoal(ownerId, "Survive offline");
+    const home = await svc.runSimulation(ownerId, "Can we still decide?");
+    expect(home.recentSimulations).toHaveLength(1);
+    expect(home.futuresBySimulation[home.recentSimulations[0].id]).toHaveLength(5);
+
+    const resumed = await new WorkspaceService({ local, remote: null }).load(ownerId);
+    expect(resumed?.recentSimulations).toHaveLength(1);
+    expect(resumed?.futuresBySimulation[home.recentSimulations[0].id]?.length).toBe(5);
   });
 });
 

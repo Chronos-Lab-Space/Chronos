@@ -7,8 +7,8 @@ import { useWorkspace } from "./WorkspaceContext";
  */
 export function WorkspaceOnboarding() {
   const { home, createWorkspace, setGoal, error } = useWorkspace();
-  const [name, setName] = useState("Chronos Lab");
-  const [goalTitle, setGoalTitle] = useState("Launch CLAB on Kickstart");
+  const [name, setName] = useState("");
+  const [goalTitle, setGoalTitle] = useState("");
   const [goalDescription, setGoalDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -65,11 +65,11 @@ export function WorkspaceOnboarding() {
             label="Workspace name"
             value={name}
             onChange={setName}
-            placeholder="Chronos Lab"
+            placeholder="My project"
           />
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || !name.trim()}
             className="w-full rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
           >
             {busy ? "Creating…" : "Create workspace"}
@@ -96,7 +96,7 @@ export function WorkspaceOnboarding() {
             label="Goal"
             value={goalTitle}
             onChange={setGoalTitle}
-            placeholder="Launch CLAB on Kickstart"
+            placeholder="What decision are you trying to make?"
           />
           <div>
             <label htmlFor="goal-desc" className="block text-sm font-medium text-ink">
@@ -113,7 +113,7 @@ export function WorkspaceOnboarding() {
           </div>
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || !goalTitle.trim()}
             className="w-full rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
           >
             {busy ? "Saving…" : "Set goal"}

@@ -30,7 +30,7 @@ type WorkspaceContextValue = {
     metadata?: Record<string, unknown>;
   }) => Promise<void>;
   addNote: (title: string, content: string) => Promise<void>;
-  runSimulation: (objective: string, constraints?: string[]) => Promise<void>;
+  runSimulation: (objective: string, constraints?: string[]) => Promise<string | null>;
   rerunSimulation: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
   refresh: () => Promise<void>;
 };
@@ -163,7 +163,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         await withOwner((id) => workspaceService.addNote(id, title, content));
       },
       runSimulation: async (objective, constraints = []) => {
-        await withOwner((id) => workspaceService.runSimulation(id, objective, constraints));
+        const next = await withOwner((id) =>
+          workspaceService.runSimulation(id, objective, constraints)
+        );
+        return next.recentSimulations[0]?.id ?? null;
       },
       rerunSimulation: async (parentSimulationId, constraints) => {
         const next = await withOwner((id) =>

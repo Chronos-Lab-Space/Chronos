@@ -215,8 +215,15 @@ create table if not exists public.simulations (
   confidence numeric(5, 4)
     check (confidence is null or (confidence >= 0 and confidence <= 1)),
   result jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Persistent memory / lineage (see migration 20260715160000_simulation_versioning)
+  version integer not null default 1,
+  lineage_id text,
+  parent_simulation_id uuid references public.simulations (id) on delete set null
 );
+
+create index if not exists simulations_lineage_id_idx
+  on public.simulations (lineage_id, version desc);
 
 create table if not exists public.futures (
   id uuid primary key default gen_random_uuid(),

@@ -118,7 +118,7 @@ export function FaqPage() {
                     </svg>
                   </span>
                 </summary>
-                <div className="px-5 pb-5 pl-[3.25rem] text-[14px] leading-[1.7] text-ink-dim sm:px-6 sm:pb-6 sm:pl-[4.25rem] sm:text-[15px]">
+                <div className="px-5 pb-5 text-[14px] leading-[1.7] text-ink-dim sm:px-6 sm:pb-6 sm:pl-[4.25rem] sm:text-[15px]">
                   {typeof item.answer === "string" ? <p>{item.answer}</p> : item.answer}
                 </div>
               </details>

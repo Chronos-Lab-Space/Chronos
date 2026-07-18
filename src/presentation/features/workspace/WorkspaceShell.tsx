@@ -5,12 +5,22 @@ import { ChronosCMark } from "../../components/ChronosCMark";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
 import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 
-const navItems = [
+const desktopNavItems = [
   { to: "/workspace", label: "Dashboard", end: true },
+  { to: "/workspace/knowledge", label: "Knowledge", end: false },
   { to: "/workspace/simulations", label: "Sims", end: false },
   { to: "/workspace/memory", label: "Memory", end: false },
   { to: "/workspace/advisor", label: "Grok", end: false },
   { to: "/workspace/settings", label: "Settings", end: false },
+] as const;
+
+/** Bottom bar: short labels for narrow screens; Settings stays in the drawer. */
+const mobileNavItems = [
+  { to: "/workspace", label: "Home", end: true },
+  { to: "/workspace/knowledge", label: "Library", end: false },
+  { to: "/workspace/simulations", label: "Sims", end: false },
+  { to: "/workspace/memory", label: "Memory", end: false },
+  { to: "/workspace/advisor", label: "Grok", end: false },
 ] as const;
 
 /**
@@ -68,7 +78,7 @@ function WorkspaceShellInner() {
           {/* Desktop nav */}
           {ready && (
             <nav className="hidden items-center gap-0.5 md:flex" aria-label="Workspace">
-              {navItems.map((item) => (
+              {desktopNavItems.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -100,7 +110,7 @@ function WorkspaceShellInner() {
         {ready && menuOpen && (
           <nav className="border-t border-line bg-bg md:hidden" aria-label="Workspace menu">
             <div className="mx-auto flex max-w-3xl flex-col gap-0.5 px-3 py-2">
-              {navItems.map((item) => (
+              {desktopNavItems.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -117,6 +127,13 @@ function WorkspaceShellInner() {
                   {item.label}
                 </NavLink>
               ))}
+              <NavLink
+                to="/workspace/notes?new=1"
+                onClick={() => setMenuOpen(false)}
+                className="rounded-md px-3 py-3 text-[15px] text-ink-dim"
+              >
+                + Note
+              </NavLink>
               <NavLink
                 to="/workspace/settings"
                 onClick={() => setMenuOpen(false)}
@@ -154,7 +171,7 @@ function WorkspaceShellInner() {
           aria-label="Workspace mobile"
         >
           <div className="mx-auto grid max-w-3xl grid-cols-5 gap-0 px-1 py-1">
-            {navItems.map((item) => (
+            {mobileNavItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

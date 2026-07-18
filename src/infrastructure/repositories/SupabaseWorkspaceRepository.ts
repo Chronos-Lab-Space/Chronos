@@ -207,16 +207,13 @@ export class SupabaseWorkspaceRepository {
       if (error) throw error;
     }
 
-    // Futures + timeline: replace per simulation present in home
+    // Futures + timeline: upsert by id (safer than delete-all under concurrent tabs)
     for (const sim of home.recentSimulations) {
       const futures = home.futuresBySimulation[sim.id] ?? [];
       const nodes = home.timelineBySimulation[sim.id] ?? [];
 
-      await this.client.from("futures").delete().eq("simulation_id", sim.id);
-      await this.client.from("timeline_nodes").delete().eq("simulation_id", sim.id);
-
       if (futures.length > 0) {
-        const { error } = await this.client.from("futures").insert(
+        const { error } = await this.client.from("futures").upsert(
           futures.map((f) => ({
             id: f.id,
             simulation_id: f.simulation_id,
@@ -225,15 +222,16 @@ export class SupabaseWorkspaceRepository {
             risk: f.risk,
             confidence: f.confidence,
             summary: f.summary ?? "",
-          }))
+          })),
+          { onConflict: "id" }
         );
         if (error) throw error;
       }
 
       if (nodes.length > 0) {
-        // Insert parents before children roughly by depth
+        // Parents before children by depth so self-FK inserts stay valid
         const ordered = [...nodes].sort((a, b) => a.depth - b.depth);
-        const { error } = await this.client.from("timeline_nodes").insert(
+        const { error } = await this.client.from("timeline_nodes").upsert(
           ordered.map((n) => ({
             id: n.id,
             simulation_id: n.simulation_id,
@@ -241,7 +239,8 @@ export class SupabaseWorkspaceRepository {
             title: n.title,
             depth: n.depth,
             score: n.score,
-          }))
+          })),
+          { onConflict: "id" }
         );
         if (error) throw error;
       }

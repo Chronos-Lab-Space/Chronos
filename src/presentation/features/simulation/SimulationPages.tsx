@@ -13,7 +13,9 @@ export function SimulationsPage() {
   const { home, runSimulation, error } = useWorkspace();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const isNew = params.get("new") === "1";
+  const hasRuns = (home?.recentSimulations.length ?? 0) > 0;
+  // Open the run form for first-time users even without ?new=1
+  const isNew = params.get("new") === "1" || (!hasRuns && params.get("new") !== "0");
   const [objective, setObjective] = useState(home?.goal?.title ?? "");
   const [constraints, setConstraints] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,9 +32,10 @@ export function SimulationsPage() {
         .split("\n")
         .map((l) => l.trim())
         .filter(Boolean);
-      await runSimulation(objective, lines);
+      const simId = await runSimulation(objective, lines);
       setParams({});
-      navigate("/workspace/simulations");
+      // Land on the decision report + timeline — not the bare list
+      navigate(simId ? `/workspace/simulations/${simId}` : "/workspace/simulations");
     } finally {
       setBusy(false);
     }
@@ -40,14 +43,25 @@ export function SimulationsPage() {
 
   return (
     <div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-        Simulation engine
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            Simulation engine
+          </div>
+          <h1 className="mt-2 font-serif text-3xl text-ink">Simulations</h1>
+          <p className="mt-2 max-w-xl text-sm text-ink-dim">
+            Generate multiple futures, evaluate trade-offs, and get a ranked recommendation.
+          </p>
+        </div>
+        {!isNew && (
+          <Link
+            to="/workspace/simulations?new=1"
+            className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-bg transition hover:bg-chronos"
+          >
+            Run simulation
+          </Link>
+        )}
       </div>
-      <h1 className="mt-2 font-serif text-3xl text-ink">Simulations</h1>
-      <p className="mt-2 max-w-xl text-sm text-ink-dim">
-        Planner → Generate futures → Evaluate → Rank → Best future. Inputs: goal, knowledge,
-        constraints.
-      </p>
 
       {isNew && (
         <form onSubmit={onSubmit} className="mt-8 space-y-4 border border-line p-4">
@@ -61,25 +75,25 @@ export function SimulationsPage() {
             </div>
           </Field>
 
-          <Field label="Objective">
+          <Field label="What should Chronos decide?">
             <input
               required
               value={objective}
               onChange={(e) => setObjective(e.target.value)}
-              placeholder="Should we raise funding before Kickstart?"
+              placeholder="e.g. How should we launch with a small team and limited runway?"
               className="w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink focus:border-chronos focus:outline-none"
             />
           </Field>
 
           <Field label="Knowledge (from library)">
             {knowledgePreview.length === 0 ? (
-              <p className="text-sm text-ink-dim">
+              <div className="rounded-lg border border-chronos/25 bg-chronos/5 p-3 text-sm text-ink-dim">
                 No knowledge yet.{" "}
-                <Link to="/workspace/knowledge" className="text-chronos">
-                  Add context
+                <Link to="/workspace/knowledge" className="text-chronos underline-offset-2 hover:underline">
+                  Add one source
                 </Link>{" "}
-                for better ranking.
-              </p>
+                for better ranking — you can still run without it.
+              </div>
             ) : (
               <ul className="space-y-1 text-sm text-ink-dim">
                 {knowledgePreview.map((k) => (
@@ -108,19 +122,30 @@ export function SimulationsPage() {
             </p>
           </Field>
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
-          >
-            {busy ? "Running engine…" : "Run engine"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              disabled={busy}
+              className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
+            >
+              {busy ? "Running…" : "Run simulation"}
+            </button>
+            {hasRuns && (
+              <button
+                type="button"
+                onClick={() => setParams({})}
+                className="rounded-full border border-line px-4 py-2.5 text-sm text-ink-dim"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
           {error && <p className="text-sm text-red-400">{error}</p>}
         </form>
       )}
 
-      <div className="mt-8 overflow-x-auto border-y border-line">
-        <table className="w-full min-w-[520px] text-left text-sm">
+      <div className="mt-8 -mx-1 overflow-x-auto border-y border-line px-1">
+        <table className="w-full min-w-[480px] text-left text-sm sm:min-w-[520px]">
           <thead>
             <tr className="border-b border-line font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
               <th className="py-3 pr-3 font-medium">Name</th>
@@ -133,11 +158,7 @@ export function SimulationsPage() {
             {home.recentSimulations.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-6 text-ink-dim">
-                  No runs yet.{" "}
-                  <Link to="/workspace/simulations?new=1" className="text-chronos">
-                    Run the engine
-                  </Link>
-                  .
+                  No runs yet. Use the form above to run your first simulation.
                 </td>
               </tr>
             ) : (

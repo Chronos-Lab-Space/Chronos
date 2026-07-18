@@ -11,19 +11,37 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "4.5.2",
+    date: "2026-07-18",
+    tag: "patch",
+    title: "First-sim UX, cloud memory sync, richer demos",
+    summary:
+      "Tightens the path from landing to first recommendation, starts multi-device workspace memory sync, and polishes public demos plus mobile layout after the FAQ/docs ship.",
+    highlights: [
+      { label: "First sim", detail: "Open report after run; Knowledge in workspace nav; empty-state CTAs; neutral onboarding defaults" },
+      { label: "Sync", detail: "Load merges local+remote homes; empty cloud backfill; futures upsert; schema versioning alignment" },
+      { label: "Demos", detail: "Richer home live demo + /simulate pipeline, ranked futures, recommendation banner" },
+      { label: "Motion", detail: "Enhanced temporal decision tree hero animation (phases, futures counter, flow)" },
+      { label: "Docs UI", detail: "Cerebrum page header on /docs; README screenshot + structure refresh" },
+      { label: "Mobile", detail: "Tablet nav no longer collides; pipeline rails scroll; full-width CTAs; Library bottom-tab label" },
+      { label: "Social", detail: "X/Open Graph card image (public/og-image.png) for Chronos Lab link previews" },
+    ],
+  },
+  {
     version: "4.5.1",
     date: "2026-07-18",
     tag: "patch",
     title: "Public FAQ & product docs",
     summary:
-      "Marketing and onboarding surfaces catch up to the private workspace product: a short FAQ in the header, and documentation rewritten as a product manual instead of an SDK-first reference.",
+      "Marketing and onboarding surfaces catch up to the private workspace product: a short FAQ in the header, and documentation rewritten for the workspace product (Cerebrum header on /docs).",
     highlights: [
       { label: "FAQ", detail: "/faq with 10 short answers; linked from header nav and footer" },
-      { label: "Docs", detail: "Product manual: introduction, getting started, workspaces, goals, knowledge, simulations, timeline, memory, reports" },
+      { label: "Docs", detail: "/docs (Cerebrum): introduction, getting started, workspaces, goals, knowledge, simulations, timeline, memory, reports" },
       { label: "API", detail: "Coming-soon placeholder for POST /simulate, GET /workspaces, POST /knowledge, GET /timeline" },
       { label: "Trust", detail: "Roadmap available-vs-planned, security & privacy, and support channels in docs" },
     ],
   },
+
   {
     version: "4.5.0",
     date: "2026-07-15",

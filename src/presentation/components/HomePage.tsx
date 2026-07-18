@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { CTA } from "./CTA";
 import { BranchingAnimation } from "./BranchingAnimation";
@@ -8,9 +7,6 @@ import { useAccessModal } from "../features/access/AccessModal";
 
 export function HomePage() {
   const { openAccessModal } = useAccessModal();
-  const scrollToDemo = useCallback(() => {
-    document.getElementById("live-demo")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
   return (
     <>
       {/* HERO: what it is, why it matters, and why it is different. */}
@@ -31,17 +27,19 @@ export function HomePage() {
               <p className="mt-6 max-w-xl text-[15px] leading-[1.7] text-ink-dim sm:mt-8 sm:text-[17px] sm:leading-[1.75]">
                 Chronos turns one objective into ranked possible futures. Instead of producing a single response, it plans tasks, simulates outcomes, and commits the strongest path before execution.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3 sm:mt-10 sm:gap-4">
-                <button type="button" onClick={openAccessModal} className="group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos sm:px-6 sm:py-3">
+              <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+                <button type="button" onClick={openAccessModal} className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos sm:w-auto sm:px-6 sm:py-3">
                   Request access
                   <svg width="14" height="14" viewBox="0 0 14 14" className="transition group-hover:translate-x-0.5"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
-                <button type="button" onClick={scrollToDemo} className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:px-6 sm:py-3">
-                  Try it live
-                </button>
-                <Link to="/login" className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:px-6 sm:py-3">
-                  Sign in
-                </Link>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link to="/docs" className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:flex-none sm:px-6 sm:py-3">
+                    Read the docs
+                  </Link>
+                  <Link to="/login" className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:flex-none sm:px-6 sm:py-3">
+                    Sign in
+                  </Link>
+                </div>
               </div>
             </div>
             <div className="relative min-w-0 overflow-hidden lg:col-span-6"><BranchingAnimation /></div>
