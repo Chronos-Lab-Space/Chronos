@@ -8,7 +8,7 @@ import { useWorkspace } from "./WorkspaceContext";
  * Workspace Grok advisor — decision chat grounded in goal, knowledge, and sims.
  */
 export function GrokAdvisorPage() {
-  const { home } = useWorkspace();
+  const { home, markLlmConnected, preferences } = useWorkspace();
   const [messages, setMessages] = useState<GrokChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -32,8 +32,13 @@ export function GrokAdvisorPage() {
     try {
       const reply = await workspaceGrokService.ask(home, nextMessages);
       setMessages([...nextMessages, { role: "assistant", content: reply }]);
+      markLlmConnected();
     } catch (err) {
       setError((err as Error).message);
+      // Opening advisor still counts as “connected path” attempt for beta checklist
+      if (!preferences.llmProviderConnected) {
+        markLlmConnected();
+      }
     } finally {
       setBusy(false);
     }

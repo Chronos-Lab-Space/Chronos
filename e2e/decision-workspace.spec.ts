@@ -38,21 +38,23 @@ test.describe("Decision Workspace (authenticated)", () => {
     await enableE2EAuth(page);
     await page.goto("/workspace");
 
-    // --- Onboarding: Create workspace ---
-    await expect(page.getByRole("heading", { name: /create workspace/i })).toBeVisible({
-      timeout: 15_000,
+    // Bootstrap creates a personal workspace on first session → wizard lands on
+    // "What are you trying to decide?" Older path: Create workspace → Name.
+    const createHeading = page.getByRole("heading", { name: /create workspace/i });
+    const decisionHeading = page.getByRole("heading", {
+      name: /what are you trying to decide|current goal/i,
     });
-    await page.getByRole("button", { name: /begin/i }).click();
+    await expect(createHeading.or(decisionHeading)).toBeVisible({ timeout: 15_000 });
 
-    await expect(page.getByRole("heading", { name: /name this workspace/i })).toBeVisible();
-    await page.getByLabel(/workspace name/i).fill("E2E Chronos Lab");
-    await page.getByRole("button", { name: /continue/i }).click();
+    if (await createHeading.isVisible().catch(() => false)) {
+      await page.getByRole("button", { name: /begin/i }).click();
+      await expect(page.getByRole("heading", { name: /name this workspace/i })).toBeVisible();
+      await page.getByLabel(/workspace name/i).fill("E2E Chronos Lab");
+      await page.getByRole("button", { name: /continue/i }).click();
+    }
 
-    // --- Set objective ---
-    await expect(page.getByRole("heading", { name: /current goal/i })).toBeVisible({
-      timeout: 10_000,
-    });
-    await page.getByLabel(/decision \/ goal/i).fill("Launch CLAB public beta");
+    await expect(decisionHeading).toBeVisible({ timeout: 10_000 });
+    await page.getByLabel(/first decision|decision \/ goal/i).fill("Launch CLAB public beta");
     await page.getByRole("button", { name: /continue/i }).click();
 
     // --- Add context (note) ---

@@ -32,16 +32,26 @@ export function HomePage() {
                 Chronos turns one objective into ranked possible futures. Instead of producing a single response, it plans tasks, simulates outcomes, and commits the strongest path before execution.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3 sm:mt-10 sm:gap-4">
-                <button type="button" onClick={openAccessModal} className="group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos sm:px-6 sm:py-3">
-                  Request access
+                <Link
+                  to="/login?intent=start"
+                  className="group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos sm:px-6 sm:py-3"
+                >
+                  Get started
                   <svg width="14" height="14" viewBox="0 0 14 14" className="transition group-hover:translate-x-0.5"><path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                </button>
+                </Link>
                 <Link to="/docs" className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:px-6 sm:py-3">
                   Docs
                 </Link>
                 <Link to="/login" className="inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink sm:px-6 sm:py-3">
                   Sign in
                 </Link>
+                <button
+                  type="button"
+                  onClick={openAccessModal}
+                  className="inline-flex items-center gap-2 text-sm text-ink-faint transition hover:text-chronos"
+                >
+                  Request invite
+                </button>
               </div>
             </div>
             <div className="relative min-w-0 overflow-hidden lg:col-span-6"><BranchingAnimation /></div>

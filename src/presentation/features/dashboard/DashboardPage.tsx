@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { evaluateBetaChecklist } from "../../../domain/workspace/betaChecklist";
 import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
 import {
   buildActivityFeed,
@@ -7,6 +8,7 @@ import {
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { DecisionReportCard } from "../simulation/components/DecisionReportCard";
 import { ActivityFeed } from "./components/ActivityFeed";
+import { BetaChecklist } from "./components/BetaChecklist";
 import { GoalCard } from "./components/GoalCard";
 import { KnowledgeSummary } from "./components/KnowledgeSummary";
 import { MvpProgress } from "./components/MvpProgress";
@@ -20,7 +22,7 @@ import { WorkspacePulse } from "./components/WorkspacePulse";
  * Answers: What am I working on? Pending decisions? Sims run? What changed?
  */
 export function DashboardPage() {
-  const { home } = useWorkspace();
+  const { home, preferences } = useWorkspace();
   if (!home?.goal) return null;
 
   const latest = home.recentSimulations[0] ?? null;
@@ -34,6 +36,10 @@ export function DashboardPage() {
 
   const pending = useMemo(() => listPendingDecisions(home), [home]);
   const activity = useMemo(() => buildActivityFeed(home, 8), [home]);
+  const checklist = useMemo(
+    () => evaluateBetaChecklist(home, preferences),
+    [home, preferences]
+  );
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 lg:max-w-none">
@@ -49,6 +55,7 @@ export function DashboardPage() {
       </header>
 
       <WorkspacePulse home={home} />
+      <BetaChecklist items={checklist} />
 
       {/* 1 · What am I working on? */}
       <GoalCard goal={home.goal} confidence={goalConfidence} />

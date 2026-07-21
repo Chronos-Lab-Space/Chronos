@@ -11,6 +11,20 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "4.8.0",
+    date: "2026-07-21",
+    tag: "minor",
+    title: "Public beta auth · OAuth · progressive checklist",
+    summary:
+      "Landing Get Started → Google/GitHub OAuth → profile + personal workspace + owner membership → first decision prompt → dashboard. Progressive beta checklist (LLM optional, decision, simulation, memory, share). Membership-aware schema and access helpers for JWT → workspace checks.",
+    highlights: [
+      { label: "OAuth", detail: "Continue with Google / GitHub; email password & magic link secondary" },
+      { label: "Bootstrap", detail: "Post-auth: profile, personal workspace, owner membership, preferences" },
+      { label: "Checklist", detail: "Natural unlock: connect LLM · first decision · first sim · save memory · share" },
+      { label: "Schema", detail: "profiles, workspace_members, decisions, events + membership RLS helpers" },
+    ],
+  },
+  {
     version: "4.7.2",
     date: "2026-07-21",
     tag: "patch",

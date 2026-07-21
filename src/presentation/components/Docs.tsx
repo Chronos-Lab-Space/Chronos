@@ -6,6 +6,7 @@ type Section =
   | "introduction"
   | "how-it-works"
   | "getting-started"
+  | "auth"
   | "beta"
   | "faq"
   | "workspaces"
@@ -30,6 +31,7 @@ const NAV: {
       { id: "introduction", label: "What is Chronos?" },
       { id: "how-it-works", label: "How it works" },
       { id: "getting-started", label: "Getting started" },
+      { id: "auth", label: "Auth & access" },
       { id: "beta", label: "Beta limitations" },
       { id: "faq", label: "FAQ" },
     ],
@@ -173,6 +175,7 @@ export function Docs() {
               {section === "introduction" && <Introduction />}
               {section === "how-it-works" && <HowItWorksDocs />}
               {section === "getting-started" && <GettingStarted />}
+              {section === "auth" && <AuthAccessDocs />}
               {section === "beta" && <BetaLimitationsDocs />}
               {section === "faq" && <DocsFaq />}
               {section === "workspaces" && <WorkspacesDocs />}
@@ -509,6 +512,68 @@ function HowItWorksDocs() {
 }
 
 // ============================================================
+// Auth & access (public beta)
+// ============================================================
+
+function AuthAccessDocs() {
+  return (
+    <div>
+      <DocTitle>Auth & access</DocTitle>
+      <DocBody>
+        Public beta authentication is designed for speed: land, sign in with
+        Google or GitHub, and reach a Decision Workspace without a tutorial maze.
+      </DocBody>
+
+      <DocSub>User flow</DocSub>
+      <FlowSteps
+        steps={[
+          "Landing → Get started",
+          "Google / GitHub (or email)",
+          "Supabase Auth session (JWT)",
+          "Create profile",
+          "Create personal workspace + owner membership",
+          "Ask: What are you trying to decide?",
+          "Run first simulation → Dashboard",
+        ]}
+      />
+
+      <DocSub>Data model</DocSub>
+      <TopicList
+        items={[
+          { title: "auth.users", body: "Supabase Auth identity (Google, GitHub, email)." },
+          { title: "profiles", body: "Display name, avatar, preferences, onboarded_at." },
+          { title: "workspaces", body: "Private decision HQ; owner_id + memberships." },
+          { title: "workspace_members", body: "Roles: owner, admin, member, viewer." },
+          { title: "decisions", body: "First-class decision objects (sims hang underneath)." },
+          { title: "simulations / events", body: "Runs + product analytics events." },
+        ]}
+      />
+
+      <DocSub>Request authorization</DocSub>
+      <DocBody>
+        Every workspace-scoped action should follow: verify JWT session → resolve
+        user → load workspace → check membership (or owner) → execute. The
+        browser app enforces this via ProtectedRoute + membership-aware RLS.
+      </DocBody>
+
+      <DocSub>Progress checklist</DocSub>
+      <DocBody>
+        Instead of a forced tour, Chronos unlocks progress as you act: connect LLM
+        (optional), create first decision, run first simulation, save memory, share
+        workspace.
+      </DocBody>
+
+      <Callout tone="note" title="Provider setup">
+        Enable Google and GitHub under Supabase Auth → Providers. Add redirect URL{" "}
+        <code className="text-chronos">https://your-host/auth/callback</code> (and
+        localhost for dev). Apply migration{" "}
+        <code className="text-chronos">20260721120000_public_beta_auth.sql</code>.
+      </Callout>
+    </div>
+  );
+}
+
+// ============================================================
 // Beta limitations
 // ============================================================
 
@@ -640,19 +705,20 @@ function GettingStarted() {
 
       <FlowSteps
         steps={[
-          "Create account",
-          "Create workspace",
-          "Set goal",
-          "Upload knowledge",
-          "Run simulation",
-          "Review recommendation",
+          "Get started (Google / GitHub)",
+          "Personal workspace bootstrapped",
+          "Create first decision",
+          "Add context",
+          "Generate futures",
+          "Save path · dashboard",
         ]}
       />
 
-      <DocSub>1. Create account</DocSub>
+      <DocSub>1. Get started</DocSub>
       <DocBody>
-        Request private beta access, then sign in. Your session stays private to
-        your account — workspaces are not public by default.
+        From the landing page choose <strong className="text-ink">Get started</strong>,
+        then continue with Google or GitHub. Chronos creates your profile and a
+        personal workspace with owner membership automatically.
       </DocBody>
       <div className="mt-4 flex flex-wrap gap-2">
         <button

@@ -19,24 +19,29 @@ test.describe("Chronos user workflows", () => {
     await page.goto("/workspace");
 
     // Private workspace requires a session
-    await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(
+      page.getByRole("heading", { name: /welcome back|start deciding/i })
+    ).toBeVisible();
   });
 
   test("legacy dashboard URL redirects unauthenticated users to login", async ({ page }) => {
     await page.goto("/dashboard");
 
-    await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(
+      page.getByRole("heading", { name: /welcome back|start deciding/i })
+    ).toBeVisible();
   });
 
-  test("login page shows password sign-in by default", async ({ page }) => {
+  test("login page leads with OAuth and email password", async ({ page }) => {
     await page.goto("/login");
 
-    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /welcome back|start deciding/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue with google/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue with github/i })).toBeVisible();
     await expect(page.getByLabel("Password")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Magic link" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /sign in with email/i })).toBeVisible();
   });
 
   test("a visitor simulates a startup idea through to a best path", async ({ page }) => {

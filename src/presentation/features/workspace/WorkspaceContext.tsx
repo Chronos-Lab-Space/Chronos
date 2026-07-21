@@ -6,7 +6,12 @@ import {
   useMemo,
   useState,
 } from "react";
+import { accountBootstrapService } from "../../../application/workspace/AccountBootstrapService";
 import { workspaceService } from "../../../application/workspace/WorkspaceService";
+import type {
+  UserPreferences,
+} from "../../../domain/workspace/betaChecklist";
+import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
 import type {
   KnowledgeType,
   OutcomeFollowed,
@@ -14,6 +19,10 @@ import type {
   WorkspaceRecord,
 } from "../../../domain/workspace/types";
 import { trackProductEvent } from "../../../infrastructure/analytics/productAnalytics";
+import {
+  loadUserPreferences,
+  saveUserPreferences,
+} from "../../../infrastructure/auth/userPreferencesStore";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 
 type WorkspaceContextValue = {
@@ -52,6 +61,10 @@ type WorkspaceContextValue = {
     followed: OutcomeFollowed
   ) => Promise<void>;
   recordOutcomeResult: (simulationId: string, resultNote: string) => Promise<void>;
+  preferences: UserPreferences;
+  updatePreferences: (patch: Partial<UserPreferences>) => void;
+  markLlmConnected: () => void;
+  markShareAcknowledged: () => void;
   refresh: () => Promise<void>;
 };
 
@@ -63,6 +76,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
 
   const resolveOwnerId = useCallback(async (): Promise<string | null> => {
     const session = await authService.currentSession();
@@ -75,14 +89,26 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const id = await resolveOwnerId();
-      if (!id) {
+      const session = await authService.currentSession();
+      const user = session?.user ?? (await authService.currentUser());
+      const id = user?.id ?? null;
+      if (!id || !user) {
         setOwnerId(null);
         setHome(null);
         setWorkspaces([]);
+        setPreferences(DEFAULT_PREFERENCES);
         return;
       }
       setOwnerId(id);
+      setPreferences(loadUserPreferences(id));
+
+      // Profile → personal workspace → owner membership
+      try {
+        await accountBootstrapService.ensureAccount(user);
+      } catch (err) {
+        console.warn("[chronos] account bootstrap failed", err);
+      }
+
       const [loaded, list] = await Promise.all([
         workspaceService.load(id),
         workspaceService.listWorkspaces(id),
@@ -94,7 +120,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [resolveOwnerId]);
+  }, []);
 
   useEffect(() => {
     trackProductEvent("session_start");
@@ -137,6 +163,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     [ownerId, resolveOwnerId]
   );
 
+  const updatePreferences = useCallback(
+    (patch: Partial<UserPreferences>) => {
+      if (!ownerId) return;
+      const next = saveUserPreferences(ownerId, patch);
+      setPreferences(next);
+    },
+    [ownerId]
+  );
+
   const value = useMemo<WorkspaceContextValue>(
     () => ({
       ownerId,
@@ -144,6 +179,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       workspaces,
       loading,
       error,
+      preferences,
+      updatePreferences,
+      markLlmConnected: () => updatePreferences({ llmProviderConnected: true }),
+      markShareAcknowledged: () => updatePreferences({ shareAcknowledged: true }),
       refresh,
       createWorkspace: async (name, description) => {
         const next = await withOwner((id) =>
@@ -249,7 +288,18 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         });
       },
     }),
-    [ownerId, home, workspaces, loading, error, refresh, withOwner, resolveOwnerId]
+    [
+      ownerId,
+      home,
+      workspaces,
+      loading,
+      error,
+      preferences,
+      updatePreferences,
+      refresh,
+      withOwner,
+      resolveOwnerId,
+    ]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

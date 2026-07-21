@@ -199,12 +199,16 @@ export function WorkspaceOnboarding() {
             <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
               Step 3 · {home?.workspace.name}
             </div>
-            <h1 className="mt-3 font-serif text-3xl text-ink">Current goal</h1>
-            <p className="mt-2 text-sm text-ink-dim">What decision are you working on?</p>
+            <h1 className="mt-3 font-serif text-3xl text-ink">
+              What are you trying to decide?
+            </h1>
+            <p className="mt-2 text-sm text-ink-dim">
+              Create your first decision — Chronos will simulate futures against it.
+            </p>
             <form onSubmit={submitGoal} className="mt-8 space-y-4">
               <Field
                 id="goal"
-                label="Decision / goal"
+                label="First decision"
                 value={goalTitle}
                 onChange={setGoalTitle}
                 placeholder="Launch CLAB on Kickstart"

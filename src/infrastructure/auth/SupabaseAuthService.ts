@@ -42,6 +42,23 @@ export class SupabaseAuthService {
     return this.client.auth.signInWithPassword({ email, password });
   }
 
+  /**
+   * Public beta OAuth — Google / GitHub.
+   * Redirect URLs must include {origin}/auth/callback in Supabase Auth settings.
+   */
+  async signInWithOAuth(provider: "google" | "github", redirectTo?: string) {
+    const target =
+      redirectTo ??
+      (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined);
+    return this.client.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: target,
+        skipBrowserRedirect: false,
+      },
+    });
+  }
+
   async signOut() {
     if (isE2EAuthEnabled()) {
       try {
