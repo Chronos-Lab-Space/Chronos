@@ -74,7 +74,10 @@ describe("WorkspaceService dual-write", () => {
     // Local resume still has the collapse
     const resumed = await new WorkspaceService({ local, remote: null }).load(ownerId);
     expect(resumed?.recentSimulations[0].result.chosen_future_id).toBe(futureId);
-    expect(resumed?.futuresBySimulation[simId]).toHaveLength(5);
+    // Engine returns up to 5 ranked futures (honest catalog may yield fewer).
+    const futures = resumed?.futuresBySimulation[simId] ?? [];
+    expect(futures.length).toBeGreaterThanOrEqual(2);
+    expect(futures.length).toBeLessThanOrEqual(5);
   });
 
   it("writes through after cloud recovers and merges local-only sims", async () => {

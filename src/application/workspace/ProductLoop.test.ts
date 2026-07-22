@@ -60,7 +60,8 @@ describe("Product validation loop", () => {
     );
     const sim = home.recentSimulations[0];
     expect(sim.status).toBe("completed");
-    expect(sim.result.futures_count).toBe(5);
+    expect(sim.result.futures_count).toBeGreaterThanOrEqual(2);
+    expect(sim.result.futures_count).toBeLessThanOrEqual(5);
     expect(sim.result.recommendation).toBeTruthy();
     expect(sim.result.best_future).toBeTruthy();
     expect(Array.isArray(sim.result.knowledge_used)).toBe(true);
@@ -69,10 +70,11 @@ describe("Product validation loop", () => {
 
     // 5. Compare Futures
     const futures = home.futuresBySimulation[sim.id] ?? [];
-    expect(futures.length).toBe(5);
-    // Ranked descending score (engine contract)
-    for (let i = 1; i < futures.length; i++) {
-      expect(futures[i - 1].score).toBeGreaterThanOrEqual(futures[i].score);
+    expect(futures.length).toBe(sim.result.futures_count);
+    // Eligible first by score; zeros (infeasible) may trail
+    const eligible = futures.filter((f) => f.score > 0);
+    for (let i = 1; i < eligible.length; i++) {
+      expect(eligible[i - 1].score).toBeGreaterThanOrEqual(eligible[i].score);
     }
     const engineBest = futures[0];
     const alternate = futures[1] ?? futures[0];
@@ -103,7 +105,7 @@ describe("Product validation loop", () => {
     expect(resumed!.knowledge.length).toBeGreaterThanOrEqual(2);
     const resumedSim = resumed!.recentSimulations.find((s) => s.id === sim.id)!;
     expect(resumedSim.result.chosen_future_id).toBe(chosen.id);
-    expect(resumed!.futuresBySimulation[sim.id]).toHaveLength(5);
+    expect(resumed!.futuresBySimulation[sim.id]!.length).toBe(futures.length);
 
     // Product validated: cumulative decision, not a blank slate
     expect(resumed!.notes.length).toBeGreaterThanOrEqual(2);

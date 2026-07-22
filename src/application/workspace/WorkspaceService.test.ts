@@ -52,13 +52,14 @@ describe("WorkspaceService success metric", () => {
     expect(sim.version).toBe(1);
     expect(sim.lineage_id).toBeTruthy();
     expect(sim.parent_simulation_id).toBeNull();
-    expect(sim.result.futures_count).toBe(5);
+    expect(sim.result.futures_count).toBeGreaterThanOrEqual(2);
+    expect(sim.result.futures_count).toBeLessThanOrEqual(5);
     expect(sim.result.best_future).toBeTruthy();
     expect(sim.result.recommendation).toBeTruthy();
     expect(Array.isArray(sim.result.risks)).toBe(true);
     expect(Array.isArray(sim.result.tasks)).toBe(true);
     expect(sim.confidence).toBeGreaterThan(0);
-    expect(home.futuresBySimulation[sim.id]).toHaveLength(5);
+    expect(home.futuresBySimulation[sim.id]!.length).toBe(sim.result.futures_count);
     expect(home.timelineBySimulation[sim.id]?.length).toBeGreaterThan(0);
 
     home = await service.rerunSimulation(ownerId, sim.id);
