@@ -57,17 +57,17 @@ test.describe("Decision Workspace (authenticated)", () => {
     await page.getByLabel(/first decision|decision \/ goal/i).fill("Launch CLAB public beta");
     await page.getByRole("button", { name: /continue/i }).click();
 
-    // --- Add context (note) ---
-    await expect(page.getByRole("heading", { name: /add context/i })).toBeVisible({
+    // --- Add knowledge (note) ---
+    await expect(page.getByRole("heading", { name: /add knowledge/i })).toBeVisible({
       timeout: 10_000,
     });
     await page.getByRole("button", { name: /^note$/i }).click();
     await page.getByLabel(/note title/i).fill("Beta constraints");
     await page.locator("textarea").fill("Small team, limited runway, prefer bootstrap path.");
-    await page.getByRole("button", { name: /add context & open dashboard/i }).click();
+    await page.getByRole("button", { name: /add knowledge/i }).click();
 
-    // --- Dashboard ---
-    await expect(page.getByText(/what am i working on/i).first()).toBeVisible({
+    // --- Dashboard (quiet HQ: current goal + decision workspace) ---
+    await expect(page.getByText(/current goal/i).first()).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.getByText("Launch CLAB public beta").first()).toBeVisible();
@@ -89,13 +89,13 @@ test.describe("Decision Workspace (authenticated)", () => {
       timeout: 20_000,
     });
 
-    // --- Compare + Decision Report ---
-    await expect(page.getByText(/future comparison/i).first()).toBeVisible({
+    // --- Decision Report (centerpiece) + comparison ---
+    await expect(page.getByText(/decision report/i).first()).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByText(/decision report/i).first()).toBeVisible();
-    await expect(page.getByText(/recommended because/i).first()).toBeVisible();
-    await expect(page.getByText(/recommended path/i).first()).toBeVisible();
+    await expect(page.getByText(/^recommendation$/i).first()).toBeVisible();
+    await expect(page.getByText(/^evidence$/i).first()).toBeVisible();
+    await expect(page.getByText(/future comparison/i).first()).toBeVisible();
 
     // --- Choose path · Save timeline ---
     const choose = page.getByRole("button", {
