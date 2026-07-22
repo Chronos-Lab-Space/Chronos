@@ -3,7 +3,7 @@
 /*
   Chronos palette (canonical):
   #111111  void / bg
-  #224D5F  deep field (bg-soft)  — note: source #224DSF normalized to valid hex
+  #2A4D5F  deep field (bg-soft)
   #60899B  chronos brand
   #989898  muted / faint
   #C4C2AA  sand / secondary
@@ -15,7 +15,7 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --color-bg: #111111;
-  --color-bg-soft: #224d5f;
+  --color-bg-soft: #2a4d5f;
   --color-ink: #f2edea;
   --color-ink-dim: #c4c2aa;
   --color-ink-faint: #989898;
@@ -29,7 +29,7 @@
 :root {
   color-scheme: dark;
   --palette-void: #111111;
-  --palette-field: #224d5f;
+  --palette-field: #2a4d5f;
   --palette-chronos: #60899b;
   --palette-muted: #989898;
   --palette-sand: #c4c2aa;
@@ -422,7 +422,7 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   border-radius: 1rem;
   border: 1px solid rgba(242, 237, 234, 0.08);
   background:
-    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(34, 77, 95, 0.55), transparent 70%),
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(42, 77, 95, 0.55), transparent 70%),
     #111111;
 }
 
@@ -469,7 +469,7 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   position: absolute;
   inset: 42px;
   border-radius: 9999px;
-  background: radial-gradient(circle at 40% 35%, #60899b, #224d5f 60%, #111111);
+  background: radial-gradient(circle at 40% 35%, #60899b, #2a4d5f 60%, #111111);
   box-shadow: 0 0 32px rgba(96, 137, 155, 0.35);
   animation: workspace-core-pulse 2.4s ease-in-out infinite;
 }
