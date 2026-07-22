@@ -22,22 +22,24 @@ export function WorkspacePulse({ home }: { home: WorkspaceHome }) {
           Updated {formatRelativeTime(pulse.lastUpdatedAt)}
         </div>
       </div>
-      <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Metric label="Knowledge coverage" value={`${pulse.knowledgeCoverage}%`} />
-        <Metric label="Simulation confidence" value={`${pulse.simulationConfidence}%`} />
-        <Metric label="Open tasks" value={String(pulse.openTasks)} />
-        <Metric label="Last updated" value={formatRelativeTime(pulse.lastUpdatedAt)} compact />
-      </dl>
-      <div className="mt-6 rounded-xl border border-line bg-bg/60 px-4 py-4">
-        <div className="font-mono text-[10px] uppercase text-ink-faint">Recommendation</div>
-        <p className="mt-2 text-[15px] text-ink">{pulse.recommendation}</p>
+
+      {/* Recommendation is the pulse, not a metrics wall */}
+      <div className="mt-5 rounded-xl border border-chronos/25 bg-bg/70 px-4 py-4">
+        <div className="font-mono text-[10px] uppercase text-ink-faint">What to do next</div>
+        <p className="mt-2 text-[15px] leading-relaxed text-ink">{pulse.recommendation}</p>
         <Link
           to={pulse.recommendationHref}
-          className="mt-3 inline-flex font-mono text-[11px] uppercase tracking-[0.16em] text-chronos"
+          className="mt-4 inline-flex rounded-full bg-ink px-4 py-2 text-sm font-medium text-bg transition hover:bg-chronos"
         >
           Continue →
         </Link>
       </div>
+
+      <dl className="mt-4 grid grid-cols-3 gap-2">
+        <Metric label="Knowledge" value={`${pulse.knowledgeCoverage}%`} />
+        <Metric label="Confidence" value={`${pulse.simulationConfidence}%`} />
+        <Metric label="Open" value={String(pulse.openTasks)} />
+      </dl>
     </section>
   );
 }

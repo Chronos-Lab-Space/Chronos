@@ -4,7 +4,6 @@ import {
   prepareUploadFile,
 } from "../../../application/workspace/KnowledgeImport";
 import {
-  ONBOARDING_STEPS,
   isWorkspaceOnboarded,
   onboardingStepIndex,
   requiredOnboardingStep,
@@ -129,7 +128,15 @@ export function WorkspaceOnboarding() {
   return (
     <div className="mx-auto max-w-lg">
       <ol className="flex flex-wrap items-center gap-1.5">
-        {ONBOARDING_STEPS.map((s, i) => (
+        {(
+          [
+            ["welcome", "Start"],
+            ["name", "Workspace"],
+            ["goal", "Goal"],
+            ["context", "Knowledge"],
+            ["dashboard", "Simulate"],
+          ] as const
+        ).map(([s, label], i) => (
           <li key={s} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-ink-faint">→</span>}
             <span
@@ -142,13 +149,13 @@ export function WorkspaceOnboarding() {
               }`}
             >
               {i < stepIdx ? "✓ " : ""}
-              {s}
+              {label}
             </span>
           </li>
         ))}
       </ol>
       <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-        Required path · no skipping
+        Goal → Knowledge → Simulation → Recommendation
       </p>
 
       <div className="mt-8">
@@ -159,10 +166,10 @@ export function WorkspaceOnboarding() {
             </div>
             <h1 className="mt-3 font-serif text-3xl text-ink">Create Workspace</h1>
             <p className="mt-4 text-[15px] text-ink-dim">
-              Chronos does not ask <span className="italic">“What do you want to ask?”</span>
+              Chronos is decision infrastructure — not a chatbot.
             </p>
             <p className="mt-2 text-[15px] text-ink">
-              It asks: <span className="text-chronos">What am I working on?</span>
+              Path: <span className="text-chronos">Goal → Knowledge → Simulation → Recommendation</span>
             </p>
             <button
               type="button"
@@ -240,11 +247,12 @@ export function WorkspaceOnboarding() {
         {step === "context" && (
           <section>
             <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
-              Step 4 · Upload context
+              Step 4 · Knowledge
             </div>
-            <h1 className="mt-3 font-serif text-3xl text-ink">Add context</h1>
+            <h1 className="mt-3 font-serif text-3xl text-ink">Add knowledge</h1>
             <p className="mt-2 text-sm text-ink-dim">
-              At least one doc, URL, or note before the dashboard unlocks.
+              Ground the simulation — one doc, URL, or note unlocks the workspace. Next you&apos;ll
+              run a simulation and keep a decision report.
             </p>
             {home?.goal && (
               <p className="mt-4 rounded-xl border border-line px-4 py-3 text-sm">
@@ -296,7 +304,7 @@ export function WorkspaceOnboarding() {
                 disabled={busy}
                 className="w-full rounded-full bg-ink px-4 py-3 text-sm font-medium text-bg hover:bg-chronos disabled:opacity-50"
               >
-                {busy ? "Adding…" : "Add context & open dashboard →"}
+                {busy ? "Adding…" : "Add knowledge → run simulation"}
               </button>
               {displayError && <p className="text-sm text-red-400">{displayError}</p>}
             </form>

@@ -6,6 +6,7 @@ import {
 } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
 import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
+import { groupSimulationsByHistory } from "../../../domain/workspace/simulationHistory";
 import { FutureTimelineCards } from "../timeline/FutureTimelineCards";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { DecisionReportCard } from "./components/DecisionReportCard";
@@ -148,46 +149,82 @@ export function SimulationsPage() {
         </form>
       )}
 
-      <div className="mt-8 -mx-1 overflow-x-auto border-y border-line px-1">
-        <table className="w-full min-w-[480px] text-left text-sm sm:min-w-[520px]">
-          <thead>
-            <tr className="border-b border-line font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-              <th className="py-3 pr-3 font-medium">Name</th>
-              <th className="py-3 pr-3 font-medium">Status</th>
-              <th className="py-3 pr-3 font-medium">Confidence</th>
-              <th className="py-3 font-medium">Created</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {home.recentSimulations.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="py-6 text-ink-dim">
-                  No runs yet. Use the form above to run your first simulation.
-                </td>
-              </tr>
-            ) : (
-              home.recentSimulations.map((sim) => (
-                <tr key={sim.id}>
-                  <td className="py-3 pr-3">
-                    <Link to={`/workspace/simulations/${sim.id}`} className="hover:text-chronos">
-                      {sim.title}
-                    </Link>
-                  </td>
-                  <td className="py-3 pr-3">
-                    <StatusPill status={sim.status} />
-                  </td>
-                  <td className="py-3 pr-3 font-mono text-chronos">
-                    {confidencePercent(sim.confidence)}
-                  </td>
-                  <td className="py-3 text-ink-dim">{formatCreatedAt(sim.created_at)}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <SimulationHistoryList simulations={home.recentSimulations} />
       <Back to="/workspace" label="Dashboard" />
     </div>
+  );
+}
+
+/** Today · Yesterday · Last week history — product memory, not a flat table. */
+function SimulationHistoryList({
+  simulations,
+}: {
+  simulations: readonly import("../../../domain/workspace/types").SimulationRecord[];
+}) {
+  const buckets = useMemo(() => groupSimulationsByHistory(simulations), [simulations]);
+
+  if (simulations.length === 0) {
+    return (
+      <section className="mt-8 rounded-2xl border border-dashed border-line px-5 py-8">
+        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+          Simulation history
+        </div>
+        <p className="mt-3 text-sm text-ink-dim">
+          No runs yet. Generate futures above to produce your first decision report.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mt-8 space-y-6">
+      <div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+          Simulation history
+        </div>
+        <p className="mt-1 text-sm text-ink-dim">
+          Reopen any run to read its decision report and saved path.
+        </p>
+      </div>
+      {buckets.map((bucket) => (
+        <div key={bucket.id}>
+          <h2 className="font-mono text-[11px] uppercase tracking-[0.18em] text-chronos">
+            {bucket.label}
+          </h2>
+          <ul className="mt-3 divide-y divide-line rounded-2xl border border-line">
+            {bucket.simulations.map((sim) => (
+              <li key={sim.id}>
+                <Link
+                  to={`/workspace/simulations/${sim.id}`}
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 transition hover:bg-bg-soft/40"
+                >
+                  <div className="min-w-0">
+                    <div className="truncate text-[15px] text-ink">{sim.title}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-faint">
+                      <StatusPill status={sim.status} />
+                      <span>v{sim.version}</span>
+                      {sim.result.chosen_future_name ? (
+                        <span className="text-chronos">
+                          Path: {String(sim.result.chosen_future_name)}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="font-mono text-sm text-chronos">
+                      {confidencePercent(sim.confidence)}
+                    </div>
+                    <div className="mt-0.5 text-xs text-ink-faint">
+                      {formatCreatedAt(sim.created_at)}
+                    </div>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   );
 }
 

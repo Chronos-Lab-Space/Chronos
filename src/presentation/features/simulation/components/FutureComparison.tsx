@@ -61,23 +61,37 @@ export function FutureComparison({
           const card = (
             <>
               <div className="flex items-start justify-between gap-3">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+                <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink">
                   Future {letter}
-                  {isBest ? " · engine best" : ""}
-                  {isChosen ? " · chosen" : ""}
+                  {isBest || isChosen ? (
+                    <span className="ml-1.5 text-chronos" aria-label="recommended">
+                      ★
+                    </span>
+                  ) : null}
                 </div>
-                {hook && (
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] ring-1 ${HOOK_TONE[hook]}`}
-                  >
-                    {hook}
-                  </span>
-                )}
+                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  {isChosen ? (
+                    <span className="rounded-full bg-chronos/20 px-2 py-0.5 font-mono text-[10px] uppercase text-chronos">
+                      Chosen
+                    </span>
+                  ) : isBest ? (
+                    <span className="rounded-full bg-chronos/15 px-2 py-0.5 font-mono text-[10px] uppercase text-chronos">
+                      Ranked best
+                    </span>
+                  ) : null}
+                  {hook && (
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] ring-1 ${HOOK_TONE[hook]}`}
+                    >
+                      {hook}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div
                 className={`mt-3 font-serif text-xl leading-snug sm:text-2xl ${
-                  isBest ? "text-ink" : "text-ink-dim"
+                  isBest || isChosen ? "text-ink" : "text-ink-dim"
                 }`}
               >
                 {future.name}
