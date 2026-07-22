@@ -1,3 +1,5 @@
+import { ScrollReveal } from "./ScrollReveal";
+
 const steps = [
   {
     num: "01",
@@ -64,9 +66,9 @@ export function Journey() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* Steps */}
         <div className="space-y-4">
-          {steps.map((s) => (
+          {steps.map((s, i) => (
+            <ScrollReveal key={s.num} delay={i * 60} variant="up">
             <div
-              key={s.num}
               className="group relative overflow-hidden rounded-2xl border border-line bg-bg-soft transition hover:border-line-strong"
             >
               <div className="grid grid-cols-1 gap-8 p-8 lg:grid-cols-12 lg:gap-12 lg:p-10">
@@ -115,11 +117,13 @@ export function Journey() {
                 </div>
               </div>
             </div>
+            </ScrollReveal>
           ))}
         </div>
 
         {/* Total time */}
-        <div className="mt-8 flex items-center justify-between rounded-2xl border border-line bg-bg-soft p-8">
+        <ScrollReveal delay={100} variant="scale" className="mt-8">
+        <div className="flex items-center justify-between rounded-2xl border border-line bg-bg-soft p-8">
           <div>
             <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
               Total end-to-end
@@ -140,6 +144,7 @@ export function Journey() {
             </div>
           </div>
         </div>
+        </ScrollReveal>
       </div>
     </section>
   );

@@ -9,6 +9,7 @@ import {
 } from "../../../application/planner/publicStartupSimulator";
 import { StartupLaunchPlanner } from "../../../application/planner/StartupLaunchPlanner";
 import { useAccessModal } from "../access/AccessModal";
+import { ScrollReveal } from "../../components/ScrollReveal";
 
 const EXAMPLES = [
   "AI meeting assistant that summarizes and assigns action items",
@@ -256,7 +257,7 @@ export function Simulate() {
 
 function IdleHint() {
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+    <ScrollReveal stagger variant="fade" className="grid grid-cols-1 gap-3 md:grid-cols-3">
       {[
         {
           n: "01",
@@ -282,7 +283,7 @@ function IdleHint() {
           <p className="mt-2 text-[13px] leading-[1.6] text-ink-dim">{card.d}</p>
         </div>
       ))}
-    </div>
+    </ScrollReveal>
   );
 }
 

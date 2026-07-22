@@ -40,8 +40,8 @@ export function WorkspaceSettingsPage() {
   };
 
   return (
-    <div className="space-y-10">
-      <div>
+    <div className="ws-cascade space-y-10">
+      <div className="header-enter">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">Settings</div>
         <h1 className="mt-2 font-serif text-3xl text-ink sm:text-4xl">Workspaces</h1>
         <p className="mt-2 text-sm text-ink-dim">
@@ -51,7 +51,7 @@ export function WorkspaceSettingsPage() {
       </div>
 
       {/* Active */}
-      <section className="border border-line p-4 sm:p-5">
+      <section className="border border-line p-4 transition duration-200 hover:border-line-strong sm:p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">Active</div>
         <dl className="mt-4 space-y-3">
           <Row label="Name" value={home.workspace.name} />
@@ -71,7 +71,10 @@ export function WorkspaceSettingsPage() {
           {workspaces.map((ws) => {
             const active = ws.id === home.workspace.id;
             return (
-              <li key={ws.id} className="flex items-center justify-between gap-3 py-3">
+              <li
+                key={ws.id}
+                className="flex items-center justify-between gap-3 py-3 transition-colors duration-200 hover:bg-chronos/5"
+              >
                 <div className="min-w-0">
                   <div className="truncate text-sm text-ink">
                     {ws.name}
@@ -88,7 +91,7 @@ export function WorkspaceSettingsPage() {
                     type="button"
                     disabled={busy}
                     onClick={() => void onSwitch(ws.id)}
-                    className="shrink-0 rounded-full border border-line px-3 py-1.5 text-xs text-ink hover:border-chronos/50 hover:text-chronos disabled:opacity-50"
+                    className="shrink-0 rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:border-chronos/50 hover:text-chronos disabled:opacity-50"
                   >
                     Switch
                   </button>
@@ -100,7 +103,7 @@ export function WorkspaceSettingsPage() {
       </section>
 
       {/* Create new */}
-      <section className="border border-line p-4 sm:p-5">
+      <section className="workspace-panel-enter border border-line p-4 sm:p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
           Create new workspace
         </div>

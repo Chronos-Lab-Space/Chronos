@@ -47,7 +47,7 @@ export function FutureTimelineCards({
   }
 
   return (
-    <section className="space-y-6">
+    <section className="ws-cascade space-y-6">
       <div>
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Timeline
@@ -56,7 +56,7 @@ export function FutureTimelineCards({
       </div>
 
       {/* Goal */}
-      <div className="rounded-2xl border border-line bg-bg-soft/30 px-4 py-4">
+      <div className="rounded-2xl border border-line bg-bg-soft/30 px-4 py-4 transition hover:border-line-strong">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">Goal</div>
         <div className="mt-1 font-serif text-2xl text-ink">{goalTitle}</div>
       </div>
@@ -66,7 +66,7 @@ export function FutureTimelineCards({
       </div>
 
       {/* Future cards */}
-      <div className="space-y-3">
+      <div className="ws-cascade space-y-3">
         {futures.map((future, index) => {
           const best = index === 0;
           const active = future.id === selectedId;
@@ -76,7 +76,7 @@ export function FutureTimelineCards({
               key={future.id}
               type="button"
               onClick={() => setSelectedId(future.id)}
-              className={`w-full rounded-2xl border px-4 py-4 text-left transition ${
+              className={`w-full rounded-2xl border px-4 py-4 text-left transition duration-200 ${
                 active
                   ? "border-chronos/50 bg-chronos/10"
                   : "border-line bg-bg hover:border-chronos/30"
@@ -102,7 +102,7 @@ export function FutureTimelineCards({
 
       {/* Selected detail */}
       {selected && (
-        <div className="rounded-2xl border border-line p-5">
+        <div key={selected.id} className="workspace-panel-enter rounded-2xl border border-line p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
               Future {futureCardLabel(selectedIndex)}

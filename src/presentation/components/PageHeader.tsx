@@ -14,7 +14,7 @@ export function PageHeader({ eyebrow, title, subtitle, breadcrumb }: PageHeaderP
         <div className="absolute inset-0 line-grid opacity-40" />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+      <div className="header-enter relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
         {/* Breadcrumb */}
         {breadcrumb && (
           <div className="mb-8 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">

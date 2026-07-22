@@ -20,6 +20,8 @@ type WorkspaceContextValue = {
   workspaces: WorkspaceRecord[];
   loading: boolean;
   error: string | null;
+  /** Non-fatal cloud dual-write / load failure (local data may still be fine). */
+  syncWarning: string | null;
   createWorkspace: (name: string, description?: string) => Promise<void>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
   setGoal: (title: string, description?: string) => Promise<void>;
@@ -43,6 +45,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncWarning, setSyncWarning] = useState<string | null>(null);
+
+  const pullRemoteWarning = useCallback(() => {
+    setSyncWarning(workspaceService.getRemoteError());
+  }, []);
 
   /**
    * Prefer local session (same source as ProtectedRoute) so createWorkspace
@@ -73,12 +80,14 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       ]);
       setHome(loaded);
       setWorkspaces(list);
+      pullRemoteWarning();
     } catch (err) {
       setError((err as Error).message);
+      pullRemoteWarning();
     } finally {
       setLoading(false);
     }
-  }, [resolveOwnerId]);
+  }, [resolveOwnerId, pullRemoteWarning]);
 
   useEffect(() => {
     void refresh();
@@ -111,13 +120,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         setHome(next);
         const list = await workspaceService.listWorkspaces(id);
         setWorkspaces(list);
+        pullRemoteWarning();
         return next;
       } catch (err) {
         setError((err as Error).message);
+        pullRemoteWarning();
         throw err;
       }
     },
-    [ownerId, resolveOwnerId]
+    [ownerId, resolveOwnerId, pullRemoteWarning]
   );
 
   const value = useMemo<WorkspaceContextValue>(
@@ -127,6 +138,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       workspaces,
       loading,
       error,
+      syncWarning,
       refresh,
       createWorkspace: async (name, description) => {
         await withOwner((id) => workspaceService.createWorkspace(id, name, description ?? ""));
@@ -175,7 +187,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         return next.recentSimulations[0]?.id ?? null;
       },
     }),
-    [ownerId, home, workspaces, loading, error, refresh, withOwner, resolveOwnerId]
+    [ownerId, home, workspaces, loading, error, syncWarning, refresh, withOwner, resolveOwnerId]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

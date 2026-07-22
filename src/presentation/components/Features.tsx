@@ -1,9 +1,11 @@
+import { ScrollReveal } from "./ScrollReveal";
+
 export function Features() {
   return (
     <section className="relative py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* Bento */}
-        <div className="grid grid-cols-12 gap-4">
+        <ScrollReveal stagger variant="fade" className="grid grid-cols-12 gap-4">
           {/* 1 — Hero: Temporal Fork (7 cols) — the only card with glow-border */}
           <div className="glow-border card-hover group relative col-span-12 overflow-hidden rounded-2xl border border-line bg-bg-soft p-10 lg:col-span-7 lg:p-12">
             <div className="flex h-full flex-col justify-between gap-10">
@@ -141,7 +143,7 @@ export function Features() {
               </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

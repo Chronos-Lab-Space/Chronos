@@ -58,7 +58,7 @@ export function GrokAdvisorPage() {
 
   return (
     <div className="flex min-h-[70vh] flex-col">
-      <div>
+      <div className="header-enter">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Grok · xAI
         </div>
@@ -69,7 +69,7 @@ export function GrokAdvisorPage() {
         </p>
       </div>
 
-      <div className="mt-4 rounded-xl border border-line bg-bg-soft/40 p-3">
+      <div className="workspace-panel-enter mt-4 rounded-xl border border-line bg-bg-soft/40 p-3">
         <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
           Context attached
         </div>
@@ -79,24 +79,24 @@ export function GrokAdvisorPage() {
         </pre>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="ws-cascade mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           disabled={busy}
           onClick={() => void quickAdvise()}
-          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink hover:border-chronos/50 hover:text-chronos disabled:opacity-50"
+          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos disabled:opacity-50"
         >
           Prioritize my goal
         </button>
         <Link
           to="/workspace/simulations?new=1"
-          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-dim hover:text-ink"
+          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-dim transition hover:text-ink"
         >
           Run simulation
         </Link>
         <Link
           to="/workspace/knowledge"
-          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-dim hover:text-ink"
+          className="rounded-full border border-line px-3 py-1.5 text-sm text-ink-dim transition hover:text-ink"
         >
           Add knowledge
         </Link>
@@ -112,7 +112,7 @@ export function GrokAdvisorPage() {
           messages.map((m, i) => (
             <div
               key={`${m.role}-${i}`}
-              className={`rounded-xl px-4 py-3 text-sm ${
+              className={`workspace-msg-enter rounded-xl px-4 py-3 text-sm ${
                 m.role === "user"
                   ? "ml-8 border border-line bg-bg text-ink"
                   : "mr-4 border border-chronos/25 bg-chronos/10 text-ink-dim"

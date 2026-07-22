@@ -1,4 +1,5 @@
 import { PageHeader } from "./PageHeader";
+import { ScrollReveal } from "./ScrollReveal";
 
 export type Release = {
   version: string;
@@ -184,19 +185,21 @@ export function ChangelogPage() {
       <section className="relative py-16 lg:py-20">
         <div className="mx-auto max-w-4xl px-6 lg:px-10">
           {/* Summary stats */}
-          <div className="mb-12 grid grid-cols-3 gap-4 rounded-xl border border-line bg-bg-soft p-5">
+          <ScrollReveal variant="fade" className="mb-12 grid grid-cols-3 gap-4 rounded-xl border border-line bg-bg-soft p-5">
             <Stat label="Releases" value={releases.length} />
             <Stat label="Current" value={releases[0].version} />
             <Stat label="Last shipped" value={releases[0].date.slice(0, 7)} />
-          </div>
+          </ScrollReveal>
 
           {/* Timeline */}
           <div className="relative space-y-8">
             {/* Vertical line */}
             <div className="absolute left-[27px] top-3 bottom-3 w-px bg-line" />
 
-            {releases.map((r) => (
-              <ReleaseCard key={r.version} release={r} />
+            {releases.map((r, i) => (
+              <ScrollReveal key={r.version} delay={Math.min(i * 50, 250)} variant="up">
+                <ReleaseCard release={r} />
+              </ScrollReveal>
             ))}
           </div>
 

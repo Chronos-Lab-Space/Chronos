@@ -23,21 +23,23 @@ export function MemoryPage() {
 
   return (
     <div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-        Memory
-      </div>
-      <h1 className="mt-2 font-serif text-3xl text-ink">History</h1>
-      <p className="mt-2 max-w-xl text-sm text-ink-dim">
-        Every simulation is saved. Reopen a report, re-run a lineage, or compare versions. No AI
-        memory — just durable history.
-      </p>
+      <div className="header-enter">
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+          Memory
+        </div>
+        <h1 className="mt-2 font-serif text-3xl text-ink">History</h1>
+        <p className="mt-2 max-w-xl text-sm text-ink-dim">
+          Every simulation is saved. Reopen a report, re-run a lineage, or compare versions. No AI
+          memory — just durable history.
+        </p>
 
-      <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-        {home.workspace.name} · {home.recentSimulations.length} runs
+        <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+          {home.workspace.name} · {home.recentSimulations.length} runs
+        </div>
       </div>
 
       {lineages.length === 0 ? (
-        <p className="mt-8 text-sm text-ink-dim">
+        <p className="workspace-panel-enter mt-8 text-sm text-ink-dim">
           No simulations yet.{" "}
           <Link to="/workspace/simulations?new=1" className="text-chronos">
             Run the engine
@@ -45,9 +47,12 @@ export function MemoryPage() {
           .
         </p>
       ) : (
-        <ul className="mt-8 space-y-6">
+        <ul className="ws-cascade mt-8 space-y-6">
           {lineages.map((line) => (
-            <li key={line.lineage_id} className="border border-line p-4">
+            <li
+              key={line.lineage_id}
+              className="border border-line p-4 transition duration-200 hover:border-line-strong"
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">

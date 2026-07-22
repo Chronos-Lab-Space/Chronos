@@ -28,7 +28,7 @@ export function KnowledgeSummary({ knowledge, notes }: Props) {
       </div>
       <Link
         to="/workspace/knowledge"
-        className="mt-4 grid grid-cols-3 gap-3 border border-line p-4 transition hover:border-chronos/40"
+        className="mt-4 grid grid-cols-3 gap-3 border border-line p-4 transition duration-200 hover:border-chronos/40 hover:bg-chronos/5"
       >
         <Stat label="Documents" value={counts.documents} />
         <Stat label="Notes" value={noteCount} />

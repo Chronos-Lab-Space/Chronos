@@ -1,8 +1,10 @@
+import { ScrollReveal } from "./ScrollReveal";
+
 export function Metrics() {
   return (
     <section className="relative py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-2 lg:grid-cols-4">
+        <ScrollReveal stagger variant="fade" className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-2 lg:grid-cols-4">
           {metrics.map((m) => (
             <div
               key={m.label}
@@ -46,7 +48,7 @@ export function Metrics() {
               </svg>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

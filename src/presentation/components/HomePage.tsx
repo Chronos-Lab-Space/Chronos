@@ -14,7 +14,7 @@ export function HomePage() {
         <div className="pointer-events-none absolute inset-0"><div className="absolute inset-0 line-grid opacity-30" /></div>
         <div className="relative mx-auto max-w-7xl px-4 pt-14 pb-16 sm:px-6 sm:pt-20 sm:pb-20 lg:px-10 lg:pt-28 lg:pb-28">
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-16">
-            <div className="min-w-0 lg:col-span-6">
+            <div className="hero-enter min-w-0 lg:col-span-6">
               <div className="mb-6 flex items-center gap-3 sm:mb-8">
                 <span className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-chronos blink" />
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim sm:text-[11px] sm:tracking-[0.25em]">Temporal Compute Platform</span>
@@ -42,7 +42,7 @@ export function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="relative min-w-0 overflow-hidden lg:col-span-6"><BranchingAnimation /></div>
+            <div className="hero-visual-enter relative min-w-0 overflow-hidden lg:col-span-6"><BranchingAnimation /></div>
           </div>
         </div>
       </section>
@@ -58,12 +58,12 @@ export function HomePage() {
             title={<>One objective.<br /><span className="italic text-ink-dim">A decision system.</span></>}
             body="Chronos treats an objective as work to be decomposed, simulated, evaluated, and ranked — not a prompt to answer once."
           />
-          <div className="mt-10 grid grid-cols-1 gap-0 divide-y divide-line border-y border-line sm:mt-14 md:grid-cols-2 md:divide-x lg:grid-cols-4 lg:divide-y-0">
+          <ScrollReveal stagger className="mt-10 grid grid-cols-1 gap-0 divide-y divide-line border-y border-line sm:mt-14 md:grid-cols-2 md:divide-x lg:grid-cols-4 lg:divide-y-0" variant="fade">
             <ProcessStep number="01" title="Plan" detail="The Planner turns a goal into a dependency-aware task graph." color="#60899B" />
             <ProcessStep number="02" title="Simulate" detail="The Runtime forks tasks into branches and executes registered capabilities." color="#CDCAB2" />
             <ProcessStep number="03" title="Evaluate" detail="Outcomes are scored for reward, risk, confidence, and constraints." color="#E2DDDA" />
             <ProcessStep number="04" title="Rank" detail="Timelines converge, then the best path becomes canonical and replayable." color="#60899B" />
-          </div>
+          </ScrollReveal>
         </div>
       </section></ScrollReveal>
 
@@ -75,11 +75,11 @@ export function HomePage() {
             title={<>Where decisions<br /><span className="italic text-ink-dim">have consequences.</span></>}
             body="Chronos is built for goals that require more than a plausible answer: they require a plan with evidence."
           />
-          <div className="mt-14 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-0">
+          <ScrollReveal stagger className="mt-14 grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-0" variant="fade">
             <UseCase index="01" title="Launch a startup" question="Should we raise, build enterprise, cut prices, or extend runway?" output="Competitor research → market estimate → roadmap → adoption → financial simulation → risk analysis" color="#E2DDDA" />
             <UseCase index="02" title="Ship a release" question="Should the team ship now, write tests, refactor, or defer?" output="Change-risk analysis → dependency check → test plan → release simulation → rollback constraints" color="#60899B" />
             <UseCase index="03" title="Manage a position" question="Should a trading system add, trim, hedge, or flatten before an event?" output="Event scenarios → market simulation → downside analysis → risk ranking → execution plan" color="#CDCAB2" />
-          </div>
+          </ScrollReveal>
         </div>
       </section></ScrollReveal>
 
@@ -122,7 +122,7 @@ await chronos.commit(outcome.bestTimeline);`}</code></pre>
       </section></ScrollReveal>
 
       {/* CTA */}
-      <CTA />
+      <ScrollReveal variant="scale"><CTA /></ScrollReveal>
     </>
   );
 }

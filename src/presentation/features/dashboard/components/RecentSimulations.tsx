@@ -47,9 +47,9 @@ export function RecentSimulations({ simulations }: Props) {
               </tr>
             ) : (
               simulations.map((sim) => (
-                <tr key={sim.id} className="hover:bg-chronos/5">
+                <tr key={sim.id} className="transition-colors duration-200 hover:bg-chronos/5">
                   <td className="py-3 pr-3">
-                    <Link to={`/workspace/simulations/${sim.id}`} className="text-ink hover:text-chronos">
+                    <Link to={`/workspace/simulations/${sim.id}`} className="text-ink transition hover:text-chronos">
                       {sim.title || "Untitled"}
                     </Link>
                   </td>

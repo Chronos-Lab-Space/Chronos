@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ScrollReveal } from "./ScrollReveal";
 
 const phases = [
   {
@@ -76,7 +77,7 @@ export function Roadmap() {
   return (
     <section className="relative py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <div className="mb-8 rounded-xl border border-line bg-bg-soft/60 p-4 sm:p-5">
+        <ScrollReveal variant="fade" className="mb-8 rounded-xl border border-line bg-bg-soft/60 p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             <span>Project timeline · 2026</span>
             <span className="flex items-center gap-2 text-chronos"><span className="h-1.5 w-1.5 rounded-full bg-chronos blink" /> Current point: Workspace MVP shipped · Cloud next</span>
@@ -90,9 +91,9 @@ export function Roadmap() {
               </div>
             ))}
           </div>
-        </div>
+        </ScrollReveal>
         {/* Phases */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ScrollReveal stagger className="grid grid-cols-1 gap-4 md:grid-cols-2" variant="fade">
           {phases.map((p) => (
             <div
               key={p.num}
@@ -173,13 +174,13 @@ export function Roadmap() {
               </div>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
 
         {/* Bottom note */}
-        <div className="mt-12 flex items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
+        <ScrollReveal delay={100} variant="fade" className="mt-12 flex items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 blink" />
           <span>All phases ship with backward compatibility guarantees</span>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

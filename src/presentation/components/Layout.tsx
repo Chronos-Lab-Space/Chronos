@@ -25,7 +25,9 @@ export function Layout() {
       <AccessModalProvider>
         <div className="relative z-10">
           <Nav />
-          <Outlet />
+          <div key={pathname} className="page-enter">
+            <Outlet />
+          </div>
           <Footer />
         </div>
       </AccessModalProvider>

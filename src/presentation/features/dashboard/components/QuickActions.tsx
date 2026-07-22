@@ -15,12 +15,12 @@ export function QuickActions() {
       <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
         Quick actions
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="ws-cascade mt-4 flex flex-wrap gap-2">
         {actions.map((action) => (
           <Link
             key={action.to}
             to={action.to}
-            className="inline-flex items-center rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
+            className="inline-flex items-center rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos hover:shadow-[0_0_0_1px_rgba(96,137,155,0.25)]"
           >
             {action.label}
           </Link>

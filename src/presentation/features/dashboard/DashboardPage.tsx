@@ -1,3 +1,4 @@
+import { ScrollReveal } from "../../components/ScrollReveal";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { KnowledgeSummary } from "./components/KnowledgeSummary";
@@ -17,19 +18,27 @@ export function DashboardPage() {
   const latest = home.recentSimulations[0] ?? null;
 
   return (
-    <div className="space-y-10">
+    <div className="ws-cascade space-y-10">
       <DashboardHeader
         workspace={home.workspace}
         goal={home.goal}
         userLabel={ownerId ? ownerId.slice(0, 8) : "You"}
       />
-      <MvpProgress home={home} />
-      <QuickActions />
-      <RecentSimulations simulations={home.recentSimulations} />
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        <KnowledgeSummary knowledge={home.knowledge} notes={home.notes} />
-        <TimelinePreview latest={latest} />
-      </div>
+      <ScrollReveal delay={40} variant="up">
+        <MvpProgress home={home} />
+      </ScrollReveal>
+      <ScrollReveal delay={80} variant="fade">
+        <QuickActions />
+      </ScrollReveal>
+      <ScrollReveal delay={120} variant="up">
+        <RecentSimulations simulations={home.recentSimulations} />
+      </ScrollReveal>
+      <ScrollReveal delay={160} variant="fade">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <KnowledgeSummary knowledge={home.knowledge} notes={home.notes} />
+          <TimelinePreview latest={latest} />
+        </div>
+      </ScrollReveal>
     </div>
   );
 }

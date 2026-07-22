@@ -10,7 +10,7 @@ type Props = {
 export function TimelinePreview({ latest }: Props) {
   if (!latest) {
     return (
-      <section className="border border-line p-5">
+      <section className="border border-line p-5 transition duration-200 hover:border-line-strong">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Timeline preview
         </div>
@@ -32,7 +32,7 @@ export function TimelinePreview({ latest }: Props) {
     "—";
 
   return (
-    <section className="border border-line p-5">
+    <section className="border border-line p-5 transition duration-200 hover:border-line-strong">
       <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
         Timeline preview
       </div>

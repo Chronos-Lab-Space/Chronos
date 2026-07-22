@@ -1,8 +1,11 @@
+import { ScrollReveal } from "./ScrollReveal";
+
 export function Intelligence() {
   return (
     <section className="relative py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* The feedback loop */}
+        <ScrollReveal variant="scale">
         <div className="glow-border relative overflow-hidden rounded-2xl border border-line bg-bg-soft p-10 lg:p-16">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
             {/* Left: The loop */}
@@ -84,9 +87,10 @@ export function Intelligence() {
             </div>
           </div>
         </div>
+        </ScrollReveal>
 
         {/* Bottom: The implication */}
-        <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+        <ScrollReveal stagger variant="fade" className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
           {[
             {
               title: "Day 1",
@@ -117,7 +121,7 @@ export function Intelligence() {
               </p>
             </div>
           ))}
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

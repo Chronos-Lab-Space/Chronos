@@ -97,8 +97,8 @@ export function KnowledgePage() {
   const err = localError || error;
 
   return (
-    <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="ws-cascade">
+      <div className="header-enter flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Knowledge
@@ -133,18 +133,18 @@ export function KnowledgePage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Keyword · title · content"
-          className="mt-2 w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-sm text-ink placeholder:text-ink-faint focus:border-chronos focus:outline-none"
+          className="mt-2 w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-sm text-ink placeholder:text-ink-faint transition focus:border-chronos focus:outline-none"
         />
       </div>
 
-      <div className="mt-6 grid grid-cols-3 gap-3 border border-line p-4">
+      <div className="mt-6 grid grid-cols-3 gap-3 border border-line p-4 transition hover:border-line-strong">
         <Stat label="Documents" value={counts.documents} />
         <Stat label="Notes" value={Math.max(home.notes.length, counts.notes)} />
         <Stat label="URLs" value={counts.urls} />
       </div>
 
       {panel === "upload" && (
-        <form onSubmit={onUpload} className="mt-8 space-y-3 border border-line p-4">
+        <form onSubmit={onUpload} className="workspace-panel-enter mt-8 space-y-3 border border-line p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Upload · PDF · Markdown · TXT
           </div>
@@ -181,7 +181,7 @@ export function KnowledgePage() {
       )}
 
       {panel === "import" && (
-        <form onSubmit={onImport} className="mt-8 space-y-3 border border-line p-4">
+        <form onSubmit={onImport} className="workspace-panel-enter mt-8 space-y-3 border border-line p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Import
           </div>
@@ -352,8 +352,8 @@ export function NotesPage() {
   };
 
   return (
-    <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="ws-cascade">
+      <div className="header-enter flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">Notes</div>
           <h1 className="mt-2 font-serif text-3xl text-ink">Working notes</h1>
@@ -362,7 +362,7 @@ export function NotesPage() {
           <button
             type="button"
             onClick={() => setParams({ new: "1" })}
-            className="rounded-full border border-line px-3 py-1.5 text-sm text-ink hover:border-chronos/50 hover:text-chronos"
+            className="rounded-full border border-line px-3 py-1.5 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
           >
             + Note
           </button>
@@ -373,11 +373,11 @@ export function NotesPage() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search notes · title · content"
-        className="mt-6 w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-sm text-ink focus:border-chronos focus:outline-none"
+        className="mt-6 w-full rounded-lg border border-line bg-bg px-3 py-2.5 text-sm text-ink transition focus:border-chronos focus:outline-none"
       />
 
       {isNew && (
-        <form onSubmit={submit} className="mt-8 space-y-4 border border-line p-4">
+        <form onSubmit={submit} className="workspace-panel-enter mt-8 space-y-4 border border-line p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Markdown note
           </div>

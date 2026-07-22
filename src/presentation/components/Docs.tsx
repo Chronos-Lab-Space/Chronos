@@ -167,21 +167,23 @@ export function Docs() {
               </div>
             </aside>
 
-            {/* Content */}
+            {/* Content — fade when section changes */}
             <main className="min-w-0 lg:col-span-9">
-              {section === "introduction" && <Introduction />}
-              {section === "getting-started" && <GettingStarted />}
-              {section === "workspaces" && <WorkspacesDocs />}
-              {section === "goals" && <GoalsDocs />}
-              {section === "knowledge" && <KnowledgeDocs />}
-              {section === "simulations" && <SimulationsDocs />}
-              {section === "timeline" && <TimelineDocs />}
-              {section === "memory" && <MemoryDocs />}
-              {section === "decision-reports" && <DecisionReportsDocs />}
-              {section === "api" && <ApiDocs />}
-              {section === "roadmap" && <RoadmapDocs />}
-              {section === "security" && <SecurityDocs />}
-              {section === "support" && <SupportDocs />}
+              <div key={section} className="page-enter">
+                {section === "introduction" && <Introduction />}
+                {section === "getting-started" && <GettingStarted />}
+                {section === "workspaces" && <WorkspacesDocs />}
+                {section === "goals" && <GoalsDocs />}
+                {section === "knowledge" && <KnowledgeDocs />}
+                {section === "simulations" && <SimulationsDocs />}
+                {section === "timeline" && <TimelineDocs />}
+                {section === "memory" && <MemoryDocs />}
+                {section === "decision-reports" && <DecisionReportsDocs />}
+                {section === "api" && <ApiDocs />}
+                {section === "roadmap" && <RoadmapDocs />}
+                {section === "security" && <SecurityDocs />}
+                {section === "support" && <SupportDocs />}
+              </div>
             </main>
           </div>
         </div>

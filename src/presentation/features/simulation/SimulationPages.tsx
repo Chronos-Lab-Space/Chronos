@@ -42,8 +42,8 @@ export function SimulationsPage() {
   };
 
   return (
-    <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="ws-cascade">
+      <div className="header-enter flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Simulation engine
@@ -64,7 +64,7 @@ export function SimulationsPage() {
       </div>
 
       {isNew && (
-        <form onSubmit={onSubmit} className="mt-8 space-y-4 border border-line p-4">
+        <form onSubmit={onSubmit} className="workspace-panel-enter mt-8 space-y-4 border border-line p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Run simulation
           </div>
@@ -163,9 +163,9 @@ export function SimulationsPage() {
               </tr>
             ) : (
               home.recentSimulations.map((sim) => (
-                <tr key={sim.id}>
+                <tr key={sim.id} className="transition-colors duration-200 hover:bg-chronos/5">
                   <td className="py-3 pr-3">
-                    <Link to={`/workspace/simulations/${sim.id}`} className="hover:text-chronos">
+                    <Link to={`/workspace/simulations/${sim.id}`} className="transition hover:text-chronos">
                       {sim.title}
                     </Link>
                   </td>
@@ -261,8 +261,8 @@ export function SimulationDetailPage() {
   const wantsRerun = params.get("rerun") === "1";
 
   return (
-    <div className="space-y-10">
-      <div>
+    <div className="ws-cascade space-y-10">
+      <div className="header-enter">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Report · {home.workspace.name}
         </div>
@@ -291,14 +291,14 @@ export function SimulationDetailPage() {
           {versions.length >= 2 && (
             <Link
               to={`/workspace/memory/compare?a=${versions[0].id}&b=${sim.id}`}
-              className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-chronos/50 hover:text-chronos"
+              className="rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
             >
               Compare versions
             </Link>
           )}
           <Link
             to="/workspace/memory"
-            className="rounded-full border border-line px-4 py-2 text-sm text-ink-dim hover:text-ink"
+            className="rounded-full border border-line px-4 py-2 text-sm text-ink-dim transition hover:text-ink"
           >
             Memory
           </Link>
@@ -314,7 +314,7 @@ export function SimulationDetailPage() {
 
         {grokError && <p className="mt-3 text-sm text-red-400">{grokError}</p>}
         {grokBrief && (
-          <div className="mt-4 rounded-xl border border-chronos/30 bg-chronos/5 p-4">
+          <div className="workspace-panel-enter mt-4 rounded-xl border border-chronos/30 bg-chronos/5 p-4">
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
               Grok brief
             </div>

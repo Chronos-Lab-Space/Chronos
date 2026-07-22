@@ -263,6 +263,22 @@ create table if not exists public.timeline_nodes (
 );
 
 -- ============================================================
+-- Workspace product privileges (authenticated only)
+-- Required after Supabase stopped auto-exposing new tables to the Data API.
+-- Full policies live in supabase/migrations/*_workspace_*.sql
+-- ============================================================
+
+grant usage on schema public to authenticated;
+
+grant select, insert, update, delete on public.workspaces to authenticated;
+grant select, insert, update, delete on public.goals to authenticated;
+grant select, insert, update, delete on public.simulations to authenticated;
+grant select, insert, update, delete on public.futures to authenticated;
+grant select, insert, update, delete on public.knowledge to authenticated;
+grant select, insert, update, delete on public.notes to authenticated;
+grant select, insert, update, delete on public.timeline_nodes to authenticated;
+
+-- ============================================================
 -- Done. Verify with:
 --   select * from access_requests order by submitted_at desc limit 10;
 -- ============================================================

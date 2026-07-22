@@ -50,7 +50,7 @@ export function WorkspaceOnboarding() {
 
   if (needsWorkspace) {
     return (
-      <section className="mx-auto max-w-md">
+      <section className="header-enter mx-auto max-w-md">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
           Get started
         </div>
@@ -59,7 +59,7 @@ export function WorkspaceOnboarding() {
           A workspace is your project HQ — goals, context, and simulations live here so you can
           leave and pick up where you stopped.
         </p>
-        <form onSubmit={submitWorkspace} className="mt-8 space-y-4">
+        <form onSubmit={submitWorkspace} className="workspace-panel-enter mt-8 space-y-4">
           <Field
             id="ws-name"
             label="Workspace name"
@@ -82,7 +82,7 @@ export function WorkspaceOnboarding() {
 
   if (needsGoal) {
     return (
-      <section className="mx-auto max-w-md">
+      <section className="header-enter mx-auto max-w-md">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
           Workspace: {home?.workspace.name}
         </div>
@@ -90,7 +90,7 @@ export function WorkspaceOnboarding() {
         <p className="mt-3 text-sm text-ink-dim">
           What decision are you working on? Simulations and knowledge revolve around it.
         </p>
-        <form onSubmit={submitGoal} className="mt-8 space-y-4">
+        <form onSubmit={submitGoal} className="workspace-panel-enter mt-8 space-y-4">
           <Field
             id="goal-title"
             label="Goal"

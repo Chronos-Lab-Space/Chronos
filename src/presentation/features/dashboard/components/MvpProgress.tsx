@@ -12,13 +12,13 @@ export function MvpProgress({ home }: { home: WorkspaceHome }) {
   const doneCount = gates.filter((g) => g.done).length;
 
   return (
-    <section className="border border-line p-4">
+    <section className="border border-line p-4 transition hover:border-line-strong">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           MVP path · {doneCount}/{gates.length}
         </div>
         {next ? (
-          <Link to={next.href} className="text-sm text-chronos hover:text-ink">
+          <Link to={next.href} className="text-sm text-chronos transition hover:text-ink">
             Next: {next.cta} →
           </Link>
         ) : (
@@ -26,7 +26,7 @@ export function MvpProgress({ home }: { home: WorkspaceHome }) {
         )}
       </div>
 
-      <ol className="mt-4 flex flex-wrap gap-2">
+      <ol className="ws-cascade mt-4 flex flex-wrap gap-2">
         {gates.map((gate) => (
           <li key={gate.id}>
             <Link
@@ -37,7 +37,7 @@ export function MvpProgress({ home }: { home: WorkspaceHome }) {
                   ? "bg-chronos/15 text-chronos"
                   : next?.id === gate.id
                     ? "border border-chronos/40 text-ink"
-                    : "border border-line text-ink-faint"
+                    : "border border-line text-ink-faint hover:border-line-strong hover:text-ink-dim"
               }`}
             >
               <span>{gate.done ? "✓" : gate.phase}</span>

@@ -215,13 +215,181 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 /* === Scroll-led motion === */
 .scroll-reveal {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 720ms cubic-bezier(0.16, 1, 0.3, 1), transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-up {
+  transform: translateY(22px);
+}
+
+.scroll-reveal-fade {
+  transform: none;
+}
+
+.scroll-reveal-scale {
+  transform: scale(0.97);
+}
+
+.scroll-reveal-left {
+  transform: translateX(-18px);
+}
+
+.scroll-reveal-right {
+  transform: translateX(18px);
 }
 
 .scroll-reveal-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
+}
+
+/* Stagger cascade for direct children once the parent is visible */
+.scroll-reveal-stagger.scroll-reveal-visible > * {
+  animation: motion-fade-up 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(1) { animation-delay: 0ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(2) { animation-delay: 70ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(3) { animation-delay: 140ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(4) { animation-delay: 210ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(5) { animation-delay: 280ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(6) { animation-delay: 350ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(7) { animation-delay: 420ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(8) { animation-delay: 490ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(9) { animation-delay: 560ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(10) { animation-delay: 630ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(n + 11) { animation-delay: 700ms; }
+
+@keyframes motion-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Route / page entrance */
+.page-enter {
+  animation: page-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Soft header fade-in (used by PageHeader) */
+.header-enter > * {
+  animation: motion-fade-up 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.header-enter > *:nth-child(1) { animation-delay: 40ms; }
+.header-enter > *:nth-child(2) { animation-delay: 120ms; }
+.header-enter > *:nth-child(3) { animation-delay: 200ms; }
+.header-enter > *:nth-child(4) { animation-delay: 280ms; }
+
+/* Hero copy cascade on first paint */
+.hero-enter > * {
+  animation: motion-fade-up 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-enter > *:nth-child(1) { animation-delay: 60ms; }
+.hero-enter > *:nth-child(2) { animation-delay: 160ms; }
+.hero-enter > *:nth-child(3) { animation-delay: 260ms; }
+.hero-enter > *:nth-child(4) { animation-delay: 360ms; }
+
+.hero-visual-enter {
+  animation: hero-visual-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 200ms;
+}
+
+@keyframes hero-visual-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* FAQ / details soft open */
+.faq-item {
+  transition: background-color 220ms ease;
+}
+
+.faq-item summary {
+  transition: color 200ms ease;
+}
+
+.faq-item[open] summary + * {
+  animation: motion-fade-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* === Workspace product motion (quiet, same language as marketing) === */
+.ws-cascade > * {
+  animation: motion-fade-up 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ws-cascade > *:nth-child(1) { animation-delay: 30ms; }
+.ws-cascade > *:nth-child(2) { animation-delay: 90ms; }
+.ws-cascade > *:nth-child(3) { animation-delay: 150ms; }
+.ws-cascade > *:nth-child(4) { animation-delay: 210ms; }
+.ws-cascade > *:nth-child(5) { animation-delay: 270ms; }
+.ws-cascade > *:nth-child(6) { animation-delay: 330ms; }
+.ws-cascade > *:nth-child(7) { animation-delay: 390ms; }
+.ws-cascade > *:nth-child(n + 8) { animation-delay: 450ms; }
+
+.workspace-drawer-enter {
+  animation: workspace-drawer-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes workspace-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.workspace-panel-enter {
+  animation: motion-fade-up 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.workspace-banner-enter {
+  animation: motion-fade-up 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.workspace-msg-enter {
+  animation: motion-fade-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.workspace-nav-active {
+  transition:
+    color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.workspace-nav-active[aria-current="page"],
+.workspace-nav-active.active {
+  box-shadow: inset 0 -2px 0 0 color-mix(in srgb, var(--color-chronos) 70%, transparent);
 }
 
 @keyframes star-twinkle {
@@ -237,7 +405,33 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 @media (prefers-reduced-motion: reduce) {
   .star-field-dot,
   .star-field-flare { animation: none; }
-  .scroll-reveal { opacity: 1; transform: none; transition: none; }
+
+  .scroll-reveal,
+  .scroll-reveal-up,
+  .scroll-reveal-fade,
+  .scroll-reveal-scale,
+  .scroll-reveal-left,
+  .scroll-reveal-right {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .scroll-reveal-stagger.scroll-reveal-visible > *,
+  .page-enter,
+  .header-enter > *,
+  .hero-enter > *,
+  .hero-visual-enter,
+  .faq-item[open] summary + *,
+  .ws-cascade > *,
+  .workspace-drawer-enter,
+  .workspace-panel-enter,
+  .workspace-banner-enter,
+  .workspace-msg-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 import { ChronosCMark } from "../../components/ChronosCMark";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
@@ -36,7 +36,8 @@ export function WorkspaceShell() {
 
 function WorkspaceShellInner() {
   const navigate = useNavigate();
-  const { home, loading } = useWorkspace();
+  const location = useLocation();
+  const { home, loading, syncWarning, error } = useWorkspace();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -45,6 +46,8 @@ function WorkspaceShellInner() {
   };
 
   const ready = Boolean(home?.workspace && home.goal);
+  // Key route segments so page-enter re-runs on workspace navigation (not query-only).
+  const routeKey = location.pathname;
 
   return (
     <div className="min-h-dvh bg-bg pb-20 md:pb-0">
@@ -68,7 +71,7 @@ function WorkspaceShellInner() {
                 <div className="font-chronos-wordmark text-[18px] leading-none text-ink sm:text-[20px]">
                   Chronos
                 </div>
-                <div className="mt-0.5 truncate text-[11px] text-ink-dim sm:text-[12px]">
+                <div className="mt-0.5 truncate text-[11px] text-ink-dim transition-opacity duration-300 sm:text-[12px]">
                   {home ? home.workspace.name : "Workspace"}
                 </div>
               </div>
@@ -84,7 +87,7 @@ function WorkspaceShellInner() {
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
-                    `rounded-full px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition ${
+                    `workspace-nav-active rounded-full px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.14em] ${
                       isActive
                         ? "bg-chronos/15 text-chronos"
                         : "text-ink-dim hover:bg-bg-soft/40 hover:text-ink"
@@ -108,7 +111,10 @@ function WorkspaceShellInner() {
 
         {/* Mobile drawer */}
         {ready && menuOpen && (
-          <nav className="border-t border-line bg-bg md:hidden" aria-label="Workspace menu">
+          <nav
+            className="workspace-drawer-enter border-t border-line bg-bg md:hidden"
+            aria-label="Workspace menu"
+          >
             <div className="mx-auto flex max-w-3xl flex-col gap-0.5 px-3 py-2">
               {desktopNavItems.map((item) => (
                 <NavLink
@@ -130,14 +136,14 @@ function WorkspaceShellInner() {
               <NavLink
                 to="/workspace/notes?new=1"
                 onClick={() => setMenuOpen(false)}
-                className="rounded-md px-3 py-3 text-[15px] text-ink-dim"
+                className="rounded-md px-3 py-3 text-[15px] text-ink-dim transition hover:bg-bg-soft/40 hover:text-ink"
               >
                 + Note
               </NavLink>
               <NavLink
                 to="/workspace/settings"
                 onClick={() => setMenuOpen(false)}
-                className="rounded-md px-3 py-3 text-[15px] text-chronos"
+                className="rounded-md px-3 py-3 text-[15px] text-chronos transition hover:bg-chronos/10"
               >
                 + New workspace
               </NavLink>
@@ -147,8 +153,29 @@ function WorkspaceShellInner() {
       </header>
 
       <main className="mx-auto max-w-3xl px-4 py-6 sm:px-5 sm:py-8">
+        {syncWarning && (
+          <div className="workspace-banner-enter mb-4 rounded-xl border border-accent-warm/35 bg-accent-warm/10 px-4 py-3 text-[13px] leading-[1.55] text-ink-dim">
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent-warm">
+              Cloud sync warning
+            </div>
+            <p className="mt-1">
+              Workspace is running from local storage. Supabase dual-write failed:{" "}
+              <span className="text-ink">{syncWarning}</span>
+            </p>
+            <p className="mt-2 text-[12px] text-ink-faint">
+              Common fix: run the latest SQL migration in the Supabase SQL editor so{" "}
+              <code className="text-ink-dim">authenticated</code> has table grants on workspaces /
+              simulations / knowledge.
+            </p>
+          </div>
+        )}
+        {error && !syncWarning && (
+          <div className="workspace-banner-enter mb-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-[13px] text-ink-dim">
+            {error}
+          </div>
+        )}
         {loading ? (
-          <div className="flex min-h-[40vh] items-center justify-center">
+          <div className="page-enter flex min-h-[40vh] items-center justify-center">
             <div className="text-center">
               <div className="mx-auto h-6 w-6 rounded-full border border-chronos border-t-transparent animate-spin" />
               <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-ink-faint">
@@ -157,9 +184,13 @@ function WorkspaceShellInner() {
             </div>
           </div>
         ) : !ready ? (
-          <WorkspaceOnboarding />
+          <div key="onboarding" className="page-enter">
+            <WorkspaceOnboarding />
+          </div>
         ) : (
-          <Outlet />
+          <div key={routeKey} className="page-enter">
+            <Outlet />
+          </div>
         )}
       </main>
 
@@ -177,8 +208,8 @@ function WorkspaceShellInner() {
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `flex flex-col items-center justify-center rounded-lg px-1 py-2 font-mono text-[9px] uppercase tracking-[0.08em] ${
-                    isActive ? "text-chronos" : "text-ink-faint"
+                  `workspace-nav-active flex flex-col items-center justify-center rounded-lg px-1 py-2 font-mono text-[9px] uppercase tracking-[0.08em] ${
+                    isActive ? "bg-chronos/10 text-chronos" : "text-ink-faint hover:text-ink-dim"
                   }`
                 }
               >
