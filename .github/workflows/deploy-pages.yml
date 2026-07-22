@@ -30,8 +30,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Vite bakes VITE_* into the static bundle at build time.
+      # Set these under: Repo → Settings → Secrets and variables → Actions
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Build
-        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::error::Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY repository secrets"
+            exit 1
+          fi
+          if [ -z "$VITE_SENTRY_DSN" ]; then
+            echo "::warning::VITE_SENTRY_DSN not set — production build will use console-only error monitoring"
+          else
+            echo "Sentry DSN present — client error monitoring enabled for production build"
+          fi
+          npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

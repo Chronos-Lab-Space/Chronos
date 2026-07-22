@@ -22,11 +22,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
       - name: Run Vitest unit tests
         run: npm run test:unit
 
+      # playwright.config webServer injects VITE_E2E_AUTH=true for mock sessions
       - name: Run Playwright E2E tests
+        env:
+          VITE_E2E_AUTH: "true"
+          CI: "true"
         run: npm run test:e2e
