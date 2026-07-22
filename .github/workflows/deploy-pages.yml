@@ -45,10 +45,11 @@ jobs:
             echo "::error::Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY repository secrets"
             exit 1
           fi
+          # Prefer secret; else Vite loads committed .env.production (public client DSN).
           if [ -z "$VITE_SENTRY_DSN" ]; then
-            echo "::warning::VITE_SENTRY_DSN not set — production build will use console-only error monitoring"
+            echo "::notice::VITE_SENTRY_DSN secret unset — using .env.production if present"
           else
-            echo "Sentry DSN present — client error monitoring enabled for production build"
+            echo "Sentry DSN secret present — overrides .env.production for this build"
           fi
           npm run build
 

@@ -3,6 +3,8 @@ dist/
 .env
 .env.*
 !.env.example
+# Public client DSN only — never put service_role or private keys here
+!.env.production
 playwright-report/
 test-results/
 .DS_Store
