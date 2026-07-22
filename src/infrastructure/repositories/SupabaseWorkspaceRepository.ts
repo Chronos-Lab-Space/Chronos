@@ -118,6 +118,7 @@ export class SupabaseWorkspaceRepository {
     return {
       workspace,
       goal: goalRes.data?.[0] ? mapGoal(goalRes.data[0]) : null,
+      goalHistory: [],
       recentSimulations: simulations,
       knowledge: (knowledgeRes.data ?? []).map(mapKnowledge),
       notes: (notesRes.data ?? []).map(mapNote),
@@ -245,6 +246,16 @@ export class SupabaseWorkspaceRepository {
         if (error) throw error;
       }
     }
+  }
+
+  async deleteKnowledge(knowledgeId: string): Promise<void> {
+    const { error } = await this.client.from("knowledge").delete().eq("id", knowledgeId);
+    if (error) throw error;
+  }
+
+  async deleteNote(noteId: string): Promise<void> {
+    const { error } = await this.client.from("notes").delete().eq("id", noteId);
+    if (error) throw error;
   }
 }
 

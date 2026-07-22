@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@playwright/test": "^1.61.1",
+    "@sentry/react": "^10.67.0",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
     "@testing-library/jest-dom": "^6.9.1",

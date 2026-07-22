@@ -6,12 +6,23 @@ import {
   useMemo,
   useState,
 } from "react";
+import { accountBootstrapService } from "../../../application/workspace/AccountBootstrapService";
 import { workspaceService } from "../../../application/workspace/WorkspaceService";
 import type {
+  UserPreferences,
+} from "../../../domain/workspace/betaChecklist";
+import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
+import type {
   KnowledgeType,
+  OutcomeFollowed,
   WorkspaceHome,
   WorkspaceRecord,
 } from "../../../domain/workspace/types";
+import { trackProductEvent } from "../../../infrastructure/analytics/productAnalytics";
+import {
+  loadUserPreferences,
+  saveUserPreferences,
+} from "../../../infrastructure/auth/userPreferencesStore";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 
 type WorkspaceContextValue = {
@@ -20,8 +31,6 @@ type WorkspaceContextValue = {
   workspaces: WorkspaceRecord[];
   loading: boolean;
   error: string | null;
-  /** Non-fatal cloud dual-write / load failure (local data may still be fine). */
-  syncWarning: string | null;
   createWorkspace: (name: string, description?: string) => Promise<void>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
   setGoal: (title: string, description?: string) => Promise<void>;
@@ -31,9 +40,31 @@ type WorkspaceContextValue = {
     content?: string;
     metadata?: Record<string, unknown>;
   }) => Promise<void>;
+  updateKnowledge: (
+    knowledgeId: string,
+    patch: {
+      title?: string;
+      content?: string;
+      metadata?: Record<string, unknown>;
+      type?: KnowledgeType;
+    }
+  ) => Promise<void>;
+  deleteKnowledge: (knowledgeId: string) => Promise<void>;
   addNote: (title: string, content: string) => Promise<void>;
+  deleteNote: (noteId: string) => Promise<void>;
+  /** Returns the new simulation id so the UI can open Compare → Report → Save. */
   runSimulation: (objective: string, constraints?: string[]) => Promise<string | null>;
   rerunSimulation: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
+  chooseBestPath: (simulationId: string, futureId: string) => Promise<void>;
+  recordOutcomeFollowed: (
+    simulationId: string,
+    followed: OutcomeFollowed
+  ) => Promise<void>;
+  recordOutcomeResult: (simulationId: string, resultNote: string) => Promise<void>;
+  preferences: UserPreferences;
+  updatePreferences: (patch: Partial<UserPreferences>) => void;
+  markLlmConnected: () => void;
+  markShareAcknowledged: () => void;
   refresh: () => Promise<void>;
 };
 
@@ -45,16 +76,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [syncWarning, setSyncWarning] = useState<string | null>(null);
+  const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
 
-  const pullRemoteWarning = useCallback(() => {
-    setSyncWarning(workspaceService.getRemoteError());
-  }, []);
-
-  /**
-   * Prefer local session (same source as ProtectedRoute) so createWorkspace
-   * does not race a null ownerId after magic-link recovery or slow first paint.
-   */
   const resolveOwnerId = useCallback(async (): Promise<string | null> => {
     const session = await authService.currentSession();
     if (session?.user?.id) return session.user.id;
@@ -66,30 +89,41 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const id = await resolveOwnerId();
-      if (!id) {
+      const session = await authService.currentSession();
+      const user = session?.user ?? (await authService.currentUser());
+      const id = user?.id ?? null;
+      if (!id || !user) {
         setOwnerId(null);
         setHome(null);
         setWorkspaces([]);
+        setPreferences(DEFAULT_PREFERENCES);
         return;
       }
       setOwnerId(id);
+      setPreferences(loadUserPreferences(id));
+
+      // Profile → personal workspace → owner membership
+      try {
+        await accountBootstrapService.ensureAccount(user);
+      } catch (err) {
+        console.warn("[chronos] account bootstrap failed", err);
+      }
+
       const [loaded, list] = await Promise.all([
         workspaceService.load(id),
         workspaceService.listWorkspaces(id),
       ]);
       setHome(loaded);
       setWorkspaces(list);
-      pullRemoteWarning();
     } catch (err) {
       setError((err as Error).message);
-      pullRemoteWarning();
     } finally {
       setLoading(false);
     }
-  }, [resolveOwnerId, pullRemoteWarning]);
+  }, []);
 
   useEffect(() => {
+    trackProductEvent("session_start");
     void refresh();
     const { data } = authService.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
@@ -99,6 +133,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         return;
       }
+      trackProductEvent("session_start", { authEvent: event });
       void refresh();
     });
     return () => data.subscription.unsubscribe();
@@ -113,22 +148,28 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         throw new Error(message);
       }
       if (!ownerId) setOwnerId(id);
-
       setError(null);
       try {
         const next = await action(id);
         setHome(next);
         const list = await workspaceService.listWorkspaces(id);
         setWorkspaces(list);
-        pullRemoteWarning();
         return next;
       } catch (err) {
         setError((err as Error).message);
-        pullRemoteWarning();
         throw err;
       }
     },
-    [ownerId, resolveOwnerId, pullRemoteWarning]
+    [ownerId, resolveOwnerId]
+  );
+
+  const updatePreferences = useCallback(
+    (patch: Partial<UserPreferences>) => {
+      if (!ownerId) return;
+      const next = saveUserPreferences(ownerId, patch);
+      setPreferences(next);
+    },
+    [ownerId]
   );
 
   const value = useMemo<WorkspaceContextValue>(
@@ -138,10 +179,19 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       workspaces,
       loading,
       error,
-      syncWarning,
+      preferences,
+      updatePreferences,
+      markLlmConnected: () => updatePreferences({ llmProviderConnected: true }),
+      markShareAcknowledged: () => updatePreferences({ shareAcknowledged: true }),
       refresh,
       createWorkspace: async (name, description) => {
-        await withOwner((id) => workspaceService.createWorkspace(id, name, description ?? ""));
+        const next = await withOwner((id) =>
+          workspaceService.createWorkspace(id, name, description ?? "")
+        );
+        trackProductEvent("workspace_created", {
+          workspaceId: next.workspace.id,
+          name: next.workspace.name,
+        });
       },
       switchWorkspace: async (workspaceId) => {
         const id = ownerId ?? (await resolveOwnerId());
@@ -156,8 +206,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         try {
           const next = await workspaceService.switchWorkspace(id, workspaceId);
           setHome(next);
-          const list = await workspaceService.listWorkspaces(id);
-          setWorkspaces(list);
+          setWorkspaces(await workspaceService.listWorkspaces(id));
+          trackProductEvent("workspace_opened", { workspaceId });
         } catch (err) {
           setError((err as Error).message);
           throw err;
@@ -167,27 +217,89 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       },
       setGoal: async (title, description) => {
         await withOwner((id) => workspaceService.setGoal(id, title, description ?? ""));
+        trackProductEvent("goal_set", { titleLength: title.trim().length });
       },
       addKnowledge: async (input) => {
         await withOwner((id) => workspaceService.addKnowledge(id, input));
+        trackProductEvent("knowledge_added", { type: input.type });
+      },
+      updateKnowledge: async (knowledgeId, patch) => {
+        await withOwner((id) => workspaceService.updateKnowledge(id, knowledgeId, patch));
+      },
+      deleteKnowledge: async (knowledgeId) => {
+        await withOwner((id) => workspaceService.deleteKnowledge(id, knowledgeId));
       },
       addNote: async (title, content) => {
         await withOwner((id) => workspaceService.addNote(id, title, content));
+        trackProductEvent("knowledge_added", { type: "note" });
+      },
+      deleteNote: async (noteId) => {
+        await withOwner((id) => workspaceService.deleteNote(id, noteId));
       },
       runSimulation: async (objective, constraints = []) => {
+        trackProductEvent("simulation_started", {
+          objectiveLength: objective.trim().length,
+          constraintCount: constraints.length,
+        });
         const next = await withOwner((id) =>
           workspaceService.runSimulation(id, objective, constraints)
         );
-        return next.recentSimulations[0]?.id ?? null;
+        const sim = next.recentSimulations[0];
+        trackProductEvent("simulation_completed", {
+          simulationId: sim?.id,
+          status: sim?.status,
+          futures: sim?.result?.futures_count,
+        });
+        return sim?.id ?? null;
       },
       rerunSimulation: async (parentSimulationId, constraints) => {
+        trackProductEvent("simulation_started", {
+          parentSimulationId,
+          rerun: true,
+        });
         const next = await withOwner((id) =>
           workspaceService.rerunSimulation(id, parentSimulationId, constraints)
         );
-        return next.recentSimulations[0]?.id ?? null;
+        const sim = next.recentSimulations[0];
+        trackProductEvent("simulation_completed", {
+          simulationId: sim?.id,
+          status: sim?.status,
+          rerun: true,
+        });
+        return sim?.id ?? null;
+      },
+      chooseBestPath: async (simulationId, futureId) => {
+        await withOwner((id) => workspaceService.chooseBestPath(id, simulationId, futureId));
+        trackProductEvent("path_chosen", { simulationId, futureId });
+      },
+      recordOutcomeFollowed: async (simulationId, followed) => {
+        await withOwner((id) =>
+          workspaceService.recordOutcomeFollowed(id, simulationId, followed)
+        );
+        trackProductEvent("outcome_followed", { simulationId, followed });
+      },
+      recordOutcomeResult: async (simulationId, resultNote) => {
+        await withOwner((id) =>
+          workspaceService.recordOutcomeResult(id, simulationId, resultNote)
+        );
+        trackProductEvent("outcome_result", {
+          simulationId,
+          noteLength: resultNote.trim().length,
+        });
       },
     }),
-    [ownerId, home, workspaces, loading, error, syncWarning, refresh, withOwner, resolveOwnerId]
+    [
+      ownerId,
+      home,
+      workspaces,
+      loading,
+      error,
+      preferences,
+      updatePreferences,
+      refresh,
+      withOwner,
+      resolveOwnerId,
+    ]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

@@ -11,49 +11,60 @@ const faqs: FaqItem[] = [
   {
     question: "What is Chronos?",
     answer:
-      "Chronos is a decision intelligence platform that helps people and AI explore multiple possible futures before making important decisions.",
+      "Chronos is a decision intelligence platform. You set an objective and context; it generates multiple futures, compares trade-offs, and recommends a path with transparent reasons — then remembers goals, runs, and outcomes.",
   },
   {
-    question: "How is Chronos different from LLM models?",
+    question: "How is Chronos different from LLM chatbots?",
     answer: (
       <>
-        <p>Most LLM models generate a single response.</p>
+        <p>Most models return a single answer.</p>
         <p className="mt-3">
-          Chronos evaluates multiple possible strategies, compares trade-offs, and
-          recommends the strongest path based on your goals and context.
+          Chronos runs branch → simulate → collapse: multiple strategies, scored
+          trade-offs, a ranked recommendation with “Recommended because” reasons,
+          and a Decision Report you can share and reopen later.
         </p>
       </>
     ),
   },
   {
+    question: "What does branch → simulate → collapse mean?",
+    answer:
+      "Branch generates alternative futures. Simulate scores each against your goal and constraints. Collapse ranks them into a recommendation and Decision Report — you still choose which path to save.",
+  },
+  {
+    question: "Why should I trust a recommendation?",
+    answer:
+      "Every recommendation explains why in plain language (e.g. lowest execution risk, fits your objective, fewer dependencies, highest expected success), plus alternatives, confidence, risks, and next actions.",
+  },
+  {
     question: "Who is Chronos for?",
     answer:
-      "Chronos is designed for founders, developers, product managers, researchers, and teams making complex decisions.",
+      "Founders, developers, product managers, researchers, and teams making complex decisions where one-shot answers are not enough.",
   },
   {
     question: "How does a simulation work?",
     answer:
-      "You define a goal, provide context, and set any constraints. Chronos generates multiple possible futures, evaluates them, and presents recommendations with supporting reasoning and trade-offs.",
+      "Define a goal, add knowledge/context, set constraints, then generate futures. Compare paths, read the Decision Report, choose a path, and optionally log whether you followed it and how it turned out.",
   },
   {
     question: "What is a workspace?",
     answer:
-      "A workspace is where your goals, knowledge, simulations, and decision history are stored.",
+      "A private HQ for goals, knowledge, simulations, decision history, and outcomes. You can create multiple workspaces and switch without losing history.",
   },
   {
     question: "What is the Knowledge Library?",
     answer:
-      "The Knowledge Library stores documents, notes, and web resources that provide context for simulations.",
+      "Documents, notes, and web resources that ground simulations. Context used in a run is listed on the Decision Report.",
   },
   {
-    question: "Can I revisit previous simulations?",
+    question: "Can I leave and come back later?",
     answer:
-      "Yes. Every simulation is saved, allowing you to compare results over time and rerun them as your context changes.",
+      "Yes. Previous goals, simulations, saved decisions, knowledge, and outcome notes persist. Memory is one of Chronos’ core advantages.",
   },
   {
     question: "Is Chronos available today?",
     answer:
-      "Chronos is currently in active development. You can join the private beta to get early access.",
+      "Chronos is in private beta. The core idea → decision loop works; see Docs → Beta limitations for current edges.",
   },
   {
     question: "What is CLAB?",

@@ -93,8 +93,8 @@ export function Features() {
               State that <span className="italic">never lies.</span>
             </h3>
             <p className="mt-4 text-[13px] leading-[1.7] text-ink-dim">
-              Every byte is cryptographically time-anchored. Replay any moment,
-              on any branch, with perfect fidelity.
+              Versioned simulations and saved paths stay in workspace memory so
+              you can reopen, re-run, and compare decisions over time.
             </p>
             <TimelineViz />
           </div>
@@ -112,9 +112,8 @@ export function Features() {
                   <span className="italic">evaluated in full.</span>
                 </h3>
                 <p className="mt-5 max-w-lg text-[14px] leading-[1.7] text-ink-dim">
-                  Run every plausible future simultaneously. Compare, score,
-                  and collapse into a single optimal action — or keep all of
-                  them running as a persistent ensemble.
+                  Compare ranked futures side by side — confidence, risk, and
+                  trade-offs — then collapse into a Decision Report you can save.
                 </p>
               </div>
               <ParallelViz />

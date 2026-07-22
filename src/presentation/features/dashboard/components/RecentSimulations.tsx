@@ -15,7 +15,7 @@ export function RecentSimulations({ simulations }: Props) {
     <section>
       <div className="flex items-baseline justify-between gap-3">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Recent simulations
+          What simulations have I run?
         </div>
         <Link
           to="/workspace/simulations"

@@ -1,13 +1,27 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  formatDurationMs,
+  getProductAnalyticsSnapshot,
+} from "../../../infrastructure/analytics/productAnalytics";
 import { useWorkspace } from "./WorkspaceContext";
 
-/** Workspace settings — switch, create, inspect. */
+/** Workspace settings — switch, create, inspect, share. */
 export function WorkspaceSettingsPage() {
-  const { home, workspaces, createWorkspace, switchWorkspace, error } = useWorkspace();
+  const {
+    home,
+    workspaces,
+    createWorkspace,
+    switchWorkspace,
+    error,
+    preferences,
+    markShareAcknowledged,
+  } = useWorkspace();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [shareNote, setShareNote] = useState<string | null>(null);
+  const analytics = useMemo(() => getProductAnalyticsSnapshot(), [home]);
 
   if (!home) return null;
 
@@ -102,6 +116,36 @@ export function WorkspaceSettingsPage() {
         </ul>
       </section>
 
+      {/* Share workspace (beta checklist) */}
+      <section className="border border-line p-4 sm:p-5">
+        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
+          Share workspace
+        </div>
+        <p className="mt-2 text-sm text-ink-dim">
+          Membership is ready for multi-user workspaces. For this beta, copy a share
+          note for teammates — full invites land next.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={async () => {
+              const text = `Join my Chronos workspace “${home.workspace.name}” — sign in at ${typeof window !== "undefined" ? window.location.origin : "https://chronoslab.space"}/login?intent=start`;
+              try {
+                await navigator.clipboard.writeText(text);
+                setShareNote("Share text copied.");
+              } catch {
+                setShareNote(text);
+              }
+              markShareAcknowledged();
+            }}
+            className="rounded-full bg-ink px-4 py-2 text-sm text-bg hover:bg-chronos"
+          >
+            {preferences.shareAcknowledged ? "Copy share text again" : "Copy share text"}
+          </button>
+        </div>
+        {shareNote && <p className="mt-3 text-sm text-chronos">{shareNote}</p>}
+      </section>
+
       {/* Create new */}
       <section className="workspace-panel-enter border border-line p-4 sm:p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
@@ -132,6 +176,30 @@ export function WorkspaceSettingsPage() {
         {(localError || error) && (
           <p className="mt-3 text-sm text-red-400">{localError || error}</p>
         )}
+      </section>
+
+      {/* Local product analytics (beta instrumentation) */}
+      <section className="border border-line p-4 sm:p-5">
+        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
+          Product analytics (this browser)
+        </div>
+        <p className="mt-2 text-sm text-ink-dim">
+          Funnel counters for beta learning — workspace creation, simulations, time
+          to first decision, exports, and return visits. Never blocks the product.
+        </p>
+        <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Row label="Workspaces created" value={String(analytics.workspace_created)} />
+          <Row label="Simulations started" value={String(analytics.simulation_started)} />
+          <Row label="Simulations completed" value={String(analytics.simulation_completed)} />
+          <Row label="Paths chosen" value={String(analytics.path_chosen)} />
+          <Row label="Reports exported" value={String(analytics.report_exported)} />
+          <Row label="Sessions (days)" value={String(analytics.sessions)} />
+          <Row label="Active days" value={String(analytics.retention_days)} />
+          <Row
+            label="Time to first decision"
+            value={formatDurationMs(analytics.time_to_first_decision_ms)}
+          />
+        </dl>
       </section>
     </div>
   );

@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
+  deriveFutureHooks,
   deriveNextSteps,
   futureCardLabel,
-  TIMELINE_LATER_FEATURES,
+  type FutureHookLabel,
 } from "../../../domain/workspace/timeline";
 import { confidencePercent } from "../../../domain/workspace/seed";
 import type { FutureRecord } from "../../../domain/workspace/types";
@@ -10,184 +12,210 @@ import type { FutureRecord } from "../../../domain/workspace/types";
 type Props = {
   goalTitle: string;
   futures: readonly FutureRecord[];
-  /** Optional risks from the simulation for the best path */
   simulationRisks?: readonly string[];
+  chosenFutureId?: string | null;
+  selectedId?: string | null;
+  onSelect?: (futureId: string) => void;
+  onChoosePath?: (futureId: string) => Promise<void> | void;
+};
+
+const HOOK_TONE: Record<FutureHookLabel, string> = {
+  "Fastest path": "text-chronos",
+  "Lower risk": "text-emerald-300",
+  "Highest upside": "text-amber-200",
 };
 
 /**
- * Phase 5 — card timeline (not a graph).
- * Goal → Future A ⭐ / B / C / D · click for summary, risk, confidence, next steps.
+ * Choose path + save to timeline — the close of the product loop.
+ * Comparison lives in FutureComparison; this is commit + next steps.
  */
 export function FutureTimelineCards({
   goalTitle,
   futures,
   simulationRisks = [],
+  chosenFutureId = null,
+  selectedId: controlledSelectedId = null,
+  onSelect,
+  onChoosePath,
 }: Props) {
-  const [selectedId, setSelectedId] = useState<string | null>(futures[0]?.id ?? null);
+  const hooks = useMemo(() => deriveFutureHooks(futures), [futures]);
+  const [internalSelectedId, setInternalSelectedId] = useState<string | null>(
+    controlledSelectedId ?? chosenFutureId ?? futures[0]?.id ?? null
+  );
+  const [saving, setSaving] = useState(false);
+
+  const selectedId = controlledSelectedId ?? internalSelectedId;
 
   useEffect(() => {
-    if (!futures.some((f) => f.id === selectedId)) {
-      setSelectedId(futures[0]?.id ?? null);
+    if (controlledSelectedId) return;
+    if (chosenFutureId && futures.some((f) => f.id === chosenFutureId)) {
+      setInternalSelectedId(chosenFutureId);
+      return;
     }
-  }, [futures, selectedId]);
+    if (!futures.some((f) => f.id === internalSelectedId)) {
+      setInternalSelectedId(futures[0]?.id ?? null);
+    }
+  }, [futures, internalSelectedId, chosenFutureId, controlledSelectedId]);
+
+  const setSelected = (id: string) => {
+    if (onSelect) onSelect(id);
+    else setInternalSelectedId(id);
+  };
 
   const selected = futures.find((f) => f.id === selectedId) ?? null;
   const selectedIndex = selected ? futures.findIndex((f) => f.id === selected.id) : -1;
   const isBest = selectedIndex === 0;
+  const isChosen = Boolean(selected && chosenFutureId === selected.id);
+  const selectedHook = selected ? hooks.get(selected.id) ?? null : null;
 
   if (futures.length === 0) {
     return (
       <section className="border border-line p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Timeline
+          Save timeline
         </div>
-        <p className="mt-3 text-sm text-ink-dim">Run a simulation to see future cards.</p>
+        <p className="mt-3 text-sm text-ink-dim">Run a simulation to choose a path.</p>
       </section>
     );
   }
 
+  const handleChoose = async () => {
+    if (!selected || !onChoosePath) return;
+    setSaving(true);
+    try {
+      await onChoosePath(selected.id);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <section className="ws-cascade space-y-6">
+    <section className="space-y-6">
       <div>
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Timeline
+          Choose path · Save timeline
         </div>
-        <p className="mt-1 text-sm text-ink-dim">Cards first. Tree and branches come later.</p>
+        <p className="mt-1 text-sm text-ink-dim">
+          Commit the future you want Chronos to remember for this decision.
+        </p>
       </div>
 
-      {/* Goal */}
-      <div className="rounded-2xl border border-line bg-bg-soft/30 px-4 py-4 transition hover:border-line-strong">
-        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">Goal</div>
+      <div className="rounded-2xl border border-line bg-bg-soft/30 px-4 py-4">
+        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+          Decision
+        </div>
         <div className="mt-1 font-serif text-2xl text-ink">{goalTitle}</div>
       </div>
 
-      <div className="flex justify-center text-ink-faint" aria-hidden>
-        ↓
-      </div>
-
-      {/* Future cards */}
-      <div className="ws-cascade space-y-3">
+      <div className="grid gap-2 sm:grid-cols-3">
         {futures.map((future, index) => {
           const best = index === 0;
           const active = future.id === selectedId;
-          const label = futureCardLabel(index);
+          const chosen = future.id === chosenFutureId;
+          const hook = hooks.get(future.id) ?? null;
           return (
             <button
               key={future.id}
               type="button"
-              onClick={() => setSelectedId(future.id)}
-              className={`w-full rounded-2xl border px-4 py-4 text-left transition duration-200 ${
-                active
-                  ? "border-chronos/50 bg-chronos/10"
-                  : "border-line bg-bg hover:border-chronos/30"
+              onClick={() => setSelected(future.id)}
+              className={`rounded-2xl border px-4 py-3 text-left transition ${
+                active ? "border-chronos/50 bg-chronos/10" : "border-line bg-bg hover:border-chronos/30"
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-                    Future {label}
-                    {best ? " ⭐" : ""}
-                  </div>
-                  <div className="mt-1 truncate text-[16px] text-ink">{future.name}</div>
-                  <p className="mt-1 line-clamp-2 text-sm text-ink-dim">{future.summary}</p>
-                </div>
-                <div className="shrink-0 text-right font-mono text-[11px] text-chronos">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+                  Future {futureCardLabel(index)}
+                  {best ? " ⭐" : ""}
+                  {chosen ? " · saved" : ""}
+                </span>
+                <span className="font-mono text-[11px] text-chronos">
                   {confidencePercent(future.confidence)}
-                </div>
+                </span>
               </div>
+              <div className="mt-1 truncate text-[15px] text-ink">{future.name}</div>
+              {hook && (
+                <div
+                  className={`mt-1 font-mono text-[10px] uppercase tracking-[0.12em] ${HOOK_TONE[hook]}`}
+                >
+                  {hook}
+                </div>
+              )}
             </button>
           );
         })}
       </div>
 
-      {/* Selected detail */}
       {selected && (
-        <div key={selected.id} className="workspace-panel-enter rounded-2xl border border-line p-5">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="rounded-2xl border border-chronos/30 bg-gradient-to-b from-chronos/5 to-bg p-5">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
               Future {futureCardLabel(selectedIndex)}
               {isBest ? " ⭐" : ""}
+              {isChosen ? " · your choice" : ""}
             </div>
-            <div className="font-serif text-xl text-ink">{selected.name}</div>
+            {selectedHook && (
+              <span className={`font-mono text-[10px] uppercase tracking-[0.12em] ${HOOK_TONE[selectedHook]}`}>
+                {selectedHook}
+              </span>
+            )}
           </div>
-
-          <dl className="mt-5 space-y-4">
-            <DetailBlock label="Summary">
-              <p className="text-sm text-ink-dim">{selected.summary || "—"}</p>
-            </DetailBlock>
-
-            <DetailBlock label="Risk">
-              <div className="flex items-center gap-3">
-                <Meter value={selected.risk} tone="risk" />
-                <span className="font-mono text-sm text-ink">
-                  {(selected.risk * 100).toFixed(0)}%
-                </span>
-              </div>
-              {isBest && simulationRisks.length > 0 && (
-                <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-ink-dim">
-                  {simulationRisks.slice(0, 4).map((r) => (
-                    <li key={r}>{r}</li>
-                  ))}
-                </ul>
+          <div className="mt-2 font-serif text-xl text-ink">{selected.name}</div>
+          <p className="mt-3 text-sm text-ink-dim">{selected.summary || "—"}</p>
+          <div className="mt-4 flex flex-wrap gap-4 font-mono text-sm">
+            <span className="text-chronos">
+              Confidence {confidencePercent(selected.confidence)}
+            </span>
+            <span className="text-ink-dim">Risk {(selected.risk * 100).toFixed(0)}%</span>
+            <span className="text-ink-dim">Score {selected.score.toFixed(2)}</span>
+          </div>
+          {isBest && simulationRisks.length > 0 && (
+            <ul className="mt-3 list-disc space-y-1 pl-4 text-sm text-ink-dim">
+              {simulationRisks.slice(0, 4).map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          )}
+          <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-ink-dim">
+            {deriveNextSteps(selected, isBest).map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ol>
+          {onChoosePath && (
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                disabled={saving || isChosen}
+                onClick={() => void handleChoose()}
+                className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg hover:bg-chronos disabled:opacity-50"
+              >
+                {isChosen
+                  ? "Path saved to timeline"
+                  : saving
+                    ? "Saving…"
+                    : "Choose this path · Save timeline"}
+              </button>
+              {isChosen && (
+                <Link
+                  to="/workspace/memory"
+                  className="rounded-full border border-chronos/40 bg-chronos/10 px-5 py-2.5 text-sm font-medium text-chronos transition hover:bg-chronos/20"
+                >
+                  View in Memory →
+                </Link>
               )}
-            </DetailBlock>
-
-            <DetailBlock label="Confidence">
-              <div className="flex items-center gap-3">
-                <Meter value={selected.confidence} tone="confidence" />
-                <span className="font-mono text-sm text-chronos">
-                  {confidencePercent(selected.confidence)}
-                </span>
-              </div>
-            </DetailBlock>
-
-            <DetailBlock label="Next steps">
-              <ol className="list-decimal space-y-2 pl-5 text-sm text-ink-dim">
-                {deriveNextSteps(selected, isBest).map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-            </DetailBlock>
-          </dl>
+            </div>
+          )}
+          {isChosen && (
+            <p className="mt-3 text-sm text-ink-dim">
+              This decision is now in persistent memory — reopen, compare versions, and log
+              outcomes anytime from{" "}
+              <Link to="/workspace/memory" className="text-chronos hover:underline">
+                Memory
+              </Link>
+              .
+            </p>
+          )}
         </div>
       )}
-
-      {/* Later roadmap — visible, not built */}
-      <div className="border-t border-line pt-5">
-        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-          Later
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {TIMELINE_LATER_FEATURES.map((feature) => (
-            <span
-              key={feature.id}
-              title="Coming later"
-              className="cursor-default rounded-full border border-line px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint opacity-70"
-            >
-              {feature.label}
-            </span>
-          ))}
-        </div>
-      </div>
     </section>
-  );
-}
-
-function DetailBlock({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">{label}</dt>
-      <dd className="mt-2">{children}</dd>
-    </div>
-  );
-}
-
-function Meter({ value, tone }: { value: number; tone: "risk" | "confidence" }) {
-  const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
-  const color = tone === "confidence" ? "#60899b" : "#989898";
-  return (
-    <div className="h-1.5 w-28 overflow-hidden rounded-full bg-bg" aria-hidden>
-      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: color }} />
-    </div>
   );
 }

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { deriveNextSteps, futureCardLabel } from "./timeline";
+import {
+  deriveFutureHooks,
+  deriveNextSteps,
+  futureCardLabel,
+  futureHookFor,
+} from "./timeline";
 import type { FutureRecord } from "./types";
 
 const future = (overrides: Partial<FutureRecord> = {}): FutureRecord => ({
@@ -27,5 +32,46 @@ describe("timeline cards helpers", () => {
     const alt = deriveNextSteps(future({ risk: 0.7, confidence: 0.4 }), false);
     expect(alt[0]).toMatch(/Compare/i);
     expect(alt.some((s) => /risk/i.test(s))).toBe(true);
+  });
+
+  it("assigns exclusive wow hooks: Fastest path · Lower risk · Highest upside", () => {
+    const futures: FutureRecord[] = [
+      future({
+        id: "a",
+        name: "Ship fast",
+        confidence: 0.92,
+        risk: 0.4,
+        score: 0.75,
+      }),
+      future({
+        id: "b",
+        name: "Safe bet",
+        confidence: 0.7,
+        risk: 0.12,
+        score: 0.65,
+      }),
+      future({
+        id: "c",
+        name: "Moonshot",
+        confidence: 0.55,
+        risk: 0.55,
+        score: 0.95,
+      }),
+    ];
+
+    const hooks = deriveFutureHooks(futures);
+    expect(futureHookFor("a", hooks)).toBe("Fastest path");
+    expect(futureHookFor("b", hooks)).toBe("Lower risk");
+    expect(futureHookFor("c", hooks)).toBe("Highest upside");
+
+    // roles are exclusive
+    const labels = [...hooks.values()];
+    expect(new Set(labels).size).toBe(labels.length);
+  });
+
+  it("handles a single future as Fastest path", () => {
+    const hooks = deriveFutureHooks([future({ id: "only", confidence: 0.8 })]);
+    expect(hooks.get("only")).toBe("Fastest path");
+    expect(hooks.size).toBe(1);
   });
 });

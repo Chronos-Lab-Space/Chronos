@@ -35,6 +35,9 @@ export type SimulationTaskRecord = {
   phase: "plan" | "generate" | "evaluate" | "rank" | "collapse";
 };
 
+/** Did the user follow Chronos' recommendation after choosing a path? */
+export type OutcomeFollowed = "yes" | "partially" | "no";
+
 export type SimulationResultPayload = {
   best_future?: string;
   futures_count?: number;
@@ -44,6 +47,20 @@ export type SimulationResultPayload = {
   risks?: string[];
   tasks?: SimulationTaskRecord[];
   constraints?: string[];
+  /** User-chosen path (may differ from engine-ranked best_future). */
+  chosen_future_id?: string;
+  chosen_future_name?: string;
+  chosen_at?: string;
+  chosen_summary?: string;
+  /**
+   * Outcome tracking — persistent memory after a recommendation.
+   * Step 1: Did you follow this recommendation?
+   * Step 2: How did it turn out?
+   */
+  outcome_followed?: OutcomeFollowed | null;
+  outcome_followed_at?: string | null;
+  outcome_result?: string | null;
+  outcome_result_at?: string | null;
   [key: string]: unknown;
 };
 
@@ -119,6 +136,8 @@ export type TimelineNodeRecord = {
 export type WorkspaceHome = {
   workspace: WorkspaceRecord;
   goal: GoalRecord | null;
+  /** Previous goals archived when the active objective changes — persistent memory. */
+  goalHistory: readonly GoalRecord[];
   recentSimulations: readonly SimulationRecord[];
   knowledge: readonly KnowledgeRecord[];
   notes: readonly NoteRecord[];

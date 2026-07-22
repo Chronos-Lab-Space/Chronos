@@ -379,7 +379,7 @@ function DemoPlanning({ futures, step }: { futures: number; step: number }) {
             {labels[Math.min(step, labels.length - 1)]}
           </div>
           <div className="mt-1 text-[12px] text-ink-faint">
-            {futures.toLocaleString()} of 1,000 futures explored
+            Exploring futures · ranking paths…
           </div>
         </div>
       </div>

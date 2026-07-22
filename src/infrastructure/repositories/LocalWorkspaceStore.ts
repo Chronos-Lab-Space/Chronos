@@ -20,9 +20,10 @@ function normalizeHome(home: WorkspaceHome): WorkspaceHome {
   return {
     ...home,
     workspace: {
-      description: "",
       ...home.workspace,
+      description: home.workspace.description ?? "",
     },
+    goalHistory: home.goalHistory ?? [],
     futuresBySimulation: home.futuresBySimulation ?? {},
     timelineBySimulation: home.timelineBySimulation ?? {},
     recentSimulations: (home.recentSimulations ?? []).map((sim) => {

@@ -2,16 +2,20 @@ import {
   simulationEngine,
   type SimulationConstraint,
 } from "../simulation/SimulationEngine";
+import { snapshotKnowledgeUsed } from "../../domain/workspace/simulationReport";
+import { archiveGoalIfChanged } from "../../domain/workspace/workspaceMemory";
 import type {
   GoalRecord,
   KnowledgeRecord,
   KnowledgeType,
   NoteRecord,
+  OutcomeFollowed,
   SimulationRecord,
   WorkspaceHome,
   WorkspaceRecord,
 } from "../../domain/workspace/types";
 import { hasLocalMemory, mergeWorkspaceHomes } from "../../domain/workspace/sync";
+import { isE2EAuthEnabled } from "../../infrastructure/auth/e2eAuth";
 import {
   LocalWorkspaceStore,
   localWorkspaceStore,
@@ -70,10 +74,11 @@ export class WorkspaceService {
       this.remote = null;
     } else {
       this.local = options.local ?? localWorkspaceStore;
-      this.remote =
-        options.remote === undefined
-          ? (supabaseWorkspaceRepository as WorkspaceCloudStore)
-          : options.remote;
+      // Playwright E2E uses local-only memory so placeholder Supabase cannot hang the loop.
+      const defaultRemote = isE2EAuthEnabled()
+        ? null
+        : (supabaseWorkspaceRepository as WorkspaceCloudStore);
+      this.remote = options.remote === undefined ? defaultRemote : options.remote;
     }
   }
 
@@ -189,6 +194,7 @@ export class WorkspaceService {
     const home: WorkspaceHome = {
       workspace,
       goal: null,
+      goalHistory: [],
       recentSimulations: [],
       knowledge: [],
       notes: [],
@@ -207,18 +213,28 @@ export class WorkspaceService {
     const home = await this.require(ownerId);
     const trimmed = title.trim();
     if (!trimmed) throw new Error("Goal title is required.");
+    const desc = description.trim();
 
+    const goalHistory = archiveGoalIfChanged(
+      home.goal,
+      trimmed,
+      desc,
+      home.goalHistory ?? []
+    );
+
+    // New objective identity when title changes; keep id when refining same goal.
+    const titleChanged = Boolean(home.goal && home.goal.title !== trimmed);
     const goal: GoalRecord = {
-      id: home.goal?.id ?? uuid(),
+      id: titleChanged || !home.goal ? uuid() : home.goal.id,
       workspace_id: home.workspace.id,
       title: trimmed,
-      description: description.trim(),
+      description: desc,
       status: "active",
       priority,
-      created_at: home.goal?.created_at ?? nowIso(),
+      created_at: titleChanged || !home.goal ? nowIso() : home.goal.created_at,
     };
 
-    return this.persist(ownerId, { ...home, goal });
+    return this.persist(ownerId, { ...home, goal, goalHistory });
   }
 
   async addKnowledge(
@@ -250,6 +266,57 @@ export class WorkspaceService {
     });
   }
 
+  async updateKnowledge(
+    ownerId: string,
+    knowledgeId: string,
+    patch: {
+      title?: string;
+      content?: string;
+      metadata?: Record<string, unknown>;
+      type?: KnowledgeType;
+    }
+  ): Promise<WorkspaceHome> {
+    const home = await this.require(ownerId);
+    const existing = home.knowledge.find((k) => k.id === knowledgeId);
+    if (!existing) throw new Error("Knowledge item not found.");
+
+    const title =
+      patch.title !== undefined ? patch.title.trim() : existing.title;
+    if (!title) throw new Error("Knowledge title is required.");
+
+    const updated: KnowledgeRecord = {
+      ...existing,
+      title,
+      content:
+        patch.content !== undefined ? patch.content.trim() : existing.content,
+      metadata: patch.metadata !== undefined ? patch.metadata : existing.metadata,
+      type: patch.type ?? existing.type,
+    };
+
+    return this.persist(ownerId, {
+      ...home,
+      knowledge: home.knowledge.map((k) => (k.id === knowledgeId ? updated : k)),
+    });
+  }
+
+  async deleteKnowledge(ownerId: string, knowledgeId: string): Promise<WorkspaceHome> {
+    const home = await this.require(ownerId);
+    if (!home.knowledge.some((k) => k.id === knowledgeId)) {
+      throw new Error("Knowledge item not found.");
+    }
+    if (this.remote) {
+      try {
+        await this.remote.deleteKnowledge(knowledgeId);
+      } catch (err) {
+        console.warn("[workspace] Supabase deleteKnowledge failed; local updated.", err);
+      }
+    }
+    return this.persist(ownerId, {
+      ...home,
+      knowledge: home.knowledge.filter((k) => k.id !== knowledgeId),
+    });
+  }
+
   async addNote(ownerId: string, title: string, content: string): Promise<WorkspaceHome> {
     const home = await this.require(ownerId);
     const trimmedTitle = title.trim();
@@ -277,6 +344,26 @@ export class WorkspaceService {
       ...home,
       notes: [note, ...home.notes],
       knowledge: [knowledgeNote, ...home.knowledge],
+    });
+  }
+
+  async deleteNote(ownerId: string, noteId: string): Promise<WorkspaceHome> {
+    const home = await this.require(ownerId);
+    if (!home.notes.some((n) => n.id === noteId)) {
+      throw new Error("Note not found.");
+    }
+    if (this.remote) {
+      try {
+        await this.remote.deleteNote(noteId);
+      } catch (err) {
+        console.warn("[workspace] Supabase deleteNote failed; local updated.", err);
+      }
+    }
+    return this.persist(ownerId, {
+      ...home,
+      notes: home.notes.filter((n) => n.id !== noteId),
+      // Drop mirrored knowledge rows linked to this note
+      knowledge: home.knowledge.filter((k) => k.metadata?.note_id !== noteId),
     });
   }
 
@@ -347,6 +434,7 @@ export class WorkspaceService {
     });
 
     const objectiveForEngine = parent ? parent.title : title;
+    const knowledgeUsed = snapshotKnowledgeUsed(home.knowledge, home.notes);
 
     const output = simulationEngine.run({
       simulationId: simId,
@@ -377,6 +465,9 @@ export class WorkspaceService {
         constraints: constraints.map((c) => `${c.kind}: ${c.text}`),
         planner_tasks: output.plannerTaskTitles,
         report_saved_at: createdAt,
+        knowledge_used: knowledgeUsed,
+        goal_title: home.goal?.title ?? null,
+        goal_description: home.goal?.description ?? null,
       },
       created_at: createdAt,
       version,
@@ -413,6 +504,175 @@ export class WorkspaceService {
         ? (parent.result.constraints as string[]).map((c) => c.replace(/^(hard|soft):\s*/i, ""))
         : []);
     return this.runSimulation(ownerId, parent.title, lines, { parentSimulationId });
+  }
+
+  /**
+   * Product loop close: user chooses a future path and saves the decision.
+   * Persists chosen_future_* on the simulation and logs a decision note.
+   */
+  async chooseBestPath(
+    ownerId: string,
+    simulationId: string,
+    futureId: string
+  ): Promise<WorkspaceHome> {
+    const home = await this.require(ownerId);
+    const sim = home.recentSimulations.find((s) => s.id === simulationId);
+    if (!sim) throw new Error("Simulation not found.");
+    const futures = home.futuresBySimulation[simulationId] ?? [];
+    const future = futures.find((f) => f.id === futureId);
+    if (!future) throw new Error("Future not found on this simulation.");
+
+    const chosenAt = nowIso();
+    const updatedSim: SimulationRecord = {
+      ...sim,
+      result: {
+        ...sim.result,
+        chosen_future_id: future.id,
+        chosen_future_name: future.name,
+        chosen_summary: future.summary,
+        chosen_at: chosenAt,
+        // Keep engine ranking; user choice is explicit
+        best_future: future.name,
+      },
+    };
+
+    const decisionNote: NoteRecord = {
+      id: uuid(),
+      workspace_id: home.workspace.id,
+      title: `Decision: ${future.name}`,
+      content: [
+        `# Chosen path`,
+        ``,
+        `**Simulation:** ${sim.title} (v${sim.version})`,
+        `**Path:** ${future.name}`,
+        `**Confidence:** ${(future.confidence * 100).toFixed(0)}%`,
+        `**Risk:** ${(future.risk * 100).toFixed(0)}%`,
+        ``,
+        future.summary,
+        ``,
+        `Saved ${chosenAt}`,
+      ].join("\n"),
+      created_at: chosenAt,
+    };
+
+    return this.persist(ownerId, {
+      ...home,
+      recentSimulations: home.recentSimulations.map((s) =>
+        s.id === simulationId ? updatedSim : s
+      ),
+      notes: [decisionNote, ...home.notes],
+    });
+  }
+
+  /**
+   * Outcome tracking step 1 — Did you follow this recommendation?
+   * Requires a saved path (chooseBestPath first).
+   */
+  async recordOutcomeFollowed(
+    ownerId: string,
+    simulationId: string,
+    followed: OutcomeFollowed
+  ): Promise<WorkspaceHome> {
+    if (followed !== "yes" && followed !== "partially" && followed !== "no") {
+      throw new Error("Followed must be yes, partially, or no.");
+    }
+    const home = await this.require(ownerId);
+    const sim = home.recentSimulations.find((s) => s.id === simulationId);
+    if (!sim) throw new Error("Simulation not found.");
+    if (!sim.result.chosen_future_id) {
+      throw new Error("Choose a path before recording outcome follow-through.");
+    }
+
+    const at = nowIso();
+    const updatedSim: SimulationRecord = {
+      ...sim,
+      result: {
+        ...sim.result,
+        outcome_followed: followed,
+        outcome_followed_at: at,
+      },
+    };
+
+    const note: NoteRecord = {
+      id: uuid(),
+      workspace_id: home.workspace.id,
+      title: `Outcome follow-through: ${followed}`,
+      content: [
+        `# Did you follow this recommendation?`,
+        ``,
+        `**Answer:** ${followed}`,
+        `**Simulation:** ${sim.title} (v${sim.version})`,
+        `**Path:** ${String(sim.result.chosen_future_name ?? "—")}`,
+        ``,
+        `Recorded ${at}`,
+      ].join("\n"),
+      created_at: at,
+    };
+
+    return this.persist(ownerId, {
+      ...home,
+      recentSimulations: home.recentSimulations.map((s) =>
+        s.id === simulationId ? updatedSim : s
+      ),
+      notes: [note, ...home.notes],
+    });
+  }
+
+  /**
+   * Outcome tracking step 2 — How did it turn out?
+   */
+  async recordOutcomeResult(
+    ownerId: string,
+    simulationId: string,
+    resultNote: string
+  ): Promise<WorkspaceHome> {
+    const text = resultNote.trim();
+    if (!text) throw new Error("Describe how it turned out.");
+    const home = await this.require(ownerId);
+    const sim = home.recentSimulations.find((s) => s.id === simulationId);
+    if (!sim) throw new Error("Simulation not found.");
+    if (!sim.result.chosen_future_id) {
+      throw new Error("Choose a path before recording how it turned out.");
+    }
+    if (!sim.result.outcome_followed) {
+      throw new Error("Record whether you followed the recommendation first.");
+    }
+
+    const at = nowIso();
+    const updatedSim: SimulationRecord = {
+      ...sim,
+      result: {
+        ...sim.result,
+        outcome_result: text,
+        outcome_result_at: at,
+      },
+    };
+
+    const note: NoteRecord = {
+      id: uuid(),
+      workspace_id: home.workspace.id,
+      title: `Outcome: ${sim.title}`,
+      content: [
+        `# How did it turn out?`,
+        ``,
+        `**Simulation:** ${sim.title} (v${sim.version})`,
+        `**Path:** ${String(sim.result.chosen_future_name ?? "—")}`,
+        `**Followed:** ${String(sim.result.outcome_followed)}`,
+        ``,
+        text,
+        ``,
+        `Recorded ${at}`,
+      ].join("\n"),
+      created_at: at,
+    };
+
+    return this.persist(ownerId, {
+      ...home,
+      recentSimulations: home.recentSimulations.map((s) =>
+        s.id === simulationId ? updatedSim : s
+      ),
+      notes: [note, ...home.notes],
+    });
   }
 
   private parseConstraints(lines: string[]): SimulationConstraint[] {
@@ -453,13 +713,16 @@ export class WorkspaceService {
   private normalize(home: WorkspaceHome): WorkspaceHome {
     return {
       ...home,
+      goalHistory: home.goalHistory ?? [],
+      knowledge: home.knowledge ?? [],
+      notes: home.notes ?? [],
       futuresBySimulation: home.futuresBySimulation ?? {},
       timelineBySimulation: home.timelineBySimulation ?? {},
       workspace: {
-        description: "",
         ...home.workspace,
+        description: home.workspace.description ?? "",
       },
-      recentSimulations: home.recentSimulations.map((sim) => ({
+      recentSimulations: (home.recentSimulations ?? []).map((sim) => ({
         ...sim,
         version: sim.version ?? 1,
         lineage_id: sim.lineage_id || sim.id,

@@ -76,8 +76,8 @@ export function evaluateMvpGates(home: WorkspaceHome | null): MvpGate[] {
       label: "Timeline",
       usableWhen: "Inspect futures as cards (summary, risk, next steps)",
       done: hasFutures,
-      href: latestId ? `/workspace/simulations/${latestId}` : "/workspace/simulations",
-      cta: hasFutures ? "Open cards" : "Need a run",
+      href: "/workspace/timeline",
+      cta: hasFutures ? "Open timeline" : "Need a run",
     },
     {
       id: "memory",
@@ -85,8 +85,8 @@ export function evaluateMvpGates(home: WorkspaceHome | null): MvpGate[] {
       label: "Memory",
       usableWhen: "Work accumulates — re-run and compare versions",
       done: hasHistory,
-      href: "/workspace/memory",
-      cta: hasHistory ? "History" : "Re-run a sim",
+      href: "/workspace/simulations",
+      cta: hasHistory ? "Simulations" : "Re-run a sim",
     },
   ];
 }

@@ -19,34 +19,39 @@ test.describe("Chronos user workflows", () => {
     await page.goto("/workspace");
 
     // Private workspace requires a session
-    await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(
+      page.getByRole("heading", { name: /welcome back|start deciding/i })
+    ).toBeVisible();
   });
 
   test("legacy dashboard URL redirects unauthenticated users to login", async ({ page }) => {
     await page.goto("/dashboard");
 
-    await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
+    await expect(
+      page.getByRole("heading", { name: /welcome back|start deciding/i })
+    ).toBeVisible();
   });
 
-  test("login page shows password sign-in by default", async ({ page }) => {
+  test("login page leads with OAuth and email password", async ({ page }) => {
     await page.goto("/login");
 
-    await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /welcome back|start deciding/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue with google/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue with github/i })).toBeVisible();
     await expect(page.getByLabel("Password")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Magic link" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /sign in with email/i })).toBeVisible();
   });
 
   test("a visitor simulates a startup idea through to a best path", async ({ page }) => {
     await page.goto("/simulate");
 
     await page.getByLabel("Your idea").fill("I want to build an AI meeting assistant");
-    await page.getByRole("button", { name: /simulate 1,000 futures/i }).click();
+    await page.getByRole("button", { name: /run demo simulation|simulate/i }).click();
 
-    // Progress line: "Fork · 42 / 1,000 futures" (phase label + counter)
-    await expect(page.getByText(/\d+\s*\/\s*1,000 futures/i)).toBeVisible();
+    // Progress line includes demo phase counter
+    await expect(page.getByText(/demo|futures|paths/i).first()).toBeVisible();
     await expect(page.getByText(/best path/i).first()).toBeVisible({ timeout: 8_000 });
     await expect(page.getByText("18-month roadmap")).toBeVisible();
     await expect(page.getByText("Other futures that almost won.")).toBeVisible();

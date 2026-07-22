@@ -55,6 +55,9 @@ const SimulationDetailPage = lazy(async () => ({
 const WorkspaceSettingsPage = lazy(async () => ({
   default: (await import("./features/workspace/WorkspaceSettingsPage")).WorkspaceSettingsPage,
 }));
+const TimelinePage = lazy(async () => ({
+  default: (await import("./features/timeline/TimelinePage")).TimelinePage,
+}));
 const MemoryPage = lazy(async () => ({
   default: (await import("./features/memory/MemoryPages")).MemoryPage,
 }));
@@ -124,11 +127,13 @@ function App() {
           <Route path="knowledge" element={lazyRoute(<KnowledgePage />)} />
           <Route path="simulations" element={lazyRoute(<SimulationsPage />)} />
           <Route path="simulations/:simulationId" element={lazyRoute(<SimulationDetailPage />)} />
+          <Route path="timeline" element={lazyRoute(<TimelinePage />)} />
+          <Route path="settings" element={lazyRoute(<WorkspaceSettingsPage />)} />
+          {/* Hidden from primary nav — deep links still work */}
           <Route path="notes" element={lazyRoute(<NotesPage />)} />
           <Route path="memory" element={lazyRoute(<MemoryPage />)} />
           <Route path="memory/compare" element={lazyRoute(<ComparePage />)} />
           <Route path="advisor" element={lazyRoute(<GrokAdvisorPage />)} />
-          <Route path="settings" element={lazyRoute(<WorkspaceSettingsPage />)} />
         </Route>
 
         {/* Legacy dashboard entry → workspace home */}

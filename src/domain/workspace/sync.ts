@@ -28,10 +28,17 @@ export function mergeWorkspaceHomes(
       : remote.workspace;
 
   const goal = remote.goal ?? local.goal;
+  const goalHistory = mergeById(
+    remote.goalHistory ?? [],
+    local.goalHistory ?? [],
+    (g) => `${g.id}:${g.title}:${g.created_at}`,
+    preferRemote
+  ).sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   return {
     workspace,
     goal,
+    goalHistory,
     recentSimulations: mergeById(
       remote.recentSimulations,
       local.recentSimulations,
@@ -65,11 +72,33 @@ function preferRicherSimulation(
   if (remoteDone && !localDone) return remote;
   if (localDone && !remoteDone) return local;
   // Prefer higher version / richer result payload.
-  if ((local.version ?? 1) > (remote.version ?? 1)) return { ...remote, ...local, id: remote.id };
+  // Merge result so outcome tracking / chosen path from either side is kept.
+  const mergedResult = { ...(local.result ?? {}), ...(remote.result ?? {}) };
+  // Prefer non-null outcome fields from either side
+  for (const key of [
+    "chosen_future_id",
+    "chosen_future_name",
+    "chosen_at",
+    "chosen_summary",
+    "outcome_followed",
+    "outcome_followed_at",
+    "outcome_result",
+    "outcome_result_at",
+    "knowledge_used",
+  ] as const) {
+    const r = remote.result?.[key];
+    const l = local.result?.[key];
+    if ((r == null || r === "") && l != null && l !== "") {
+      mergedResult[key] = l as never;
+    }
+  }
+  if ((local.version ?? 1) > (remote.version ?? 1)) {
+    return { ...remote, ...local, id: remote.id, result: mergedResult };
+  }
   return {
     ...local,
     ...remote,
-    result: { ...(local.result ?? {}), ...(remote.result ?? {}) },
+    result: mergedResult,
   };
 }
 

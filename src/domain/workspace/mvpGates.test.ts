@@ -20,6 +20,7 @@ function baseHome(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
       priority: 1,
       created_at: "2026-01-01T00:00:00.000Z",
     },
+    goalHistory: [],
     recentSimulations: [],
     knowledge: [],
     notes: [],

@@ -5,9 +5,12 @@ import {
   formatCreatedAt,
 } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
-import { workspaceGrokService } from "../../../application/workspace/WorkspaceGrokService";
+import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
 import { FutureTimelineCards } from "../timeline/FutureTimelineCards";
 import { useWorkspace } from "../workspace/WorkspaceContext";
+import { DecisionReportCard } from "./components/DecisionReportCard";
+import { FutureComparison } from "./components/FutureComparison";
+import { OutcomeTracking } from "./components/OutcomeTracking";
 
 export function SimulationsPage() {
   const { home, runSimulation, error } = useWorkspace();
@@ -42,15 +45,15 @@ export function SimulationsPage() {
   };
 
   return (
-    <div className="ws-cascade">
-      <div className="header-enter flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Simulation engine
           </div>
           <h1 className="mt-2 font-serif text-3xl text-ink">Simulations</h1>
           <p className="mt-2 max-w-xl text-sm text-ink-dim">
-            Generate multiple futures, evaluate trade-offs, and get a ranked recommendation.
+            Generate multiple futures, compare trade-offs, get a decision report — then save the path.
           </p>
         </div>
         {!isNew && (
@@ -64,7 +67,7 @@ export function SimulationsPage() {
       </div>
 
       {isNew && (
-        <form onSubmit={onSubmit} className="workspace-panel-enter mt-8 space-y-4 border border-line p-4">
+        <form onSubmit={onSubmit} className="mt-8 space-y-4 border border-line p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Run simulation
           </div>
@@ -78,6 +81,7 @@ export function SimulationsPage() {
           <Field label="What should Chronos decide?">
             <input
               required
+              aria-label="What should Chronos decide?"
               value={objective}
               onChange={(e) => setObjective(e.target.value)}
               placeholder="e.g. How should we launch with a small team and limited runway?"
@@ -128,7 +132,7 @@ export function SimulationsPage() {
               disabled={busy}
               className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
             >
-              {busy ? "Running…" : "Run simulation"}
+              {busy ? "Generating futures…" : "Generate futures"}
             </button>
             {hasRuns && (
               <button
@@ -163,9 +167,9 @@ export function SimulationsPage() {
               </tr>
             ) : (
               home.recentSimulations.map((sim) => (
-                <tr key={sim.id} className="transition-colors duration-200 hover:bg-chronos/5">
+                <tr key={sim.id}>
                   <td className="py-3 pr-3">
-                    <Link to={`/workspace/simulations/${sim.id}`} className="transition hover:text-chronos">
+                    <Link to={`/workspace/simulations/${sim.id}`} className="hover:text-chronos">
                       {sim.title}
                     </Link>
                   </td>
@@ -188,16 +192,20 @@ export function SimulationsPage() {
 }
 
 export function SimulationDetailPage() {
-  const { home, rerunSimulation } = useWorkspace();
+  const {
+    home,
+    rerunSimulation,
+    chooseBestPath,
+    recordOutcomeFollowed,
+    recordOutcomeResult,
+  } = useWorkspace();
   const { simulationId } = useParams();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const sim = home?.recentSimulations.find((s) => s.id === simulationId);
   const futures = simulationId ? home?.futuresBySimulation[simulationId] ?? [] : [];
   const [rerunning, setRerunning] = useState(false);
-  const [grokBusy, setGrokBusy] = useState(false);
-  const [grokBrief, setGrokBrief] = useState<string | null>(null);
-  const [grokError, setGrokError] = useState<string | null>(null);
+  const [selectedFutureId, setSelectedFutureId] = useState<string | null>(null);
 
   const tasks = useMemo(() => {
     const raw = sim?.result.tasks;
@@ -227,13 +235,6 @@ export function SimulationDetailPage() {
     );
   }
 
-  const recommendation =
-    typeof sim.result.recommendation === "string"
-      ? sim.result.recommendation
-      : sim.result.thesis
-        ? String(sim.result.thesis)
-        : "—";
-
   const handleRerun = async () => {
     setRerunning(true);
     try {
@@ -245,28 +246,23 @@ export function SimulationDetailPage() {
     }
   };
 
-  const handleGrokEnhance = async () => {
-    setGrokBusy(true);
-    setGrokError(null);
-    try {
-      const brief = await workspaceGrokService.enhanceSimulationReport(home, sim.id);
-      setGrokBrief(brief);
-    } catch (err) {
-      setGrokError((err as Error).message);
-    } finally {
-      setGrokBusy(false);
-    }
-  };
-
   const wantsRerun = params.get("rerun") === "1";
+  const decisionReport =
+    sim.status === "completed" ? buildDecisionReport(home, sim, futures) : null;
+  const chosenId =
+    typeof sim.result.chosen_future_id === "string" ? sim.result.chosen_future_id : null;
+  const activeFutureId = selectedFutureId ?? chosenId ?? futures[0]?.id ?? null;
 
   return (
-    <div className="ws-cascade space-y-10">
-      <div className="header-enter">
+    <div className="space-y-10">
+      <div>
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Report · {home.workspace.name}
+          Simulation · {home.workspace.name}
         </div>
         <h1 className="mt-2 font-serif text-3xl text-ink">{sim.title}</h1>
+        <p className="mt-2 max-w-2xl text-sm text-ink-dim">
+          Compare futures → read the decision report → choose a path and save it to the timeline.
+        </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <StatusPill status={sim.status} />
           <span className="rounded-full bg-chronos/15 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-chronos">
@@ -278,7 +274,6 @@ export function SimulationDetailPage() {
           <span className="text-sm text-ink-dim">{formatCreatedAt(sim.created_at)}</span>
         </div>
 
-        {/* Memory actions */}
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             type="button"
@@ -291,36 +286,18 @@ export function SimulationDetailPage() {
           {versions.length >= 2 && (
             <Link
               to={`/workspace/memory/compare?a=${versions[0].id}&b=${sim.id}`}
-              className="rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
+              className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-chronos/50 hover:text-chronos"
             >
               Compare versions
             </Link>
           )}
           <Link
-            to="/workspace/memory"
-            className="rounded-full border border-line px-4 py-2 text-sm text-ink-dim transition hover:text-ink"
+            to="/workspace/timeline"
+            className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-chronos/50 hover:text-chronos"
           >
-            Memory
+            Timeline
           </Link>
-          <button
-            type="button"
-            onClick={() => void handleGrokEnhance()}
-            disabled={grokBusy}
-            className="rounded-full border border-chronos/40 px-4 py-2 text-sm text-chronos transition hover:bg-chronos/10 disabled:opacity-50"
-          >
-            {grokBusy ? "Grok…" : "Enhance with Grok"}
-          </button>
         </div>
-
-        {grokError && <p className="mt-3 text-sm text-red-400">{grokError}</p>}
-        {grokBrief && (
-          <div className="workspace-panel-enter mt-4 rounded-xl border border-chronos/30 bg-chronos/5 p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
-              Grok brief
-            </div>
-            <div className="mt-2 whitespace-pre-wrap text-sm text-ink-dim">{grokBrief}</div>
-          </div>
-        )}
 
         {wantsRerun && (
           <p className="mt-3 text-sm text-ink-dim">
@@ -331,7 +308,6 @@ export function SimulationDetailPage() {
           </p>
         )}
 
-        {/* Version strip */}
         {versions.length > 0 && (
           <ol className="mt-5 flex flex-wrap gap-2">
             {versions.map((v) => (
@@ -352,12 +328,53 @@ export function SimulationDetailPage() {
         )}
       </div>
 
-      {/* Pipeline tasks */}
-      <section>
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Engine pipeline
-        </div>
-        <ol className="mt-4 space-y-2">
+      {/* 1 · Compare outcomes — the Chronos wow moment */}
+      <FutureComparison
+        futures={futures}
+        chosenFutureId={chosenId}
+        selectedId={activeFutureId}
+        onSelect={setSelectedFutureId}
+      />
+
+      {/* 2 · Decision report (shareable artifact) */}
+      {decisionReport && (
+        <DecisionReportCard
+          report={decisionReport}
+          outcomeSlot={
+            <OutcomeTracking
+              pathSaved={Boolean(chosenId)}
+              followed={decisionReport.outcomeFollowed}
+              followedAt={decisionReport.outcomeFollowedAt}
+              result={decisionReport.outcomeResult}
+              resultAt={decisionReport.outcomeResultAt}
+              recommendedName={decisionReport.recommended}
+              onFollowed={(followed) => recordOutcomeFollowed(sim.id, followed)}
+              onResult={(note) => recordOutcomeResult(sim.id, note)}
+            />
+          }
+        />
+      )}
+
+      {/* 3 · Choose path · Save timeline */}
+      <FutureTimelineCards
+        goalTitle={home.goal?.title ?? sim.title}
+        futures={futures}
+        simulationRisks={risks}
+        chosenFutureId={chosenId}
+        selectedId={activeFutureId}
+        onSelect={setSelectedFutureId}
+        onChoosePath={async (futureId) => {
+          await chooseBestPath(sim.id, futureId);
+          setSelectedFutureId(futureId);
+        }}
+      />
+
+      {/* Engine pipeline — secondary detail after the decision loop */}
+      <details className="rounded-2xl border border-line">
+        <summary className="cursor-pointer list-none px-4 py-3 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint marker:content-none [&::-webkit-details-marker]:hidden">
+          Engine pipeline · {tasks.length || 5} steps
+        </summary>
+        <ol className="space-y-2 border-t border-line px-4 py-4">
           {(tasks.length
             ? tasks
             : [
@@ -382,31 +399,7 @@ export function SimulationDetailPage() {
             </li>
           ))}
         </ol>
-      </section>
-
-      {/* Best recommendation */}
-      <section className="border border-chronos/30 bg-chronos/5 p-5">
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
-          Best recommendation
-        </div>
-        <p className="mt-3 text-lg text-ink">{recommendation}</p>
-        <div className="mt-4 flex flex-wrap gap-4 text-sm">
-          <span className="text-ink-dim">
-            Top future:{" "}
-            <span className="text-ink">{String(sim.result.best_future ?? "—")}</span>
-          </span>
-          <span className="font-mono text-chronos">
-            {confidencePercent(sim.confidence)}
-          </span>
-        </div>
-      </section>
-
-      {/* Phase 5 — card timeline */}
-      <FutureTimelineCards
-        goalTitle={home.goal?.title ?? sim.title}
-        futures={futures}
-        simulationRisks={risks}
-      />
+      </details>
 
       <Back to="/workspace/simulations" label="All simulations" />
     </div>

@@ -23,6 +23,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     env: {
       VITE_MOCK_ACCESS_REQUESTS: "true",
+      // Enables mock session only when tests set localStorage chronos.e2e.auth=1
+      VITE_E2E_AUTH: "true",
     },
   },
 });

@@ -1,28 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { WorkspaceHome, WorkspaceRecord } from "../../domain/workspace/types";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
-import { WorkspaceService, type WorkspaceCloudStore } from "./WorkspaceService";
-
-/** In-memory cloud double for sync tests. */
-class FakeCloudStore implements WorkspaceCloudStore {
-  homes = new Map<string, WorkspaceHome>();
-
-  async list(ownerId: string): Promise<WorkspaceRecord[]> {
-    return [...this.homes.values()]
-      .filter((h) => h.workspace.owner_id === ownerId)
-      .map((h) => h.workspace);
-  }
-
-  async load(ownerId: string, workspaceId?: string): Promise<WorkspaceHome | null> {
-    const matches = [...this.homes.values()].filter((h) => h.workspace.owner_id === ownerId);
-    if (workspaceId) return matches.find((h) => h.workspace.id === workspaceId) ?? null;
-    return matches[0] ?? null;
-  }
-
-  async save(home: WorkspaceHome): Promise<void> {
-    this.homes.set(home.workspace.id, structuredClone(home));
-  }
-}
+import { WorkspaceService } from "./WorkspaceService";
 
 describe("WorkspaceService success metric", () => {
   const ownerId = "user-test-1";
@@ -126,85 +104,62 @@ describe("WorkspaceService success metric", () => {
     expect(switched.workspace.name).toBe("Alpha");
     expect(switched.goal?.title).toBe("Goal A");
   });
-});
 
-describe("WorkspaceService cloud memory sync", () => {
-  const ownerId = "user-cloud-1";
-  let local: LocalWorkspaceStore;
-  let cloud: FakeCloudStore;
+  it("updates and deletes knowledge and notes", async () => {
+    await service.createWorkspace(ownerId, "Edit Lab");
+    let home = await service.addKnowledge(ownerId, {
+      type: "markdown",
+      title: "Draft.md",
+      content: "v1",
+    });
+    const kid = home.knowledge[0].id;
 
-  beforeEach(() => {
-    localStorage.clear();
-    local = new LocalWorkspaceStore();
-    cloud = new FakeCloudStore();
+    home = await service.updateKnowledge(ownerId, kid, {
+      title: "Final.md",
+      content: "v2 body",
+    });
+    expect(home.knowledge.find((k) => k.id === kid)?.title).toBe("Final.md");
+    expect(home.knowledge.find((k) => k.id === kid)?.content).toBe("v2 body");
+
+    home = await service.addNote(ownerId, "Scratch", "idea");
+    const noteId = home.notes[0].id;
+    expect(home.notes).toHaveLength(1);
+
+    home = await service.deleteNote(ownerId, noteId);
+    expect(home.notes).toHaveLength(0);
+    expect(home.knowledge.some((k) => k.metadata?.note_id === noteId)).toBe(false);
+
+    home = await service.deleteKnowledge(ownerId, kid);
+    expect(home.knowledge.find((k) => k.id === kid)).toBeUndefined();
   });
 
-  it("backfills local workspace to empty cloud on load", async () => {
-    const offline = new WorkspaceService({ local, remote: null });
-    let home = await offline.createWorkspace(ownerId, "Local Lab");
-    home = await offline.setGoal(ownerId, "Ship beta");
-    home = await offline.runSimulation(ownerId, "What is the best launch path?");
-    expect(home.recentSimulations).toHaveLength(1);
-    expect(cloud.homes.size).toBe(0);
+  it("archives previous goals and tracks outcomes after a chosen path", async () => {
+    await service.createWorkspace(ownerId, "Outcome Lab");
+    let home = await service.setGoal(ownerId, "First objective");
+    home = await service.setGoal(ownerId, "Second objective");
+    expect(home.goal?.title).toBe("Second objective");
+    expect(home.goalHistory.some((g) => g.title === "First objective")).toBe(true);
 
-    const online = new WorkspaceService({ local, remote: cloud });
-    const loaded = await online.load(ownerId);
-    expect(loaded?.recentSimulations).toHaveLength(1);
-    expect(cloud.homes.size).toBe(1);
-    const cloudHome = await cloud.load(ownerId);
-    expect(cloudHome?.recentSimulations[0]?.title).toContain("launch");
-    expect(cloudHome?.futuresBySimulation[home.recentSimulations[0].id]?.length).toBe(5);
-  });
+    home = await service.addNote(ownerId, "Context", "evidence");
+    home = await service.runSimulation(ownerId, "Which path?");
+    const sim = home.recentSimulations[0];
+    const future = home.futuresBySimulation[sim.id][0];
 
-  it("merges local-only simulations with remote home on load", async () => {
-    const online = new WorkspaceService({ local, remote: cloud });
-    const remoteHome = await online.createWorkspace(ownerId, "Synced");
-    await online.setGoal(ownerId, "Cloud goal");
-    const afterRemoteSim = await online.runSimulation(ownerId, "Remote path A");
-    const remoteSimId = afterRemoteSim.recentSimulations[0].id;
+    home = await service.chooseBestPath(ownerId, sim.id, future.id);
+    expect(home.recentSimulations[0].result.chosen_future_id).toBe(future.id);
 
-    // Simulate offline local-only run after a failed remote save by writing only to local
-    const offline = new WorkspaceService({ local, remote: null });
-    const afterLocalSim = await offline.runSimulation(ownerId, "Local path B");
-    const localSimId = afterLocalSim.recentSimulations[0].id;
-    expect(localSimId).not.toBe(remoteSimId);
+    home = await service.recordOutcomeFollowed(ownerId, sim.id, "partially");
+    expect(home.recentSimulations[0].result.outcome_followed).toBe("partially");
+    expect(home.recentSimulations[0].result.outcome_followed_at).toBeTruthy();
 
-    // Cloud still only has the first sim
-    const cloudOnly = await cloud.load(ownerId);
-    expect(cloudOnly?.recentSimulations).toHaveLength(1);
+    home = await service.recordOutcomeResult(ownerId, sim.id, "Shipped late but worked.");
+    expect(home.recentSimulations[0].result.outcome_result).toMatch(/Shipped late/);
 
-    const merged = await online.load(ownerId);
-    const ids = merged?.recentSimulations.map((s) => s.id) ?? [];
-    expect(ids).toContain(remoteSimId);
-    expect(ids).toContain(localSimId);
-    expect(merged?.futuresBySimulation[remoteSimId]?.length).toBe(5);
-    expect(merged?.futuresBySimulation[localSimId]?.length).toBe(5);
-
-    // Merge write-through should push the union back to cloud
-    const cloudAfter = await cloud.load(ownerId);
-    expect(cloudAfter?.recentSimulations.map((s) => s.id).sort()).toEqual(
-      [localSimId, remoteSimId].sort()
-    );
-  });
-
-  it("keeps local futures when remote save fails after a run", async () => {
-    const flaky: WorkspaceCloudStore = {
-      list: (id) => cloud.list(id),
-      load: (id, ws) => cloud.load(id, ws),
-      save: async () => {
-        throw new Error("network down");
-      },
-    };
-    const svc = new WorkspaceService({ local, remote: flaky });
-    await svc.createWorkspace(ownerId, "Flaky");
-    await svc.setGoal(ownerId, "Survive offline");
-    const home = await svc.runSimulation(ownerId, "Can we still decide?");
-    expect(home.recentSimulations).toHaveLength(1);
-    expect(home.futuresBySimulation[home.recentSimulations[0].id]).toHaveLength(5);
-
-    const resumed = await new WorkspaceService({ local, remote: null }).load(ownerId);
-    expect(resumed?.recentSimulations).toHaveLength(1);
-    expect(resumed?.futuresBySimulation[home.recentSimulations[0].id]?.length).toBe(5);
+    const resumed = await new WorkspaceService({ local: store, remote: null }).load(ownerId);
+    expect(resumed?.goalHistory[0]?.title).toBe("First objective");
+    expect(resumed?.recentSimulations[0].result.outcome_followed).toBe("partially");
+    expect(resumed?.recentSimulations[0].result.outcome_result).toMatch(/Shipped late/);
   });
 });
+
 

@@ -4,7 +4,11 @@ import { useAccessModal } from "../features/access/AccessModal";
 
 type Section =
   | "introduction"
+  | "how-it-works"
   | "getting-started"
+  | "auth"
+  | "beta"
+  | "faq"
   | "workspaces"
   | "goals"
   | "knowledge"
@@ -25,12 +29,11 @@ const NAV: {
     group: "Introduction",
     items: [
       { id: "introduction", label: "What is Chronos?" },
-    ],
-  },
-  {
-    group: "Getting Started",
-    items: [
-      { id: "getting-started", label: "First simulation" },
+      { id: "how-it-works", label: "How it works" },
+      { id: "getting-started", label: "Getting started" },
+      { id: "auth", label: "Auth & access" },
+      { id: "beta", label: "Beta limitations" },
+      { id: "faq", label: "FAQ" },
     ],
   },
   {
@@ -80,7 +83,7 @@ export function Docs() {
             Cerebrum<span className="text-ink-faint">.</span>
           </>
         }
-        subtitle="How Chronos works — from workspaces and knowledge to simulations, timelines, and decision reports."
+        subtitle="What Chronos is, how branch → simulate → collapse works, beta limits, and how to run your first decision."
       />
 
       <section className="relative">
@@ -167,23 +170,25 @@ export function Docs() {
               </div>
             </aside>
 
-            {/* Content — fade when section changes */}
+            {/* Content */}
             <main className="min-w-0 lg:col-span-9">
-              <div key={section} className="page-enter">
-                {section === "introduction" && <Introduction />}
-                {section === "getting-started" && <GettingStarted />}
-                {section === "workspaces" && <WorkspacesDocs />}
-                {section === "goals" && <GoalsDocs />}
-                {section === "knowledge" && <KnowledgeDocs />}
-                {section === "simulations" && <SimulationsDocs />}
-                {section === "timeline" && <TimelineDocs />}
-                {section === "memory" && <MemoryDocs />}
-                {section === "decision-reports" && <DecisionReportsDocs />}
-                {section === "api" && <ApiDocs />}
-                {section === "roadmap" && <RoadmapDocs />}
-                {section === "security" && <SecurityDocs />}
-                {section === "support" && <SupportDocs />}
-              </div>
+              {section === "introduction" && <Introduction />}
+              {section === "how-it-works" && <HowItWorksDocs />}
+              {section === "getting-started" && <GettingStarted />}
+              {section === "auth" && <AuthAccessDocs />}
+              {section === "beta" && <BetaLimitationsDocs />}
+              {section === "faq" && <DocsFaq />}
+              {section === "workspaces" && <WorkspacesDocs />}
+              {section === "goals" && <GoalsDocs />}
+              {section === "knowledge" && <KnowledgeDocs />}
+              {section === "simulations" && <SimulationsDocs />}
+              {section === "timeline" && <TimelineDocs />}
+              {section === "memory" && <MemoryDocs />}
+              {section === "decision-reports" && <DecisionReportsDocs />}
+              {section === "api" && <ApiDocs />}
+              {section === "roadmap" && <RoadmapDocs />}
+              {section === "security" && <SecurityDocs />}
+              {section === "support" && <SupportDocs />}
             </main>
           </div>
         </div>
@@ -335,19 +340,39 @@ function Introduction() {
     <div>
       <DocTitle>What is Chronos?</DocTitle>
       <DocBody>
-        Chronos is a decision intelligence platform that helps people and AI
-        explore multiple possible futures before making important decisions.
-        Instead of a single answer, Chronos generates strategies, compares
-        trade-offs, and recommends the strongest path for your goals and context.
+        Chronos is a decision intelligence platform. You bring a goal and
+        context; Chronos generates multiple possible futures, compares trade-offs,
+        and recommends a path — with transparent reasons, not a single opaque answer.
       </DocBody>
 
-      <DocSub>Vision</DocSub>
+      <DocSub>The problem</DocSub>
       <DocBody>
-        Important decisions should not be one-shot guesses. Chronos exists so
-        founders, product teams, researchers, and autonomous agents can simulate
-        consequences first — then commit with clearer reasoning, ranked options,
-        and an audit trail of what was considered.
+        Most AI tools return one reply. High-stakes choices need options: risk vs
+        speed, upside vs dependencies, confidence vs uncertainty. Chronos is built
+        so you can see those trade-offs before you commit.
       </DocBody>
+
+      <DocSub>What you get</DocSub>
+      <TopicList
+        items={[
+          {
+            title: "Multiple futures",
+            body: "Ranked paths with confidence, risk, and distinctive hooks (Fastest path, Lower risk, Highest upside).",
+          },
+          {
+            title: "Transparent reasoning",
+            body: "Every recommendation explains why — lowest execution risk, fits your objective, fewer dependencies, highest expected success.",
+          },
+          {
+            title: "Decision Report",
+            body: "A shareable artifact: objective, context, alternatives, trade-offs, confidence, risks, next actions.",
+          },
+          {
+            title: "Persistent memory",
+            body: "Goals, simulations, decisions, knowledge, and outcomes stay when you leave and return.",
+          },
+        ]}
+      />
 
       <DocSub>Core concepts</DocSub>
       <TopicList
@@ -366,50 +391,299 @@ function Introduction() {
           },
           {
             title: "Simulation",
-            body: "A run that generates multiple futures, scores them, and ranks recommendations.",
+            body: "A run that branches futures, scores them, and collapses to a recommendation.",
           },
           {
             title: "Timeline",
-            body: "A view of ranked futures and how they relate across versions of a decision.",
+            body: "Ranked futures you can compare, choose, and save.",
           },
           {
             title: "Memory",
-            body: "Saved history so past simulations, reports, and outcomes stay reusable.",
+            body: "History of goals, runs, decisions, and outcomes — Chronos’ durable advantage.",
           },
         ]}
       />
 
-      <DocSub>Architecture overview</DocSub>
-      <DocBody>
-        Chronos follows a simple decision loop. Every simulation moves through
-        the same stages so results stay comparable over time.
-      </DocBody>
+      <DocSub>Decision loop</DocSub>
       <FlowSteps
         steps={[
-          "Set a goal",
-          "Gather context",
-          "Generate multiple futures",
-          "Evaluate trade-offs",
-          "Rank outcomes",
-          "Recommend the best path",
+          "Create workspace",
+          "Set objective",
+          "Add context",
+          "Generate futures",
+          "Compare outcomes",
+          "Receive Decision Report",
+          "Save path · track outcome",
         ]}
       />
 
       <Callout tone="tip" title="Start here">
-        New to Chronos? Follow{" "}
+        Read{" "}
+        <Link
+          to="/docs?section=how-it-works"
+          className="text-chronos underline-offset-2 hover:underline"
+        >
+          How it works
+        </Link>{" "}
+        for branch → simulate → collapse, then{" "}
         <Link
           to="/docs?section=getting-started"
           className="text-chronos underline-offset-2 hover:underline"
         >
-          Getting Started
-        </Link>{" "}
-        to create a workspace and run your first simulation. For short answers,
-        see the{" "}
-        <Link to="/faq" className="text-chronos underline-offset-2 hover:underline">
-          FAQ
+          Getting started
+        </Link>
+        . Beta limits are listed under{" "}
+        <Link
+          to="/docs?section=beta"
+          className="text-chronos underline-offset-2 hover:underline"
+        >
+          Beta limitations
         </Link>
         .
       </Callout>
+    </div>
+  );
+}
+
+// ============================================================
+// How it works — branch → simulate → collapse
+// ============================================================
+
+function HowItWorksDocs() {
+  return (
+    <div>
+      <DocTitle>How it works</DocTitle>
+      <DocBody>
+        Chronos does not answer in one shot. It runs a three-phase loop —
+        <strong className="text-ink"> branch → simulate → collapse</strong> — so
+        every recommendation is grounded in compared alternatives.
+      </DocBody>
+
+      <DocSub>Branch</DocSub>
+      <DocBody>
+        From your goal, knowledge, and constraints, Chronos generates multiple
+        plausible futures (strategies). Each future is a distinct path: different
+        pace, risk, dependencies, and upside.
+      </DocBody>
+
+      <DocSub>Simulate</DocSub>
+      <DocBody>
+        Each branch is evaluated against your objective and constraints. The engine
+        scores success likelihood, risk, and confidence, and surfaces trade-offs —
+        what you gain and what you give up relative to other futures.
+      </DocBody>
+
+      <DocSub>Collapse</DocSub>
+      <DocBody>
+        Futures are ranked and collapsed into a Decision Report: recommended path,
+        confidence, “Recommended because” reasons, risks, and next actions. You
+        still choose which path to save — Chronos recommends; you decide.
+      </DocBody>
+
+      <FlowSteps
+        steps={["Branch (generate futures)", "Simulate (score & trade-offs)", "Collapse (rank & recommend)"]}
+      />
+
+      <DocSub>Why this builds trust</DocSub>
+      <DocBody>
+        Transparent reasoning is required on every recommendation. You should always
+        see short, scannable reasons such as:
+      </DocBody>
+      <ul className="mt-4 space-y-2 text-[15px] text-ink">
+        {[
+          "lowest execution risk",
+          "fits your stated objective",
+          "requires fewer dependencies",
+          "highest expected success",
+        ].map((item) => (
+          <li key={item} className="flex gap-2.5">
+            <span className="text-chronos">•</span>
+            {item}
+          </li>
+        ))}
+      </ul>
+
+      <Callout tone="note" title="Not a black box">
+        If Chronos cannot explain a recommendation relative to alternatives and your
+        goal, it is not finished product behavior. Comparison is the product.
+      </Callout>
+    </div>
+  );
+}
+
+// ============================================================
+// Auth & access (public beta)
+// ============================================================
+
+function AuthAccessDocs() {
+  return (
+    <div>
+      <DocTitle>Auth & access</DocTitle>
+      <DocBody>
+        Public beta authentication is designed for speed: land, sign in with
+        Google or GitHub, and reach a Decision Workspace without a tutorial maze.
+      </DocBody>
+
+      <DocSub>User flow</DocSub>
+      <FlowSteps
+        steps={[
+          "Landing → Get started",
+          "Google / GitHub (or email)",
+          "Supabase Auth session (JWT)",
+          "Create profile",
+          "Create personal workspace + owner membership",
+          "Ask: What are you trying to decide?",
+          "Run first simulation → Dashboard",
+        ]}
+      />
+
+      <DocSub>Data model</DocSub>
+      <TopicList
+        items={[
+          { title: "auth.users", body: "Supabase Auth identity (Google, GitHub, email)." },
+          { title: "profiles", body: "Display name, avatar, preferences, onboarded_at." },
+          { title: "workspaces", body: "Private decision HQ; owner_id + memberships." },
+          { title: "workspace_members", body: "Roles: owner, admin, member, viewer." },
+          { title: "decisions", body: "First-class decision objects (sims hang underneath)." },
+          { title: "simulations / events", body: "Runs + product analytics events." },
+        ]}
+      />
+
+      <DocSub>Request authorization</DocSub>
+      <DocBody>
+        Every workspace-scoped action should follow: verify JWT session → resolve
+        user → load workspace → check membership (or owner) → execute. The
+        browser app enforces this via ProtectedRoute + membership-aware RLS.
+      </DocBody>
+
+      <DocSub>Progress checklist</DocSub>
+      <DocBody>
+        Instead of a forced tour, Chronos unlocks progress as you act: connect LLM
+        (optional), create first decision, run first simulation, save memory, share
+        workspace.
+      </DocBody>
+
+      <Callout tone="note" title="Provider setup">
+        Enable Google and GitHub under Supabase Auth → Providers. Add redirect URL{" "}
+        <code className="text-chronos">https://your-host/auth/callback</code> (and
+        localhost for dev). Apply migration{" "}
+        <code className="text-chronos">20260721120000_public_beta_auth.sql</code>.
+      </Callout>
+    </div>
+  );
+}
+
+// ============================================================
+// Beta limitations
+// ============================================================
+
+function BetaLimitationsDocs() {
+  return (
+    <div>
+      <DocTitle>Current beta limitations</DocTitle>
+      <DocBody>
+        Chronos is in private beta. The decision loop works end-to-end; some
+        platform depth is still landing. Knowing the edges reduces surprises.
+      </DocBody>
+
+      <TopicList
+        items={[
+          {
+            title: "Simulation engine",
+            body: "Futures are generated and scored with the current product engine — useful for structured decisions, not a full Monte Carlo of the real world.",
+          },
+          {
+            title: "Knowledge (RAG-lite)",
+            body: "Uploads, URLs, and notes ground rankings. Full semantic retrieval and large corpus search are still evolving.",
+          },
+          {
+            title: "Collaboration",
+            body: "Workspaces are private to your account. Multi-user sharing, roles, and comments are not the focus of this beta.",
+          },
+          {
+            title: "API & automation",
+            body: "Public API and CI-style automation are roadmap items. The product UI is the primary surface today.",
+          },
+          {
+            title: "Outcome tracking",
+            body: "Follow-through (Yes / Partially / No) and free-text outcomes are supported; advanced calibration from outcomes into the next model is early.",
+          },
+          {
+            title: "Mobile polish",
+            body: "Core flows work on small screens; dense comparison layouts are optimized first for desktop.",
+          },
+        ]}
+      />
+
+      <Callout tone="tip" title="What is solid today">
+        Create workspace → set objective → add context → generate futures → compare
+        → Decision Report → save path → log outcomes. That loop is the beta focus.
+      </Callout>
+    </div>
+  );
+}
+
+// ============================================================
+// Docs FAQ
+// ============================================================
+
+function DocsFaq() {
+  const items: { q: string; a: string }[] = [
+    {
+      q: "What is Chronos?",
+      a: "A decision intelligence workspace that explores multiple futures, compares trade-offs, and recommends a path with transparent reasons — plus durable memory of goals, runs, and outcomes.",
+    },
+    {
+      q: "How is Chronos different from a chatbot?",
+      a: "Chatbots usually return one answer. Chronos branches alternatives, simulates trade-offs, collapses to a ranked recommendation, and keeps Decision Reports and history you can reopen later.",
+    },
+    {
+      q: "What does branch → simulate → collapse mean?",
+      a: "Branch generates multiple futures; simulate scores them against your goal and constraints; collapse ranks them into a recommendation and Decision Report you can share and save.",
+    },
+    {
+      q: "Why should I trust a recommendation?",
+      a: "Every report includes “Recommended because” bullets (risk, fit to objective, dependencies, expected success) plus alternatives, trade-offs, confidence, and risks — so you can disagree with evidence.",
+    },
+    {
+      q: "What is a Decision Report?",
+      a: "The artifact you remember and share: objective, context used, alternative futures, trade-offs, confidence, recommended path, risks, next actions — copy or download as markdown.",
+    },
+    {
+      q: "Does Chronos remember past work?",
+      a: "Yes. Previous goals, simulations, saved paths, knowledge, and outcomes persist locally and sync when cloud is available. Leave and come back without restarting from zero.",
+    },
+    {
+      q: "Is Chronos production-ready?",
+      a: "It is private beta. The core decision loop is usable; see Beta limitations for known edges (engine depth, collab, API, etc.).",
+    },
+    {
+      q: "Who is it for?",
+      a: "Founders, PMs, researchers, and teams making high-stakes choices where one-shot answers are not enough.",
+    },
+  ];
+
+  return (
+    <div>
+      <DocTitle>Frequently asked questions</DocTitle>
+      <DocBody>
+        Short answers for product understanding. A longer public FAQ also lives at{" "}
+        <Link to="/faq" className="text-chronos underline-offset-2 hover:underline">
+          /faq
+        </Link>
+        .
+      </DocBody>
+      <div className="mt-8 space-y-6">
+        {items.map((item, i) => (
+          <div key={item.q} className="border-b border-line pb-6">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
+              {String(i + 1).padStart(2, "0")}
+            </div>
+            <h3 className="mt-2 font-serif text-xl text-ink">{item.q}</h3>
+            <p className="mt-2 text-[15px] leading-relaxed text-ink-dim">{item.a}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -431,19 +705,20 @@ function GettingStarted() {
 
       <FlowSteps
         steps={[
-          "Create account",
-          "Create workspace",
-          "Set goal",
-          "Upload knowledge",
-          "Run simulation",
-          "Review recommendation",
+          "Get started (Google / GitHub)",
+          "Personal workspace bootstrapped",
+          "Create first decision",
+          "Add context",
+          "Generate futures",
+          "Save path · dashboard",
         ]}
       />
 
-      <DocSub>1. Create account</DocSub>
+      <DocSub>1. Get started</DocSub>
       <DocBody>
-        Request private beta access, then sign in. Your session stays private to
-        your account — workspaces are not public by default.
+        From the landing page choose <strong className="text-ink">Get started</strong>,
+        then continue with Google or GitHub. Chronos creates your profile and a
+        personal workspace with owner membership automatically.
       </DocBody>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
@@ -763,9 +1038,10 @@ function TimelineDocs() {
 
       <DocSub>Future comparison</DocSub>
       <DocBody>
-        Compare alternatives side by side: which path maximizes upside, which
-        protects runway, which is fastest. Comparison is how Chronos helps you
-        decide — not just generate options.
+        Chronos does not return a single answer. Each ranked future gets a
+        distinctive hook — Fastest path, Lower risk, or Highest upside — with
+        confidence so you can see trade-offs at a glance. Comparison is the
+        product: decide which future fits, then save it to the timeline.
       </DocBody>
 
       <DocSub>Version history</DocSub>
@@ -834,36 +1110,40 @@ function DecisionReportsDocs() {
     <div>
       <DocTitle>Decision reports</DocTitle>
       <DocBody>
-        A decision report is the packaged outcome of a simulation: the
-        recommended path, why it won, what alternatives were close, and what
-        risks remain.
+        The Decision Report is the artifact you remember and share. It is not a
+        chat reply — it packages the full decision: objective, context, ranked
+        futures, trade-offs, confidence, recommendation, risks, and next actions.
       </DocBody>
 
       <TopicList
         items={[
           {
-            title: "Recommendation",
-            body: "The strongest path ranked against your goal, priorities, and constraints.",
+            title: "Objective",
+            body: "The decision Chronos was asked to work — usually your active goal.",
           },
           {
-            title: "Reasoning",
-            body: "Supporting rationale so you can inspect why Chronos preferred one future.",
+            title: "Context used",
+            body: "Knowledge and notes that grounded the ranking for this run.",
+          },
+          {
+            title: "Alternative futures",
+            body: "Ranked paths with confidence, risk, and distinctive hooks (Fastest path, Lower risk, Highest upside).",
           },
           {
             title: "Trade-offs",
-            body: "What you gain and what you give up relative to other futures.",
+            body: "What each future gains or gives up relative to the engine best.",
           },
           {
-            title: "Risks & confidence",
-            body: "Where uncertainty remains and how strongly the ranking is supported.",
+            title: "Recommended because",
+            body: "Transparent trust bullets: lowest execution risk, fits your objective, fewer dependencies, highest expected success.",
           },
           {
-            title: "Next steps",
-            body: "Concrete actions suggested by the winning path so you can execute.",
+            title: "Confidence & recommended path",
+            body: "How strongly the ranking is supported and which path to commit.",
           },
           {
-            title: "Persistence",
-            body: "Reports stay in memory for comparison, re-runs, and decision history.",
+            title: "Risks & next actions",
+            body: "Where uncertainty remains and what to do next — then track outcomes over time.",
           },
         ]}
       />

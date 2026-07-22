@@ -146,7 +146,7 @@ export function Simulate() {
             <span className="italic text-ink-dim">startup.</span>
           </>
         }
-        subtitle="Enter an idea. Chronos forks ~1,000 possible futures — go-to-market paths, timelines, and outcomes — then collapses to the highest expected ARR with ranked alternatives."
+        subtitle="Public demo: enter an idea and watch Chronos branch → simulate → collapse into a best path with ranked alternatives. The Decision Workspace uses the same idea with multi-future comparison and durable memory."
       />
 
       <section className="relative pb-24 lg:pb-32">
@@ -198,7 +198,7 @@ export function Simulate() {
                   disabled={!idea.trim() || stage === "simulating"}
                   className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-medium text-bg transition hover:bg-chronos disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
                 >
-                  {stage === "simulating" ? "Simulating…" : "Simulate 1,000 futures"}
+                  {stage === "simulating" ? "Simulating…" : "Run demo simulation"}
                   {stage !== "simulating" && (
                     <svg
                       width="14"
@@ -314,7 +314,7 @@ function SimulatingPanel({
               <span className="relative inline-flex h-3 w-3 rounded-full bg-chronos" />
             </span>
             <span className="font-mono text-[12px] uppercase tracking-[0.2em] text-chronos">
-              {phaseLabel} · {counter.toLocaleString()} / 1,000 futures
+              {phaseLabel} · demo · {counter.toLocaleString()} paths
             </span>
           </div>
           <span className="font-mono text-[11px] tabular-nums text-ink-faint">

@@ -37,11 +37,11 @@ export function HomePage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[
             { to: "/core", num: "01", label: "Core", desc: "The working engine, three agents, and the Chronos language — all in one place.", color: "#E2DDDA" },
-            { to: "/simulate", num: "02", label: "Simulate", desc: "Enter an idea. Chronos simulates 1,000 startup paths and collapses to the best.", color: "#60899B" },
-            { to: "/platform", num: "03", label: "Platform", desc: "The architecture and six primitives that power temporal compute.", color: "#CDCAB2" },
-            { to: "/journey", num: "04", label: "Journey", desc: "Five steps from zero to temporal. Code included.", color: "#E2DDDA" },
-            { to: "/runtime", num: "05", label: "Runtime", desc: "The four-phase lifecycle inside a single kernel invocation.", color: "#60899B" },
-            { to: "/developers", num: "06", label: "Developers", desc: "SDKs, CLI, dashboard, and API — everything you need to ship.", color: "#CDCAB2" },
+            { to: "/simulate", num: "02", label: "Simulate", desc: "Public demo: branch → simulate → collapse an idea into a best path with ranked alternatives.", color: "#60899B" },
+            { to: "/platform", num: "03", label: "Platform", desc: "The architecture and primitives behind temporal decision systems.", color: "#CDCAB2" },
+            { to: "/journey", num: "04", label: "Journey", desc: "How Chronos thinks about plan, simulate, evaluate, and decide.", color: "#E2DDDA" },
+            { to: "/runtime", num: "05", label: "Runtime", desc: "The four-phase lifecycle of a simulation run.", color: "#60899B" },
+            { to: "/developers", num: "06", label: "Developers", desc: "Docs and platform notes — public API & SDKs on the roadmap.", color: "#CDCAB2" },
             { to: "/metrics", num: "07", label: "Metrics", desc: "Measured, not marketed. The numbers behind the runtime.", color: "#E2DDDA" },
             { to: "/roadmap", num: "08", label: "Roadmap", desc: "Built in phases. What's live, what's in beta, what's coming.", color: "#60899B" },
             { to: "/intelligence", num: "09", label: "Intelligence", desc: "The world model that compounds over time into an unfair advantage.", color: "#CDCAB2" },
@@ -406,9 +406,9 @@ export function AboutPage() {
         {/* Principles */}
         <div className="mt-16 grid grid-cols-1 gap-3 md:grid-cols-3">
           {[
-            { k: "01", t: "Branch freely", b: "Cost of a branch approaches zero. Evaluate a million futures in a single call." },
-            { k: "02", t: "Commit with confidence", b: "The winning branch is deterministic. Every bit of state is cryptographically anchored." },
-            { k: "03", t: "Archive everything", b: "Every branch becomes replayable. Every decision becomes an audit trail." },
+            { k: "01", t: "Branch freely", b: "Generate multiple futures for one objective instead of a single answer." },
+            { k: "02", t: "Commit with confidence", b: "Rank paths with confidence, risk, and transparent “recommended because” reasons." },
+            { k: "03", t: "Archive everything", b: "Save paths and outcomes in workspace memory so decisions compound over time." },
           ].map((p) => (
             <div key={p.k} className="rounded-xl border border-line bg-bg-soft p-5">
               <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">
@@ -534,22 +534,22 @@ export function SecurityPage() {
 
           <Block
             title="Encryption"
-            body="All data is encrypted in transit with TLS 1.3 and at rest with AES-256. Branch state is additionally sealed with post-quantum key agreement (ML-KEM-768) and signed with ML-DSA-65. Keys are rotated every 24 hours."
+            body="Production traffic uses HTTPS. Workspace data is stored under Supabase with industry-standard encryption at rest for the managed database, plus browser local storage for offline-first memory."
           />
 
           <Block
             title="Isolation"
-            body="Every branch is byte-level isolated from every other branch. We use cryptographic memory tagging and deterministic replay to guarantee that no branch can observe or influence any other branch — including branches belonging to other customers."
+            body="Workspaces are private to authenticated accounts. Row Level Security scopes cloud data by owner/membership. Simulation futures are evaluated as separate ranked options inside your workspace — not shared across customers."
           />
 
           <Block
             title="Infrastructure"
-            body="The runtime runs in configured deployment regions. Customer data remains within the region selected for its workspace. We do not use shared tenancy for the compute plane."
+            body="The Decision Workspace is a client app with dual-write memory (local + Supabase). Elastic simulation cloud and multi-region runtime are roadmap items, not current beta claims."
           />
 
           <Block
             title="Access control"
-            body="SSO via SAML 2.0 and OIDC. Role-based access control with four default roles. Audit logs for every API call, every branch operation, every state change — retained for 7 years."
+            body="Sign-in via Supabase Auth (Google, GitHub, email). Workspace membership roles (owner/admin/member/viewer) are in schema; full multi-user invites and SSO are expanding in beta."
           />
 
           <Block

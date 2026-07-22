@@ -505,7 +505,7 @@ export function BranchingAnimation() {
           textAnchor="middle"
           style={{ letterSpacing: 1.6 }}
         >
-          1,000 FUTURES → 1 DECISION
+          RANKED FUTURES → 1 DECISION
         </text>
       </svg>
     </div>
