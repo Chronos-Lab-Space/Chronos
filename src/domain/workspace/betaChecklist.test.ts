@@ -27,9 +27,9 @@ function home(partial: Partial<WorkspaceHome> = {}): WorkspaceHome {
 }
 
 describe("betaChecklist", () => {
-  it("starts with only optional LLM and share incomplete", () => {
+  it("starts with decision incomplete and share optional", () => {
     const items = evaluateBetaChecklist(home());
-    expect(items.find((i) => i.id === "llm")?.optional).toBe(true);
+    expect(items.find((i) => i.id === "share")?.optional).toBe(true);
     expect(items.find((i) => i.id === "decision")?.done).toBe(false);
     expect(nextBetaChecklistItem(items)?.id).toBe("decision");
   });
@@ -83,11 +83,10 @@ describe("betaChecklist", () => {
 
   it("computes required progress percent", () => {
     const items = evaluateBetaChecklist(home(), {
-      llmProviderConnected: true,
       shareAcknowledged: true,
       preferredAuthProvider: "google",
     });
-    // share + llm are optional — no required items done without goal/sim/memory
+    // share is optional — no required items done without goal/sim/memory
     const p = betaChecklistProgress(items);
     expect(p.requiredTotal).toBe(3);
     expect(p.requiredDone).toBe(0);

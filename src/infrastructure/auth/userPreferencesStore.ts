@@ -27,9 +27,18 @@ function writeAll(store: StoreShape): void {
   }
 }
 
+function normalize(raw: Partial<UserPreferences> | Record<string, unknown> | undefined): UserPreferences {
+  const r = raw ?? {};
+  return {
+    shareAcknowledged: Boolean(r.shareAcknowledged),
+    preferredAuthProvider:
+      typeof r.preferredAuthProvider === "string" ? r.preferredAuthProvider : null,
+  };
+}
+
 export function loadUserPreferences(userId: string): UserPreferences {
   const all = readAll();
-  return { ...DEFAULT_PREFERENCES, ...(all[userId] ?? {}) };
+  return { ...DEFAULT_PREFERENCES, ...normalize(all[userId]) };
 }
 
 export function saveUserPreferences(
@@ -37,7 +46,7 @@ export function saveUserPreferences(
   prefs: Partial<UserPreferences>
 ): UserPreferences {
   const all = readAll();
-  const next = { ...loadUserPreferences(userId), ...prefs };
+  const next = normalize({ ...loadUserPreferences(userId), ...prefs });
   all[userId] = next;
   writeAll(all);
   return next;

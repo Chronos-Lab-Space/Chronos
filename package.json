@@ -8,11 +8,18 @@
     "build": "vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test --config=playwright.config.ts"
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "supabase:start": "npx supabase start --ignore-health-check --exclude logflare,vector,studio,imgproxy",
+    "supabase:start:full": "npx supabase start",
+    "supabase:stop": "npx supabase stop",
+    "supabase:status": "npx supabase status",
+    "supabase:reset": "npx supabase db reset",
+    "supabase:env": "node scripts/write-local-supabase-env.mjs"
   },
   "dependencies": {
     "@playwright/test": "^1.61.1",
     "@sentry/react": "^10.67.0",
+    "@supabase/server": "1.4.0",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
     "@testing-library/jest-dom": "^6.9.1",
@@ -33,6 +40,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.1",
+    "supabase": "^2.109.1",
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "vite": "7.3.2",

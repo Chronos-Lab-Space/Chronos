@@ -3,6 +3,17 @@
 -- Simple relational model for the signed-in product home.
 -- ============================================================
 
+-- Shared trigger helper (also defined in schema.sql bootstrap)
+create or replace function public.refresh_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 -- workspaces --------------------------------------------------
 create table if not exists public.workspaces (
   id uuid primary key default gen_random_uuid(),

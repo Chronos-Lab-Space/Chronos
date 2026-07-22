@@ -1,13 +1,11 @@
 /**
  * Public beta onboarding checklist — unlock progress naturally (not a tutorial).
  *
- * Connect LLM (optional) → Create first decision → Run first simulation
- * → Save memory → Share workspace
+ * Create first decision → Run first simulation → Save memory → Share workspace
  */
 import type { WorkspaceHome } from "./types";
 
 export type BetaChecklistId =
-  | "llm"
   | "decision"
   | "simulation"
   | "memory"
@@ -24,13 +22,11 @@ export type BetaChecklistItem = {
 };
 
 export type UserPreferences = {
-  llmProviderConnected: boolean;
   shareAcknowledged: boolean;
   preferredAuthProvider: string | null;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
-  llmProviderConnected: false,
   shareAcknowledged: false,
   preferredAuthProvider: null,
 };
@@ -51,15 +47,6 @@ export function evaluateBetaChecklist(
   );
 
   return [
-    {
-      id: "llm",
-      label: "Connect LLM provider",
-      detail: "Optional — Grok advisor for briefs grounded in your workspace.",
-      optional: true,
-      done: prefs.llmProviderConnected,
-      href: "/workspace/advisor",
-      cta: prefs.llmProviderConnected ? "Advisor" : "Connect",
-    },
     {
       id: "decision",
       label: "Create first decision",

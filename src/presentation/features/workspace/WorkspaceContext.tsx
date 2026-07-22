@@ -63,7 +63,6 @@ type WorkspaceContextValue = {
   recordOutcomeResult: (simulationId: string, resultNote: string) => Promise<void>;
   preferences: UserPreferences;
   updatePreferences: (patch: Partial<UserPreferences>) => void;
-  markLlmConnected: () => void;
   markShareAcknowledged: () => void;
   refresh: () => Promise<void>;
 };
@@ -181,7 +180,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       error,
       preferences,
       updatePreferences,
-      markLlmConnected: () => updatePreferences({ llmProviderConnected: true }),
       markShareAcknowledged: () => updatePreferences({ shareAcknowledged: true }),
       refresh,
       createWorkspace: async (name, description) => {

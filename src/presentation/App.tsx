@@ -64,9 +64,6 @@ const MemoryPage = lazy(async () => ({
 const ComparePage = lazy(async () => ({
   default: (await import("./features/memory/MemoryPages")).ComparePage,
 }));
-const GrokAdvisorPage = lazy(async () => ({
-  default: (await import("./features/workspace/GrokAdvisorPage")).GrokAdvisorPage,
-}));
 
 function RouteFallback() {
   return (
@@ -133,7 +130,6 @@ function App() {
           <Route path="notes" element={lazyRoute(<NotesPage />)} />
           <Route path="memory" element={lazyRoute(<MemoryPage />)} />
           <Route path="memory/compare" element={lazyRoute(<ComparePage />)} />
-          <Route path="advisor" element={lazyRoute(<GrokAdvisorPage />)} />
         </Route>
 
         {/* Legacy dashboard entry → workspace home */}

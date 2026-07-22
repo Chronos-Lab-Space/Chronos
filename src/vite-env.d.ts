@@ -2,7 +2,10 @@
 
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;
+  /** Publishable (sb_publishable_...) or legacy anon JWT key */
   readonly VITE_SUPABASE_ANON_KEY: string;
+  /** Optional alias for the new publishable key naming */
+  readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   readonly VITE_DEBUG?: string;
 
   /** Playwright only — never set in production builds */

@@ -42,7 +42,6 @@ Use it when the cost of a wrong path is high — product launches, capital alloc
 | **Public site** | Marketing, simulator, docs, FAQ |
 | **Private workspace** | Goals, knowledge library, simulations, timeline, memory |
 | **Docs** | Product documentation (`/docs`, page header: Cerebrum) |
-| **Grok advisor** | Workspace-aware guidance (via Supabase Edge Function) |
 
 ---
 
@@ -56,13 +55,9 @@ cd Chronos
 # Install
 npm install
 
-# Configure
-cp .env.example .env
-# Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-
-# Apply database schema (Supabase SQL editor)
-# Prefer migrations under supabase/migrations/
-# or bootstrap with supabase/schema.sql
+# Local Supabase (Docker) — applies migrations under supabase/migrations/
+npm run supabase:start
+npm run supabase:env    # writes .env with local URL + anon key
 
 # Dev
 npm run dev
@@ -76,14 +71,32 @@ npm run build
 
 Open [http://localhost:5173](http://localhost:5173).
 
+### Local Supabase
+
+| Command | Purpose |
+|---------|---------|
+| `npm run supabase:start` | Start local stack (lean defaults for smaller machines) |
+| `npm run supabase:start:full` | Full stack including Studio / analytics |
+| `npm run supabase:env` | Write `.env` from `supabase status` |
+| `npm run supabase:status` | URLs, keys, DB connection |
+| `npm run supabase:reset` | Re-run migrations + seed |
+| `npm run supabase:stop` | Stop containers (keeps data volume) |
+
+- API: `http://127.0.0.1:54321` · DB: `postgresql://postgres:postgres@127.0.0.1:54322/postgres`
+- Mailpit (auth emails): `http://127.0.0.1:54324`
+- Auth redirects are configured for Vite at port **5173** in `supabase/config.toml`
+- Project is prepared to link remote **Chronos Lab** (`gkyhqnjgwxlyzptpiiob`) via `npx supabase link` after `supabase login`
+
+To point the SPA at a **hosted** project instead: copy [`.env.example`](./.env.example) → `.env` and set Dashboard API URL + anon/publishable key.
+
 ### Environment
 
 | Variable | Purpose |
 |----------|---------|
 | `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon key (browser) |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon / publishable key (browser) |
 | `VITE_SENTRY_DSN` | Optional — client error monitoring (production) |
-| `XAI_API_KEY` | **Server-only** Edge Function secret for Grok (never `VITE_`) |
+| `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` | Server / `@supabase/server` (never `VITE_` for secret) |
 
 See [`.env.example`](./.env.example).
 
@@ -94,17 +107,13 @@ See [`.env.example`](./.env.example).
 #    - supabase/migrations/* (through public_beta_auth)
 #    - supabase/repair_workspace_grants.sql  (authenticated grants)
 
-# 2) Edge Grok (if marketing advisor)
-supabase secrets set XAI_API_KEY=xai-...
-supabase functions deploy grok
-
-# 3) Hosting env (Vercel / GH Pages build)
+# 2) Hosting env (Vercel / GH Pages build)
 #    VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_SENTRY_DSN
 
-# 4) Auth → URL config: https://chronoslab.space/auth/callback
+# 3) Auth → URL config: https://chronoslab.space/auth/callback
 #    Providers: Google + GitHub enabled
 
-# 5) If keys were ever pasted in chat or committed: rotate anon + service_role
+# 4) If keys were ever pasted in chat or committed: rotate publishable + secret
 #    in Supabase → Settings → API, then update hosting env.
 ```
 
@@ -117,7 +126,7 @@ supabase functions deploy grok
 | UI | React 19, Vite 7, Tailwind CSS 4, TypeScript |
 | Routing | React Router 7 (BrowserRouter) |
 | Backend | Supabase (Auth, Postgres, RLS, Edge Functions) |
-| AI | Grok (xAI) via authenticated Edge Function proxy |
+| Server SDK | `@supabase/server` (Edge Function auth + clients) |
 | Tests | Vitest, Testing Library, Playwright |
 | Deploy | Static SPA (Vercel / GitHub Pages) |
 
@@ -137,7 +146,6 @@ src/
 └── index.css
 supabase/
 ├── migrations/       # Schema evolution (workspaces, sims, versioning, …)
-├── functions/grok/   # Edge Function → api.x.ai
 └── schema.sql        # Bootstrap reference (keep aligned with migrations)
 ```
 
@@ -161,7 +169,6 @@ Testing strategy: [TESTING.md](./TESTING.md)
 | `/workspace/knowledge` | Knowledge Library |
 | `/workspace/simulations` | Run & review simulations |
 | `/workspace/memory` | Versioned decision history |
-| `/workspace/advisor` | Grok workspace advisor |
 | `/platform` · `/roadmap` · `/about` | Product & company |
 
 Legacy `/dashboard` redirects to `/workspace`.

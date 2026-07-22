@@ -37,7 +37,7 @@ const releases: Release[] = [
       },
       {
         label: "Ops",
-        detail: "Optional VITE_SENTRY_DSN · Edge XAI_API_KEY · E2E join-public-beta + decision loop",
+        detail: "Optional VITE_SENTRY_DSN · E2E join-public-beta + decision loop",
       },
     ],
   },
@@ -136,21 +136,7 @@ const releases: Release[] = [
       { label: "Pulse", detail: "Knowledge coverage, simulation confidence, open tasks, recommendation" },
       { label: "Comparison", detail: "All ranked futures with confidence bars — not a single answer" },
       { label: "Timeline", detail: "Goal → Future A ⭐ → B → C; choose and save path" },
-      { label: "Nav", detail: "Primary chrome simplified; Memory/Grok remain deep-linkable" },
-    ],
-  },
-  {
-    version: "4.5.0",
-    date: "2026-07-15",
-    tag: "minor",
-    title: "Grok workspace advisor",
-    summary:
-      "Grok (xAI) is wired into the private workspace through a Supabase Edge Function proxy. Advisors and simulation briefs stay grounded in goal, knowledge, and run history — API keys never reach the browser.",
-    highlights: [
-      { label: "Grok", detail: "Authenticated Edge Function grok → api.x.ai chat completions (model grok-4.5)" },
-      { label: "Advisor", detail: "/workspace/advisor chat with workspace context attached" },
-      { label: "Reports", detail: "Enhance with Grok on simulation detail for executive brief + 7-day plan" },
-      { label: "Security", detail: "XAI_API_KEY stored as function secret; JWT required" },
+      { label: "Nav", detail: "Primary chrome simplified; Memory remains deep-linkable" },
     ],
   },
   {
