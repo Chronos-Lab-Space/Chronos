@@ -1,31 +1,46 @@
 @import "tailwindcss";
 
+/*
+  Chronos palette (canonical):
+  #111111  void / bg
+  #224D5F  deep field (bg-soft)  — note: source #224DSF normalized to valid hex
+  #60899B  chronos brand
+  #989898  muted / faint
+  #C4C2AA  sand / secondary
+  #F2EDEA  paper / primary ink on dark
+*/
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --color-bg: #111111;
-  --color-bg-soft: #1c3e4e;
-  --color-ink: #e2ddda;
-  --color-ink-dim: #cdcab2;
+  --color-bg-soft: #224d5f;
+  --color-ink: #f2edea;
+  --color-ink-dim: #c4c2aa;
   --color-ink-faint: #989898;
-  --color-line: rgba(226, 221, 218, 0.1);
-  --color-line-strong: rgba(226, 221, 218, 0.2);
+  --color-line: rgba(242, 237, 234, 0.1);
+  --color-line-strong: rgba(242, 237, 234, 0.2);
   --color-chronos: #60899b;
-  --color-accent-2: #cdcab2;
-  --color-accent-warm: #e2ddda;
+  --color-accent-2: #c4c2aa;
+  --color-accent-warm: #f2edea;
 }
 
 :root {
   color-scheme: dark;
+  --palette-void: #111111;
+  --palette-field: #224d5f;
+  --palette-chronos: #60899b;
+  --palette-muted: #989898;
+  --palette-sand: #c4c2aa;
+  --palette-paper: #f2edea;
 }
 
 html,
 body,
 #root {
   background: #111111;
-  color: #e2ddda;
+  color: #f2edea;
   font-family: "Inter", sans-serif;
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
@@ -38,7 +53,7 @@ body {
 
 ::selection {
   background: #60899b;
-  color: #111111;
+  color: #f2edea;
 }
 
 /* === Subtle grid texture (used sparingly) === */
@@ -95,10 +110,10 @@ body {
 .gradient-text {
   background: linear-gradient(
     110deg,
-    #e2ddda 0%,
-    #cdcab2 42%,
+    #f2edea 0%,
+    #c4c2aa 42%,
     #60899b 72%,
-    #e2ddda 100%
+    #f2edea 100%
   );
   background-size: 200% 100%;
   -webkit-background-clip: text;
@@ -115,13 +130,13 @@ body {
   letter-spacing: -0.04em;
   line-height: 0.82;
   text-transform: none;
-  color: #cdcab2;
+  color: #c4c2aa;
   -webkit-font-smoothing: antialiased;
   text-rendering: geometricPrecision;
 }
 
 .chronos-brand-mark {
-  color: #e2ddda;
+  color: #f2edea;
 }
 
 /* === Palette normalization ===
@@ -132,17 +147,17 @@ svg [stroke="#c6f0ff"] { stroke: #60899b; }
 svg [fill="#c6f0ff"] { fill: #60899b; }
 svg [stop-color="#c6f0ff"], svg [stopColor="#c6f0ff"] { stop-color: #60899b; }
 
-svg [stroke="#b79bff"] { stroke: #cdcab2; }
-svg [fill="#b79bff"] { fill: #cdcab2; }
-svg [stop-color="#b79bff"], svg [stopColor="#b79bff"] { stop-color: #cdcab2; }
+svg [stroke="#b79bff"] { stroke: #c4c2aa; }
+svg [fill="#b79bff"] { fill: #c4c2aa; }
+svg [stop-color="#b79bff"], svg [stopColor="#b79bff"] { stop-color: #c4c2aa; }
 
-svg [stroke="#ffd7a3"] { stroke: #e2ddda; }
-svg [fill="#ffd7a3"] { fill: #e2ddda; }
-svg [stop-color="#ffd7a3"], svg [stopColor="#ffd7a3"] { stop-color: #e2ddda; }
+svg [stroke="#ffd7a3"] { stroke: #f2edea; }
+svg [fill="#ffd7a3"] { fill: #f2edea; }
+svg [stop-color="#ffd7a3"], svg [stopColor="#ffd7a3"] { stop-color: #f2edea; }
 
-svg [stroke="#e8ecf2"] { stroke: #e2ddda; }
-svg [fill="#e8ecf2"] { fill: #e2ddda; }
-svg [stop-color="#e8ecf2"], svg [stopColor="#e8ecf2"] { stop-color: #e2ddda; }
+svg [stroke="#e8ecf2"] { stroke: #f2edea; }
+svg [fill="#e8ecf2"] { fill: #f2edea; }
+svg [stop-color="#e8ecf2"], svg [stopColor="#e8ecf2"] { stop-color: #f2edea; }
 
 svg [stroke="#8a93a6"], svg [stroke="#4a5168"] { stroke: #989898; }
 svg [fill="#8a93a6"], svg [fill="#4a5168"] { fill: #989898; }
@@ -180,18 +195,18 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
    keep legacy inline diagrams on the current palette without adding visual
    side effects to unrelated style properties. */
 [style*="color: rgb(198, 240, 255)"] { color: #60899b !important; }
-[style*="color: rgb(183, 155, 255)"] { color: #cdcab2 !important; }
-[style*="color: rgb(255, 215, 163)"], [style*="color: rgb(240, 138, 169)"] { color: #e2ddda !important; }
+[style*="color: rgb(183, 155, 255)"] { color: #c4c2aa !important; }
+[style*="color: rgb(255, 215, 163)"], [style*="color: rgb(240, 138, 169)"] { color: #f2edea !important; }
 [style*="color: rgb(138, 147, 166)"], [style*="color: rgb(74, 81, 104)"] { color: #989898 !important; }
 
 [style*="background: rgb(198, 240, 255)"], [style*="background-color: rgb(198, 240, 255)"] { background: #60899b !important; }
-[style*="background: rgb(183, 155, 255)"], [style*="background-color: rgb(183, 155, 255)"] { background: #cdcab2 !important; }
-[style*="background: rgb(255, 215, 163)"], [style*="background-color: rgb(255, 215, 163)"], [style*="background: rgb(240, 138, 169)"], [style*="background-color: rgb(240, 138, 169)"] { background: #e2ddda !important; }
+[style*="background: rgb(183, 155, 255)"], [style*="background-color: rgb(183, 155, 255)"] { background: #c4c2aa !important; }
+[style*="background: rgb(255, 215, 163)"], [style*="background-color: rgb(255, 215, 163)"], [style*="background: rgb(240, 138, 169)"], [style*="background-color: rgb(240, 138, 169)"] { background: #f2edea !important; }
 [style*="background: rgb(138, 147, 166)"], [style*="background-color: rgb(138, 147, 166)"], [style*="background: rgb(74, 81, 104)"], [style*="background-color: rgb(74, 81, 104)"] { background: #989898 !important; }
 
 [style*="border-color: rgb(198, 240, 255)"] { border-color: #60899b !important; }
-[style*="border-color: rgb(183, 155, 255)"] { border-color: #cdcab2 !important; }
-[style*="border-color: rgb(255, 215, 163)"], [style*="border-color: rgb(240, 138, 169)"] { border-color: #e2ddda !important; }
+[style*="border-color: rgb(183, 155, 255)"] { border-color: #c4c2aa !important; }
+[style*="border-color: rgb(255, 215, 163)"], [style*="border-color: rgb(240, 138, 169)"] { border-color: #f2edea !important; }
 [style*="border-color: rgb(138, 147, 166)"], [style*="border-color: rgb(74, 81, 104)"] { border-color: #989898 !important; }
 
 /* === Spatial star field === */
@@ -380,6 +395,137 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   animation: motion-fade-up 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.workspace-shell-enter {
+  animation: workspace-shell-in 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes workspace-shell-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Full-screen enter loading — branch → evaluate feel */
+.workspace-loading-screen {
+  position: relative;
+  display: flex;
+  min-height: min(70vh, 560px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(242, 237, 234, 0.08);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(34, 77, 95, 0.55), transparent 70%),
+    #111111;
+}
+
+.workspace-loading-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(96, 137, 155, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(96, 137, 155, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+  pointer-events: none;
+}
+
+.workspace-loading-orbits {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.workspace-loading-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid rgba(96, 137, 155, 0.35);
+  animation: workspace-orbit 4.5s linear infinite;
+}
+
+.workspace-loading-ring:nth-child(2) {
+  inset: 14px;
+  border-color: rgba(196, 194, 170, 0.35);
+  animation-duration: 6s;
+  animation-direction: reverse;
+}
+
+.workspace-loading-ring:nth-child(3) {
+  inset: 28px;
+  border-color: rgba(242, 237, 234, 0.2);
+  animation-duration: 3.2s;
+}
+
+.workspace-loading-core {
+  position: absolute;
+  inset: 42px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 40% 35%, #60899b, #224d5f 60%, #111111);
+  box-shadow: 0 0 32px rgba(96, 137, 155, 0.35);
+  animation: workspace-core-pulse 2.4s ease-in-out infinite;
+}
+
+.workspace-loading-node {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #f2edea;
+  box-shadow: 0 0 10px rgba(96, 137, 155, 0.8);
+}
+
+.workspace-loading-ring > .workspace-loading-node {
+  top: -3.5px;
+  left: calc(50% - 3.5px);
+}
+
+.workspace-loading-label {
+  position: relative;
+  margin-top: 2rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #60899b;
+  animation: workspace-label-fade 1.8s ease-in-out infinite;
+}
+
+.workspace-loading-sub {
+  position: relative;
+  margin-top: 0.65rem;
+  max-width: 16rem;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #c4c2aa;
+  animation: motion-fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 200ms;
+}
+
+@keyframes workspace-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes workspace-core-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes workspace-label-fade {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
 .workspace-nav-active {
   transition:
     color 200ms ease,
@@ -427,7 +573,12 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   .workspace-drawer-enter,
   .workspace-panel-enter,
   .workspace-banner-enter,
-  .workspace-msg-enter {
+  .workspace-msg-enter,
+  .workspace-shell-enter,
+  .workspace-loading-ring,
+  .workspace-loading-core,
+  .workspace-loading-label,
+  .workspace-loading-sub {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

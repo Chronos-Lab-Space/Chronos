@@ -4,6 +4,7 @@ import { isWorkspaceOnboarded } from "../../../domain/workspace/onboarding";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 import { ChronosCMark } from "../../components/ChronosCMark";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
+import { WorkspaceLoadingScreen } from "./WorkspaceLoadingScreen";
 import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean };
@@ -50,7 +51,7 @@ function WorkspaceShellInner() {
   };
 
   return (
-    <div className="min-h-dvh bg-bg pb-20 md:pb-0">
+    <div className="workspace-shell-enter min-h-dvh bg-bg pb-20 md:pb-0">
       <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-5 lg:px-6">
           <div className="flex min-w-0 items-center gap-2">
@@ -180,9 +181,13 @@ function WorkspaceShellInner() {
             </div>
           )}
           {loading ? (
-            <div className="page-enter flex min-h-[40vh] items-center justify-center">
-              <div className="h-6 w-6 animate-spin rounded-full border border-chronos border-t-transparent" />
-            </div>
+            <WorkspaceLoadingScreen
+              message={
+                home
+                  ? "Syncing workspace memory…"
+                  : "Opening decision workspace…"
+              }
+            />
           ) : !ready ? (
             <div key="onboarding" className="page-enter">
               <WorkspaceOnboarding />
