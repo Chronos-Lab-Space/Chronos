@@ -41,11 +41,10 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
         run: |
+          # Secrets override .env.production when set; otherwise Vite uses committed public client env.
           if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
-            echo "::error::Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY repository secrets"
-            exit 1
+            echo "::notice::Supabase Actions secrets unset — using .env.production if present"
           fi
-          # Prefer secret; else Vite loads committed .env.production (public client DSN).
           if [ -z "$VITE_SENTRY_DSN" ]; then
             echo "::notice::VITE_SENTRY_DSN secret unset — using .env.production if present"
           else
