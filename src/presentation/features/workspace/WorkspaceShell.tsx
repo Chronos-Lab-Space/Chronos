@@ -180,20 +180,26 @@ function WorkspaceShellInner() {
               {error}
             </div>
           )}
-          {loading ? (
-            <WorkspaceLoadingScreen
-              message={
-                home
-                  ? "Syncing workspace memory…"
-                  : "Opening decision workspace…"
-              }
-            />
+          {/* Never unmount the outlet once home exists — tab focus sync used to
+              flip loading and wipe in-progress form drafts (objective, notes). */}
+          {loading && !home ? (
+            <WorkspaceLoadingScreen message="Opening decision workspace…" />
           ) : !ready ? (
             <div key="onboarding" className="page-enter">
               <WorkspaceOnboarding />
+              {loading ? (
+                <p className="mt-4 text-center font-mono text-[10px] uppercase text-ink-faint">
+                  Syncing…
+                </p>
+              ) : null}
             </div>
           ) : (
             <div key={routeKey} className="page-enter">
+              {loading ? (
+                <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                  Syncing workspace…
+                </p>
+              ) : null}
               <Outlet />
             </div>
           )}

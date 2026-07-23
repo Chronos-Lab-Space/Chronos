@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { accountBootstrapService } from "../../../application/workspace/AccountBootstrapService";
@@ -82,6 +83,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
+  /** After first hydrate, background sync must not flip loading (unmounts forms). */
+  const hasHydratedRef = useRef(false);
+  const ownerIdRef = useRef<string | null>(null);
 
   const syncRemoteError = useCallback(() => {
     setRemoteError(workspaceService.getRemoteError());
@@ -94,59 +98,94 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     return user?.id ?? null;
   }, []);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const session = await authService.currentSession();
-      const user = session?.user ?? (await authService.currentUser());
-      const id = user?.id ?? null;
-      if (!id || !user) {
-        setOwnerId(null);
-        setHome(null);
-        setWorkspaces([]);
-        setPreferences(DEFAULT_PREFERENCES);
-        setRemoteError(null);
-        return;
+  /**
+   * Reload workspace from local + cloud.
+   * @param quiet When true, keep the shell mounted so in-progress form drafts survive
+   *   (tab focus token refresh, soft revalidate). Default: show loading only before first hydrate.
+   */
+  const refresh = useCallback(
+    async (options?: { quiet?: boolean }) => {
+      const quiet = options?.quiet === true || hasHydratedRef.current;
+      if (!quiet) {
+        setLoading(true);
       }
-      setOwnerId(id);
-      setPreferences(loadUserPreferences(id));
-
-      // Profile → personal workspace → owner membership
+      setError(null);
       try {
-        await accountBootstrapService.ensureAccount(user);
-      } catch (err) {
-        console.warn("[chronos] account bootstrap failed", err);
-      }
+        const session = await authService.currentSession();
+        const user = session?.user ?? (await authService.currentUser());
+        const id = user?.id ?? null;
+        if (!id || !user) {
+          hasHydratedRef.current = false;
+          ownerIdRef.current = null;
+          setOwnerId(null);
+          setHome(null);
+          setWorkspaces([]);
+          setPreferences(DEFAULT_PREFERENCES);
+          setRemoteError(null);
+          return;
+        }
+        setOwnerId(id);
+        ownerIdRef.current = id;
+        setPreferences(loadUserPreferences(id));
 
-      const [loaded, list] = await Promise.all([
-        workspaceService.load(id),
-        workspaceService.listWorkspaces(id),
-      ]);
-      setHome(loaded);
-      setWorkspaces(list);
-      syncRemoteError();
-    } catch (err) {
-      setError((err as Error).message);
-      syncRemoteError();
-    } finally {
-      setLoading(false);
-    }
-  }, [syncRemoteError]);
+        // Profile → personal workspace → owner membership
+        try {
+          await accountBootstrapService.ensureAccount(user);
+        } catch (err) {
+          console.warn("[chronos] account bootstrap failed", err);
+        }
+
+        const [loaded, list] = await Promise.all([
+          workspaceService.load(id),
+          workspaceService.listWorkspaces(id),
+        ]);
+        setHome(loaded);
+        setWorkspaces(list);
+        hasHydratedRef.current = true;
+        syncRemoteError();
+      } catch (err) {
+        setError((err as Error).message);
+        syncRemoteError();
+      } finally {
+        setLoading(false);
+      }
+    },
+    [syncRemoteError]
+  );
 
   useEffect(() => {
     trackProductEvent("session_start");
-    void refresh();
+    void refresh({ quiet: false });
     const { data } = authService.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || !session) {
+        hasHydratedRef.current = false;
+        ownerIdRef.current = null;
         setOwnerId(null);
         setHome(null);
         setWorkspaces([]);
         setLoading(false);
         return;
       }
+
+      // Tab focus / auto-refresh fires TOKEN_REFRESHED — must not remount workspace
+      // (loading screen unmounts <Outlet /> and wipes objective/note drafts).
+      if (event === "TOKEN_REFRESHED") {
+        return;
+      }
+
+      // Duplicate of initial refresh path; soft revalidate only if needed.
+      if (event === "INITIAL_SESSION") {
+        if (!hasHydratedRef.current) {
+          void refresh({ quiet: false });
+        }
+        return;
+      }
+
+      const nextId = session.user?.id ?? null;
+      const userChanged = Boolean(nextId && nextId !== ownerIdRef.current);
       trackProductEvent("session_start", { authEvent: event });
-      void refresh();
+      // Full loading flash only on true sign-in / account switch.
+      void refresh({ quiet: !userChanged && hasHydratedRef.current });
     });
     return () => data.subscription.unsubscribe();
   }, [refresh]);
