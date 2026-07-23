@@ -9,6 +9,14 @@ import {
   type KnowledgeUsedRef,
   type TradeoffRow,
 } from "./simulationReport";
+import {
+  buildDecisionEvidence,
+  type DecisionEvidence,
+} from "./evidence";
+import {
+  deriveExpectedValue,
+  type ExpectedValueResult,
+} from "./expectedValue";
 import type {
   FutureRecord,
   GoalRecord,
@@ -18,10 +26,10 @@ import type {
 } from "./types";
 
 /**
- * Decision Report — the artifact users remember and share.
+ * Decision Report — the keepable product artifact.
  *
- * Objective · Context used · Alternative futures · Trade-offs ·
- * Confidence · Recommended path · Risks · Next actions
+ * Contract: Goal → Summary → Evidence → Recommendation → Why →
+ * Expected Value → Compare → Next → Save Decision → Memory
  */
 export type DecisionReportAlternative = {
   id: string;
@@ -35,12 +43,21 @@ export type DecisionReportAlternative = {
   isRecommended: boolean;
 };
 
+export type SimulationSummary = {
+  pathsEvaluated: number | null;
+  strategiesGenerated: number;
+  disqualifiedCount: number | null;
+  status: string;
+};
+
 export type DecisionReport = {
   /** Active decision / goal title */
   decisionTitle: string;
   /** Simulation objective (what Chronos decided) */
   objective: string;
   objectiveDescription: string | null;
+  summary: SimulationSummary;
+  evidence: DecisionEvidence;
   contextUsed: KnowledgeUsedRef[];
   alternatives: DecisionReportAlternative[];
   tradeoffs: TradeoffRow[];
@@ -54,6 +71,7 @@ export type DecisionReport = {
   recommendedBecause: string[];
   /** Longer narrative / evidence reasons (complementary to recommendedBecause). */
   why: string[];
+  expectedValue: ExpectedValueResult;
   risks: string[];
   nextActions: string[];
   simulationId: string;
@@ -125,6 +143,26 @@ export function buildDecisionReport(
     goal?.description ||
     null;
 
+  const evidence = buildDecisionEvidence(home, simulation, futures);
+  const knowledgeCount =
+    evidence.knowledgeSourcesUsed || home.knowledge.length + home.notes.length;
+  const expectedValue = deriveExpectedValue({
+    chosen,
+    futures,
+    simulation,
+    knowledgeCount,
+    constraintCount: evidence.constraintsEvaluated,
+  });
+
+  const pathsEvaluated =
+    typeof simulation.result.paths_evaluated === "number"
+      ? simulation.result.paths_evaluated
+      : null;
+  const disqualifiedCount =
+    typeof simulation.result.disqualified_count === "number"
+      ? simulation.result.disqualified_count
+      : null;
+
   return {
     decisionTitle: goal?.title?.trim() || simulation.title,
     objective:
@@ -132,6 +170,13 @@ export function buildDecisionReport(
       goal?.title?.trim() ||
       simulation.title,
     objectiveDescription,
+    summary: {
+      pathsEvaluated,
+      strategiesGenerated: evidence.strategiesGenerated,
+      disqualifiedCount,
+      status: simulation.status,
+    },
+    evidence,
     contextUsed,
     alternatives,
     tradeoffs,
@@ -140,6 +185,7 @@ export function buildDecisionReport(
     recommendedSummary: chosen?.summary ?? null,
     recommendedBecause,
     why,
+    expectedValue,
     risks,
     nextActions,
     simulationId: simulation.id,
@@ -406,9 +452,21 @@ function parseOutcomeFollowed(raw: unknown): OutcomeFollowed | null {
   return null;
 }
 
-/** Markdown export for sharing / archival — keepable product artifact. */
+/** Markdown export — matches result page contract order. */
 export function exportDecisionReportMarkdown(report: DecisionReport): string {
   const conf = `${Math.round(report.confidence * 100)}%`;
+  const summaryBits = [
+    report.summary.strategiesGenerated != null
+      ? `${report.summary.strategiesGenerated} strategies`
+      : null,
+    report.summary.pathsEvaluated != null
+      ? `${report.summary.pathsEvaluated} paths evaluated`
+      : null,
+    report.summary.disqualifiedCount != null && report.summary.disqualifiedCount > 0
+      ? `${report.summary.disqualifiedCount} disqualified`
+      : null,
+  ].filter(Boolean);
+
   const lines = [
     `# Decision Report`,
     ``,
@@ -417,37 +475,56 @@ export function exportDecisionReportMarkdown(report: DecisionReport): string {
     report.objective !== report.decisionTitle ? report.objective : null,
     report.objectiveDescription ? report.objectiveDescription : null,
     ``,
-    `## Recommendation`,
-    report.recommended,
-    report.recommendedSummary ? report.recommendedSummary : null,
-    ``,
-    `## Confidence`,
-    conf,
+    `## Simulation summary`,
+    summaryBits.length ? summaryBits.join(" · ") : report.summary.status,
     report.pathSaved ? `Status: Path saved` : `Status: Engine recommendation`,
-    report.outcomeFollowed
-      ? `Followed: ${report.outcomeFollowed}${report.outcomeResult ? ` — ${report.outcomeResult}` : ""}`
-      : null,
     ``,
     `## Evidence`,
-    ...report.recommendedBecause.map((r) => `- ${r}`),
-    ...report.why.map((w) => `- ${w}`),
+    `- Knowledge sources used: ${report.evidence.knowledgeSourcesUsed}`,
+    `- Constraints evaluated: ${report.evidence.constraintsEvaluated}`,
+    `- Strategies generated: ${report.evidence.strategiesGenerated}`,
+    ``,
+    `### Evaluation criteria`,
+    ...report.evidence.criteria.map(
+      (c) => `- ${c.evaluated ? "✓" : "—"} ${c.label}`
+    ),
     ...(report.contextUsed.length
       ? ["", "### Context used", ...report.contextUsed.map((c) => `- [${c.type}] ${c.title}`)]
       : []),
     ``,
-    `## Trade-offs`,
+    `## Recommendation`,
+    report.recommended,
+    report.recommendedSummary ? report.recommendedSummary : null,
+    `Confidence: ${conf}`,
+    ``,
+    `## Why this was chosen`,
+    ...report.recommendedBecause.map((r) => `- ${r}`),
+    ...report.why.map((w) => `- ${w}`),
+    ``,
+    `## Expected value`,
+    ...(report.expectedValue.rows.length
+      ? report.expectedValue.rows.map((r) => `- **${r.label}:** ${r.value}`)
+      : ["- (insufficient signals)"]),
+    report.expectedValue.reason ? `Reason: ${report.expectedValue.reason}` : null,
+    ``,
+    `## Compare alternatives`,
     ...(report.tradeoffs.length
       ? report.tradeoffs.map((t) => `- **${t.name}:** ${t.vsBest}`)
       : report.alternatives.map(
           (a) =>
-            `- **${a.name}**${a.isRecommended ? " · recommended" : ""} — conf ${(a.confidence * 100).toFixed(0)}% · risk ${(a.risk * 100).toFixed(0)}%`
+            `- **${a.name}**${a.isRecommended ? " · recommended" : ""} — conf ${(a.confidence * 100).toFixed(0)}% · risk ${(a.risk * 100).toFixed(0)}% · score ${(a.score * 100).toFixed(0)}%`
         )),
     ``,
     `## Risks`,
     ...report.risks.map((r) => `- ${r}`),
     ``,
-    `## Next steps`,
+    `## Next actions`,
     ...report.nextActions.map((a, i) => `${i + 1}. ${a}`),
+    ``,
+    `## Save decision`,
+    report.pathSaved
+      ? `Path saved${report.outcomeFollowed ? ` · Followed: ${report.outcomeFollowed}` : ""}`
+      : `Pending — choose and save a path`,
     ``,
     `---`,
     `Simulation: ${report.simulationTitle} (${report.simulationId})`,
