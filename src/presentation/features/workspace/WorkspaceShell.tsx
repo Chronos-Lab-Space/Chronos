@@ -95,8 +95,9 @@ function WorkspaceShellInner() {
             </div>
             <button
               type="button"
-              onClick={handleSignOut}
-              className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-ink-dim hover:text-ink sm:inline"
+              onClick={() => void handleSignOut()}
+              aria-label="Sign out"
+              className="rounded-full border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-dim transition hover:border-chronos/40 hover:text-ink"
             >
               Sign out
             </button>
@@ -124,6 +125,16 @@ function WorkspaceShellInner() {
                   {item.label}
                 </NavLink>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  void handleSignOut();
+                }}
+                className="mt-1 rounded-md border border-line px-3 py-3 text-left text-[15px] text-ink-dim transition hover:bg-bg-soft/40 hover:text-ink"
+              >
+                Sign out
+              </button>
             </div>
           </nav>
         )}
