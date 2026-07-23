@@ -39,10 +39,10 @@ test.describe("Decision Workspace (authenticated)", () => {
     await page.goto("/workspace");
 
     // Bootstrap creates a personal workspace on first session → wizard lands on
-    // "What are you trying to decide?" Older path: Create workspace → Name.
+    // "What decision are you trying to make?" Older path: Create workspace → Name.
     const createHeading = page.getByRole("heading", { name: /create workspace/i });
     const decisionHeading = page.getByRole("heading", {
-      name: /what are you trying to decide|current goal/i,
+      name: /what decision are you trying to make|what are you trying to decide|current goal/i,
     });
     await expect(createHeading.or(decisionHeading)).toBeVisible({ timeout: 15_000 });
 
@@ -89,23 +89,33 @@ test.describe("Decision Workspace (authenticated)", () => {
       timeout: 20_000,
     });
 
-    // --- Decision Report (centerpiece) + comparison ---
-    await expect(page.getByText(/decision report/i).first()).toBeVisible({
-      timeout: 10_000,
-    });
+    // --- Decision pipeline + report contract ---
+    await expect(page.getByTestId("decision-pipeline")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("decision-report")).toBeVisible();
     await expect(page.getByText(/^recommendation$/i).first()).toBeVisible();
-    await expect(page.getByText(/^evidence$/i).first()).toBeVisible();
+    await expect(page.getByTestId("decision-evidence")).toBeVisible();
+    await expect(page.getByTestId("expected-value")).toBeVisible();
+    await expect(page.getByText(/why this was chosen/i).first()).toBeVisible();
     await expect(page.getByText(/future comparison/i).first()).toBeVisible();
 
-    // --- Choose path · Save timeline ---
-    const choose = page.getByRole("button", {
-      name: /choose this path · save timeline/i,
+    // Decide stage pending until path saved
+    await expect(page.getByTestId("pipeline-decide")).toContainText(/pending/i);
+
+    // --- Save decision (hard-gate) or choose path on timeline ---
+    const saveDecision = page.getByRole("button", { name: /^save decision$/i });
+    if (await saveDecision.isVisible().catch(() => false)) {
+      await saveDecision.click();
+    } else {
+      const choose = page.getByRole("button", {
+        name: /choose this path · save timeline/i,
+      });
+      await expect(choose).toBeVisible({ timeout: 10_000 });
+      await choose.click();
+    }
+    await expect(page.getByTestId("pipeline-decide")).toContainText(/✓|complete|saved/i, {
+      timeout: 10_000,
     });
-    await expect(choose).toBeVisible({ timeout: 10_000 });
-    await choose.click();
-    await expect(
-      page.getByRole("button", { name: /path saved to timeline/i })
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText(/path saved/i).first()).toBeVisible({ timeout: 10_000 });
 
     // --- Outcome tracking ---
     await expect(page.getByText(/did you follow this recommendation/i)).toBeVisible();
