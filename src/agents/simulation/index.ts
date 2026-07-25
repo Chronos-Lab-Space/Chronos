@@ -19,8 +19,7 @@ function isSimulationInput(value: unknown): value is SimulationEngineInput {
 }
 
 /**
- * Forwards full product simulation payloads to the existing SimulationEngine.
- * Engine internals are unchanged (Phase 1 bridge).
+ * Product simulation worker: deterministic engine, then AI recommendation enrich.
  */
 export class SimulationAgent implements Agent {
   readonly name = "simulation";
@@ -37,7 +36,9 @@ export class SimulationAgent implements Agent {
   async execute(task: AgentTask): Promise<AgentResult> {
     const payload = task.input.simulation ?? task.input;
     if (isSimulationInput(payload)) {
-      const output: SimulationEngineOutput = simulationEngine.run(payload);
+      const raw: SimulationEngineOutput = simulationEngine.run(payload);
+      // AI polish of recommendation prose only (scores/futures unchanged)
+      const output = await simulationEngine.maybeEnrichRecommendation(raw, payload);
       return {
         ok: true,
         capability: task.capability,
@@ -46,6 +47,7 @@ export class SimulationAgent implements Agent {
           engine: output as unknown as Record<string, unknown>,
           confidence: output.confidence,
           bestFuture: output.best.name,
+          enriched: output.recommendation !== raw.recommendation,
         },
       };
     }

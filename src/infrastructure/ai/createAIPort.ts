@@ -22,17 +22,19 @@ function envString(key: string): string | undefined {
 }
 
 /**
- * Opt-in LLM polish for sim recommendation text only.
- * Scoring/futures stay deterministic. Requires a non-noop provider
- * (e.g. VITE_AI_PROVIDER=ollama) or enrich is a no-op.
+ * Whether to polish sim recommendation text via AIPort after deterministic collapse.
+ * Default **on**. Set VITE_AI_SIM_ENRICH=false to force deterministic prose only.
+ * Still a no-op when the active provider is noop or generate returns empty.
+ * Scoring/futures never change.
  */
 export function isAISimEnrichEnabled(): boolean {
   const v = (
     envString("VITE_AI_SIM_ENRICH") ??
     envString("AI_SIM_ENRICH") ??
-    ""
+    "true"
   ).toLowerCase();
-  return v === "1" || v === "true" || v === "yes" || v === "on";
+  if (v === "0" || v === "false" || v === "no" || v === "off") return false;
+  return v === "1" || v === "true" || v === "yes" || v === "on" || v === "";
 }
 
 /**

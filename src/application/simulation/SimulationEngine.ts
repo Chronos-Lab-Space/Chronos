@@ -231,6 +231,13 @@ function isConservativePath(path: Path): boolean {
   return /(conserv|hold|bootstrap|bottom-up|wedge|hunker|extend\s+runway)/i.test(pathText(path));
 }
 
+/** True when the port (or router default) cannot produce model text. */
+function isNoopAiPort(ai: AIPort): boolean {
+  if (ai.id === "noop") return true;
+  const active = (ai as AIPort & { activeProviderId?: string }).activeProviderId;
+  return active === "noop";
+}
+
 /** Short focus phrase from the objective for path grounding (not full sentence dump). */
 function objectiveFocus(objective: string): string {
   const cleaned = objective.replace(/\s+/g, " ").trim();
@@ -348,25 +355,26 @@ export class SimulationEngine {
   }
 
   /**
-   * Optional LLM polish of recommendation prose only.
-   * Requires VITE_AI_SIM_ENRICH=true and a non-noop AIPort (e.g. Ollama).
+   * LLM polish of recommendation prose after deterministic collapse.
+   * Enabled by default (VITE_AI_SIM_ENRICH=false to disable).
    * Futures, scores, risks, and confidence stay deterministic.
-   * Fail-open: any AI error returns the original output.
+   * Fail-open: noop provider, empty text, or any AI error → original output.
    */
   async maybeEnrichRecommendation(
     output: SimulationEngineOutput,
     input: SimulationEngineInput
   ): Promise<SimulationEngineOutput> {
     if (!isAISimEnrichEnabled()) return output;
-    // Pure noop skips network; router+noop yields empty text and is treated as no-op below.
-    if (this.ai.id === "noop") return output;
+    if (isNoopAiPort(this.ai)) return output;
+    // Failed runs keep the engine message
+    if (output.confidence <= 0 || output.best.score <= 0) return output;
 
     try {
       const result = await this.ai.generate({
         system:
           "You write concise decision recommendations for founders and PMs. " +
           "2–4 sentences max. No hype, no invented metrics. Preserve the chosen path name. " +
-          "Focus on why this path fits the objective and what to do next.",
+          "Focus on why this path fits the objective and the single next action.",
         prompt: [
           `Objective: ${input.objective}`,
           input.goal?.title ? `Goal: ${input.goal.title}` : null,
@@ -376,12 +384,12 @@ export class SimulationEngine {
           `Risks: ${output.risks.slice(0, 4).join("; ") || "none listed"}`,
           `Confidence: ${(output.confidence * 100).toFixed(0)}%`,
           "",
-          "Rewrite the recommendation more clearly. Do not change the chosen path.",
+          "Rewrite the recommendation more clearly for this specific decision. Do not change the chosen path.",
         ]
           .filter(Boolean)
           .join("\n"),
-        temperature: 0.35,
-        maxTokens: 220,
+        temperature: 0.4,
+        maxTokens: 280,
       });
       const text = result.text.trim();
       if (!text) return output;
