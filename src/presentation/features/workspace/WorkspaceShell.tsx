@@ -8,16 +8,32 @@ import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
 import { WorkspaceLoadingScreen } from "./WorkspaceLoadingScreen";
 import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 
-type NavItem = { to: string; label: string; short: string; end?: boolean };
+type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
 
-/** Primary product nav — matches HQ mock (public/image.png). */
+/** Desktop sidebar — matches public/image.png */
 const navItems: NavItem[] = [
-  { to: "/workspace", label: "Current Decision", short: "Home", end: true },
-  { to: "/workspace/knowledge", label: "Knowledge", short: "Know" },
-  { to: "/workspace/simulations", label: "Simulations", short: "Sims" },
-  { to: "/workspace/timeline", label: "Timeline", short: "Time" },
-  { to: "/workspace/memory", label: "Memory", short: "Mem" },
-  { to: "/workspace/settings", label: "Settings", short: "Set" },
+  { to: "/workspace", label: "Current Decision", short: "Home", end: true, icon: "⌂" },
+  { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
+  { to: "/workspace/simulations", label: "Simulations", short: "Sims", icon: "⬡" },
+  { to: "/workspace/timeline", label: "Timeline", short: "Time", icon: "▤" },
+  { to: "/workspace/memory", label: "Memory", short: "Mem", icon: "▣" },
+  { to: "/workspace/settings", label: "Settings", short: "Set", icon: "⚙" },
+];
+
+/** Mobile tab bar — matches public/mobile.png: Home · Sims · + · Timeline · More */
+const mobilePrimary = [
+  { to: "/workspace", label: "Home", end: true, icon: "⌂" },
+  { to: "/workspace/simulations", label: "Simulations", icon: "⬡" },
+] as const;
+
+const mobileSecondary = [
+  { to: "/workspace/timeline", label: "Timeline", icon: "▤" },
+] as const;
+
+const moreMenuItems: NavItem[] = [
+  { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
+  { to: "/workspace/memory", label: "Memory", short: "Mem", icon: "▣" },
+  { to: "/workspace/settings", label: "Settings", short: "Set", icon: "⚙" },
 ];
 
 export function WorkspaceShell() {
@@ -32,7 +48,7 @@ function WorkspaceShellInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { home, loading, ownerId, error, remoteError } = useWorkspace();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const ready = isWorkspaceOnboarded(home);
@@ -41,6 +57,8 @@ function WorkspaceShellInner() {
   const showContextRail =
     ready &&
     (location.pathname === "/workspace" || location.pathname === "/workspace/");
+  const isDashboard =
+    location.pathname === "/workspace" || location.pathname === "/workspace/";
 
   const handleSignOut = async () => {
     await authService.signOut();
@@ -51,7 +69,6 @@ function WorkspaceShellInner() {
     e.preventDefault();
     const q = search.trim();
     if (!q) return;
-    // Command-ish routing from HQ mock search bar
     const lower = q.toLowerCase();
     if (lower.startsWith("sim") || lower.includes("run")) {
       navigate("/workspace/simulations?new=1");
@@ -62,26 +79,20 @@ function WorkspaceShellInner() {
     } else {
       navigate(`/workspace/knowledge?q=${encodeURIComponent(q)}`);
     }
-    setMenuOpen(false);
+    setMoreOpen(false);
   };
 
+  // Full-screen brand load before home exists
+  if (loading && !home) {
+    return <WorkspaceLoadingScreen message="Opening decision workspace…" fullScreen />;
+  }
+
   return (
-    <div className="workspace-shell-enter min-h-dvh bg-bg pb-20 lg:pb-0">
-      {/* Top bar — brand · command · user */}
+    <div className="workspace-shell-enter min-h-dvh bg-bg pb-[4.75rem] lg:pb-0">
+      {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-3 sm:px-4 lg:px-5">
           <div className="flex min-w-0 items-center gap-2.5">
-            {ready && (
-              <button
-                type="button"
-                aria-label="Open menu"
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((v) => !v)}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-dim lg:hidden"
-              >
-                <span className="font-mono text-base">{menuOpen ? "×" : "☰"}</span>
-              </button>
-            )}
             <ChronosCMark size={22} className="chronos-brand-mark shrink-0 text-ink" />
             <div className="min-w-0">
               <div className="flex items-baseline gap-1.5">
@@ -92,6 +103,12 @@ function WorkspaceShellInner() {
                   Lab
                 </span>
               </div>
+              {/* Mobile: workspace name under brand when on dashboard */}
+              {ready && home && isDashboard ? (
+                <div className="mt-0.5 truncate text-[11px] text-ink-dim lg:hidden">
+                  {home.workspace.name}
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -133,43 +150,6 @@ function WorkspaceShellInner() {
             </button>
           </div>
         </div>
-
-        {ready && menuOpen && (
-          <nav
-            className="workspace-drawer-enter border-t border-line bg-bg lg:hidden"
-            aria-label="Menu"
-          >
-            <div className="mx-auto flex max-w-6xl flex-col gap-0.5 px-3 py-2">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  onClick={() => setMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `rounded-md px-3 py-3 text-[15px] transition ${
-                      isActive
-                        ? "bg-chronos/15 text-chronos"
-                        : "text-ink-dim hover:bg-bg-soft/40 hover:text-ink"
-                    }`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  void handleSignOut();
-                }}
-                className="mt-1 rounded-md border border-line px-3 py-3 text-left text-[15px] text-ink-dim transition hover:bg-bg-soft/40 hover:text-ink"
-              >
-                Sign out
-              </button>
-            </div>
-          </nav>
-        )}
       </header>
 
       {remoteError && (
@@ -185,7 +165,7 @@ function WorkspaceShellInner() {
       )}
 
       <div className="mx-auto flex max-w-[1600px]">
-        {/* Left workspace nav */}
+        {/* Desktop left nav */}
         {ready && (
           <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-[220px] shrink-0 border-r border-line lg:flex lg:flex-col">
             <nav className="flex h-full flex-col gap-0.5 p-3" aria-label="Workspace">
@@ -247,15 +227,13 @@ function WorkspaceShellInner() {
           </aside>
         )}
 
-        <main className="min-w-0 flex-1 px-4 py-5 sm:px-5 sm:py-6 lg:px-6">
+        <main className="min-w-0 flex-1 px-3 py-4 sm:px-5 sm:py-6 lg:px-6">
           {error && (
             <div className="workspace-banner-enter mb-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-[13px] text-ink-dim">
               {error}
             </div>
           )}
-          {loading && !home ? (
-            <WorkspaceLoadingScreen message="Opening decision workspace…" />
-          ) : !ready ? (
+          {!ready ? (
             <div key="onboarding" className="page-enter">
               <WorkspaceOnboarding />
               {loading ? (
@@ -279,32 +257,130 @@ function WorkspaceShellInner() {
         {showContextRail && home ? <WorkspaceContextRail home={home} /> : null}
       </div>
 
+      {/* Mobile tab bar — public/mobile.png */}
       {ready && (
-        <nav
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 backdrop-blur-xl lg:hidden"
-          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-          aria-label="Workspace"
-        >
-          <div className="mx-auto grid max-w-6xl grid-cols-6 gap-0 px-0.5 py-1">
-            {navItems.map((item) => (
+        <>
+          {moreOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              role="presentation"
+              onClick={() => setMoreOpen(false)}
+            />
+          )}
+          {moreOpen && (
+            <div
+              className="workspace-drawer-enter fixed inset-x-0 bottom-[4.5rem] z-50 mx-auto max-w-lg px-3 lg:hidden"
+              role="dialog"
+              aria-label="More menu"
+            >
+              <div className="rounded-2xl border border-line bg-bg p-3 shadow-2xl">
+                <div className="mb-2 px-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+                  Workspace
+                </div>
+                <div className="mb-3 rounded-xl border border-line bg-bg-soft/20 px-3 py-2.5">
+                  <div className="font-chronos-wordmark text-lg text-ink">Chronos Lab</div>
+                  <div className="text-xs text-ink-dim">
+                    {home?.workspace.name ?? "Workspace"}
+                  </div>
+                </div>
+                {moreMenuItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMoreOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-xl px-3 py-3 text-[15px] transition ${
+                        isActive
+                          ? "bg-chronos/15 text-chronos"
+                          : "text-ink-dim hover:bg-bg-soft/40 hover:text-ink"
+                      }`
+                    }
+                  >
+                    <span className="w-5 text-center opacity-80">{item.icon}</span>
+                    {item.label}
+                  </NavLink>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    void handleSignOut();
+                  }}
+                  className="mt-1 w-full rounded-xl border border-line px-3 py-3 text-left text-[15px] text-ink-dim"
+                >
+                  Sign out
+                </button>
+                <div className="mt-2 flex items-center gap-2 px-2 pt-2 border-t border-line">
+                  <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
+                  <span className="font-mono text-[10px] uppercase text-ink-faint">
+                    Sync status · local ready
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <nav
+            className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/95 backdrop-blur-xl lg:hidden"
+            aria-label="Workspace"
+          >
+            <div className="workspace-mobile-tabbar mx-auto max-w-lg">
+              {mobilePrimary.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={"end" in item ? item.end : false}
+                  aria-label={item.label}
+                  className={({ isActive }) =>
+                    `workspace-mobile-tab ${isActive ? "active" : ""}`
+                  }
+                >
+                  <span className="workspace-mobile-tab-icon" aria-hidden>
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </NavLink>
+              ))}
+
               <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                aria-label={item.label}
-                className={({ isActive }) =>
-                  `workspace-nav-active flex min-h-11 flex-col items-center justify-center rounded-lg px-0.5 py-1.5 font-mono text-[9px] uppercase tracking-[0.02em] transition sm:text-[10px] ${
-                    isActive
-                      ? "bg-chronos/10 text-chronos"
-                      : "text-ink-faint hover:text-ink-dim"
-                  }`
-                }
+                to="/workspace/simulations?new=1"
+                aria-label="Create new simulation"
+                className="workspace-mobile-create"
               >
-                <span className="max-w-full truncate">{item.short}</span>
+                +
               </NavLink>
-            ))}
-          </div>
-        </nav>
+
+              {mobileSecondary.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  aria-label={item.label}
+                  className={({ isActive }) =>
+                    `workspace-mobile-tab ${isActive ? "active" : ""}`
+                  }
+                >
+                  <span className="workspace-mobile-tab-icon" aria-hidden>
+                    {item.icon}
+                  </span>
+                  {item.label}
+                </NavLink>
+              ))}
+
+              <button
+                type="button"
+                aria-label="More"
+                aria-expanded={moreOpen}
+                onClick={() => setMoreOpen((v) => !v)}
+                className={`workspace-mobile-tab ${moreOpen ? "active" : ""}`}
+              >
+                <span className="workspace-mobile-tab-icon" aria-hidden>
+                  ···
+                </span>
+                More
+              </button>
+            </div>
+          </nav>
+        </>
       )}
     </div>
   );

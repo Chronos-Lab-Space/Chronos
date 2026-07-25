@@ -11,9 +11,8 @@ import { DecisionCardView } from "./components/DecisionCard";
 import { HqPipeline } from "./components/HqPipeline";
 
 /**
- * Decision Workspace HQ — layout aligned to public/image.png mock:
- * pipeline → decision header + confidence → recommendation | evidence →
- * ranked futures | activity
+ * Decision Workspace HQ
+ * Desktop: public/image.png · Mobile: public/mobile.png
  */
 export function DashboardPage() {
   const { home, preferences } = useWorkspace();
@@ -27,12 +26,15 @@ export function DashboardPage() {
       ? (home.futuresBySimulation[card.simulationId] ?? []).slice(0, 5)
       : [];
   const activity = decisionHistoryPreview(home, 6);
-  const evidence = [...home.knowledge, ...home.notes.map((n) => ({
-    id: n.id,
-    title: n.title,
-    type: "note" as const,
-    created_at: n.created_at,
-  }))].slice(0, 6);
+  const evidence = [
+    ...home.knowledge,
+    ...home.notes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      type: "note" as const,
+      created_at: n.created_at,
+    })),
+  ].slice(0, 6);
 
   const checklist = useMemo(
     () => evaluateBetaChecklist(home, preferences),
@@ -49,19 +51,40 @@ export function DashboardPage() {
           ? "Moderate confidence"
           : "Low confidence";
 
+  const statusDot =
+    latest?.status === "running" || latest?.status === "queued"
+      ? "bg-amber-400"
+      : latest?.status === "completed"
+        ? "bg-chronos"
+        : "bg-chronos";
+
   return (
-    <div className="ws-cascade mx-auto max-w-5xl space-y-5">
-      <HqPipeline latest={latest} />
+    <div className="ws-cascade mx-auto max-w-5xl space-y-4 sm:space-y-5">
+      {/* Desktop lifecycle strip only — mobile mock stacks content */}
+      <div className="hidden sm:block">
+        <HqPipeline latest={latest} />
+      </div>
 
       {checklistOpen && <BetaChecklist items={checklist} />}
+
+      {/* Mobile status row (mock: CURRENT DECISION · Planning) */}
+      <div className="flex items-center justify-between gap-2 sm:hidden">
+        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+          Current decision
+        </div>
+        <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase text-chronos">
+          <span className={`inline-flex h-1.5 w-1.5 rounded-full ${statusDot}`} />
+          {card.statusLabel}
+        </div>
+      </div>
 
       {/* Decision header + confidence */}
       <div className="grid gap-4 lg:grid-cols-[1fr_220px]">
         <section className="min-w-0">
-          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+          <div className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint sm:block">
             Decision
           </div>
-          <h1 className="mt-2 font-serif text-3xl text-ink sm:text-4xl">
+          <h1 className="font-serif text-[1.75rem] leading-tight text-ink sm:mt-2 sm:text-3xl lg:text-4xl">
             {card.decisionTitle}
           </h1>
           {home.goal.description ? (
@@ -74,13 +97,12 @@ export function DashboardPage() {
               collapse to a recommendation.
             </p>
           )}
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
-            <span>
-              Created{" "}
-              {formatCreatedAt(home.goal.created_at)}
-            </span>
-            <span>Status · {card.statusLabel}</span>
-            <span>Workspace · {home.workspace.name}</span>
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.08em] text-ink-faint">
+            <span>{formatCreatedAt(home.goal.created_at)}</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">{card.statusLabel}</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">{home.workspace.name}</span>
           </div>
         </section>
 
@@ -88,34 +110,54 @@ export function DashboardPage() {
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
             Decision confidence
           </div>
-          <div className="mt-2 font-mono text-4xl tabular-nums text-chronos">
-            {card.confidence != null ? confidencePercent(card.confidence) : "—"}
+          <div className="mt-2 flex items-end justify-between gap-3">
+            <div>
+              <div className="font-mono text-4xl tabular-nums text-chronos">
+                {card.confidence != null ? confidencePercent(card.confidence) : "—"}
+              </div>
+              <div className="mt-1 text-xs text-ink-dim">{confLabel}</div>
+            </div>
+            {/* Decorative sparkline placeholder */}
+            <svg
+              width="72"
+              height="28"
+              viewBox="0 0 72 28"
+              className="mb-1 opacity-70"
+              aria-hidden
+            >
+              <path
+                d="M1 22 C12 20 14 8 24 10 C34 12 36 18 46 14 C56 10 60 6 71 4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="text-chronos"
+              />
+            </svg>
           </div>
-          <div className="mt-1 text-xs text-ink-dim">{confLabel}</div>
-          <dl className="mt-4 space-y-1.5 border-t border-line pt-3 font-mono text-[10px] uppercase text-ink-faint">
-            <div className="flex justify-between gap-2">
+          <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono text-[10px] uppercase text-ink-faint sm:grid-cols-1 sm:space-y-1.5 sm:gap-0">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-2">
               <dt>Evidence</dt>
               <dd className="text-ink-dim">
-                {home.knowledge.length + home.notes.length} sources
+                {home.knowledge.length + home.notes.length}
               </dd>
             </div>
-            <div className="flex justify-between gap-2">
-              <dt>Simulations</dt>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-2">
+              <dt>Sims</dt>
               <dd className="text-ink-dim">{home.recentSimulations.length}</dd>
             </div>
-            <div className="flex justify-between gap-2">
-              <dt>Completed</dt>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-2">
+              <dt>Done</dt>
               <dd className="text-ink-dim">{completed.length}</dd>
             </div>
           </dl>
         </section>
       </div>
 
-      {/* Recommendation | Evidence */}
+      {/* Recommendation | Evidence (evidence desktop/tablet) */}
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <DecisionCardView card={card} />
 
-        <section className="rounded-2xl border border-line bg-bg-soft/15 p-5">
+        <section className="hidden rounded-2xl border border-line bg-bg-soft/15 p-5 sm:block">
           <div className="flex items-center justify-between gap-2">
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
               Evidence
@@ -152,7 +194,7 @@ export function DashboardPage() {
         </section>
       </div>
 
-      {/* Ranked futures | Recent activity */}
+      {/* Ranked futures | Activity */}
       <div className="grid gap-4 lg:grid-cols-2">
         <section
           data-testid="ranked-futures-hq"
@@ -179,7 +221,7 @@ export function DashboardPage() {
               </p>
               <Link
                 to="/workspace/simulations?new=1"
-                className="mt-4 inline-flex rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
+                className="mt-4 inline-flex rounded-full border border-line bg-ink/5 px-4 py-2.5 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
               >
                 Run your first simulation →
               </Link>
@@ -192,9 +234,7 @@ export function DashboardPage() {
                   className="flex items-center justify-between gap-3 rounded-xl border border-line/80 px-3 py-2.5 text-sm"
                 >
                   <div className="min-w-0">
-                    <span className="font-mono text-[10px] text-ink-faint">
-                      #{i + 1}
-                    </span>
+                    <span className="font-mono text-[10px] text-ink-faint">#{i + 1}</span>
                     <span className="ml-2 text-ink">{f.name}</span>
                   </div>
                   <span className="shrink-0 font-mono text-[11px] text-chronos">
@@ -241,8 +281,10 @@ export function DashboardPage() {
         </section>
       </div>
 
-      {/* Compact recent sims list */}
-      <section data-testid="recent-simulations" className="rounded-2xl border border-line p-5">
+      <section
+        data-testid="recent-simulations"
+        className="hidden rounded-2xl border border-line p-5 sm:block"
+      >
         <div className="flex items-center justify-between gap-2">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
             Recent simulations

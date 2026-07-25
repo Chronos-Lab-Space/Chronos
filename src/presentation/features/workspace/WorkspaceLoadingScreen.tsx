@@ -1,14 +1,21 @@
 /**
- * Brand loading state — uses public/chronos_loading.png with light motion.
+ * Brand loading — full-viewport chronos_loading.png with light motion.
  */
 export function WorkspaceLoadingScreen({
   message = "Opening decision workspace",
+  fullScreen = true,
 }: {
   message?: string;
+  /** Cover the entire viewport (default). */
+  fullScreen?: boolean;
 }) {
   return (
     <div
-      className="workspace-loading-screen"
+      className={
+        fullScreen
+          ? "workspace-loading-screen workspace-loading-screen--full"
+          : "workspace-loading-screen"
+      }
       role="status"
       aria-live="polite"
       aria-busy="true"
@@ -26,13 +33,15 @@ export function WorkspaceLoadingScreen({
         <div className="workspace-loading-art-shine" />
       </div>
 
-      <p className="workspace-loading-sub">{message}</p>
-      <div className="workspace-loading-phases" aria-hidden>
-        <span>Branch</span>
-        <span className="workspace-loading-phase-dot" />
-        <span>Simulate</span>
-        <span className="workspace-loading-phase-dot" />
-        <span>Evaluate</span>
+      <div className="workspace-loading-footer">
+        <p className="workspace-loading-sub">{message}</p>
+        <div className="workspace-loading-phases" aria-hidden>
+          <span>Branch</span>
+          <span className="workspace-loading-phase-dot" />
+          <span>Simulate</span>
+          <span className="workspace-loading-phase-dot" />
+          <span>Evaluate</span>
+        </div>
       </div>
     </div>
   );
