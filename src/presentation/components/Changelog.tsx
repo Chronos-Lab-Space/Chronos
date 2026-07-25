@@ -12,6 +12,46 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.1.0",
+    date: "2026-07-25",
+    tag: "minor",
+    title: "Decision HQ · platform AI · beta reliability",
+    summary:
+      "Workspace HQ leads with a Decision Card (review deep-link only — Chronos recommends, you save on the sim page). Shared decision history powers HQ preview and Timeline. Simulation results show a real pipeline, Evidence, Why, and Expected Value. Platform AI port ships with Noop default and opt-in Ollama. Ops fixes for cloud login, tab-focus drafts, and mobile sign-out.",
+    highlights: [
+      {
+        label: "Decision HQ",
+        detail:
+          "Hero Recommendation · Confidence · Status · Review Recommendation → · demoted Goal/Knowledge · recent decision timeline",
+      },
+      {
+        label: "Decision history",
+        detail:
+          "One deriveDecisionHistory model: workspace → knowledge → sim → recommendation → accept → outcome",
+      },
+      {
+        label: "Sim result contract",
+        detail:
+          "Pipeline stages · Evidence · Why · Expected value · Compare · Save decision (P1 pipeline UX)",
+      },
+      {
+        label: "Platform AI",
+        detail:
+          "AIPort generate/embed/reason/code · ProviderRouter · Noop default · Ollama adapter (VITE_AI_PROVIDER=ollama)",
+      },
+      {
+        label: "Cloud reliability",
+        detail:
+          "Profiles updated_at recursion fix (54001) · migration history parity · hosted grant repairs",
+      },
+      {
+        label: "Workspace UX",
+        detail:
+          "Tab focus no longer wipes form drafts · Sign out on mobile header/drawer · cloud sync banner when dual-write fails",
+      },
+    ],
+  },
+  {
     version: "5.0.0",
     date: "2026-07-22",
     tag: "major",
