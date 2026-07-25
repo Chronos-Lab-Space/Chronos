@@ -8,22 +8,23 @@ import type { Agent, AgentResult, AgentTask } from "../types";
 function asFutures(input: Record<string, unknown>): EvaluableFuture[] {
   const raw = input.futures;
   if (!Array.isArray(raw)) return [];
-  return raw
-    .map((item) => {
-      if (!item || typeof item !== "object") return null;
-      const f = item as Record<string, unknown>;
-      if (typeof f.id !== "string" || typeof f.name !== "string") return null;
-      if (typeof f.score !== "number") return null;
-      return {
-        id: f.id,
-        name: f.name,
-        score: f.score,
-        risk: typeof f.risk === "number" ? f.risk : undefined,
-        confidence: typeof f.confidence === "number" ? f.confidence : undefined,
-        summary: typeof f.summary === "string" ? f.summary : undefined,
-      } satisfies EvaluableFuture;
-    })
-    .filter((f): f is EvaluableFuture => f !== null);
+  const out: EvaluableFuture[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const f = item as Record<string, unknown>;
+    if (typeof f.id !== "string" || typeof f.name !== "string") continue;
+    if (typeof f.score !== "number") continue;
+    const future: EvaluableFuture = {
+      id: f.id,
+      name: f.name,
+      score: f.score,
+    };
+    if (typeof f.risk === "number") future.risk = f.risk;
+    if (typeof f.confidence === "number") future.confidence = f.confidence;
+    if (typeof f.summary === "string") future.summary = f.summary;
+    out.push(future);
+  }
+  return out;
 }
 
 /**
