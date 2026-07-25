@@ -231,6 +231,96 @@ function isConservativePath(path: Path): boolean {
   return /(conserv|hold|bootstrap|bottom-up|wedge|hunker|extend\s+runway)/i.test(pathText(path));
 }
 
+/** Short focus phrase from the objective for path grounding (not full sentence dump). */
+function objectiveFocus(objective: string): string {
+  const cleaned = objective.replace(/\s+/g, " ").trim();
+  if (!cleaned) return "this decision";
+  // Drop leading question fluff
+  const stripped = cleaned
+    .replace(/^(should|can|will|do|how|what|when|where|why)\s+(we|i|our team)\s+/i, "")
+    .replace(/\?+$/, "")
+    .trim();
+  const words = stripped.split(/\s+/).filter(Boolean);
+  if (words.length <= 10) return stripped;
+  return `${words.slice(0, 10).join(" ")}…`;
+}
+
+function significantTokens(text: string): string[] {
+  // Exclude policy/finance verbs so path *names* never flip isRaiseHeavyPath falsely.
+  const stop = new Set([
+    "the", "a", "an", "and", "or", "to", "of", "for", "in", "on", "we", "our", "should",
+    "can", "will", "with", "from", "this", "that", "into", "about", "before", "after",
+    "raise", "raising", "funding", "fund", "seed", "series", "venture", "dilution",
+    "bootstrap", "capital", "invest", "investor", "round",
+  ]);
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !stop.has(w))
+    .slice(0, 8);
+}
+
+/** Ground a catalog path in this run's objective so futures aren't identical boilerplate. */
+function contextualizePath(path: Path, objective: string, seed: number): Path {
+  const focus = objectiveFocus(objective);
+  const tokens = significantTokens(objective);
+  const hook = tokens.slice(0, 3).join(" ");
+  const nameSuffix = hook ? ` · ${hook}` : "";
+  // Keep names readable; avoid stacking suffixes on re-contextualize
+  const baseName = path.name.split(" · ")[0] ?? path.name;
+  const name =
+    baseName.length + nameSuffix.length <= 56 ? `${baseName}${nameSuffix}` : baseName;
+
+  const economic =
+    path.arr > 0
+      ? ` Modeled ~$${(path.arr / 1_000_000).toFixed(1)}M ARR at ~${Math.round(path.probability * 100)}% likelihood (${path.monthsToPmf} mo to PMF).`
+      : "";
+
+  const thesis = `${path.thesis.replace(/\s+$/, "")} Framed for “${focus}”.${economic}`;
+
+  // Light seed-based reordering of highlights keeps texture without breaking determinism
+  const highlights = [...path.highlights];
+  if (highlights.length > 1 && seed % 2 === 1) {
+    const [first, ...rest] = highlights;
+    highlights.splice(0, highlights.length, ...rest, first);
+  }
+
+  return {
+    ...path,
+    name,
+    thesis,
+    highlights,
+  };
+}
+
+function nextActionsFor(best: FutureRecord, signals: DecisionSignals, objective: string): string {
+  const name = best.name.toLowerCase();
+  const focus = objectiveFocus(objective);
+  if (/bootstrap|wedge|bottom-up|conserv|hold/i.test(name)) {
+    return `validate “${focus}” with 5–10 design partners before increasing burn`;
+  }
+  if (/raise|capital|series|fund/i.test(name)) {
+    return `tie a raise narrative for “${focus}” to 2–3 traction milestones and a 12-month plan`;
+  }
+  if (/compliance|trust|enterprise/i.test(name)) {
+    return `sequence trust work (security questionnaire + one compliance spike) before widening GTM on “${focus}”`;
+  }
+  if (signals.runwayMonths != null && signals.runwayMonths < 10) {
+    return `protect runway while proving demand for “${focus}” in one channel`;
+  }
+  return `pick one 14-day experiment that proves demand for “${focus}” under this path`;
+}
+
+/** Parse learning soft constraints like Prefer "A" over "B". */
+function parsePreferOver(text: string): { prefer: string; avoid: string } | null {
+  const m = text.match(
+    /prefer paths resembling ["“]?([^"”]+)["”]?\s+over\s+["“]?([^"”]+)["”]?/i
+  );
+  if (!m) return null;
+  return { prefer: m[1].trim().toLowerCase(), avoid: m[2].trim().toLowerCase() };
+}
+
 /**
  * Chronos Simulation Engine — product decision loop.
  *
@@ -337,13 +427,15 @@ export class SimulationEngine {
       this.setTask(tasks, "generate", "running");
       const corpus = this.buildCorpus(input, objective);
       const raw = simulate(corpus, { sampleBudget: 64 });
+      const seed = hash(corpus);
+      // Keep catalog paths raw for policy/scoring; contextualize only on the FutureRecord.
       const generated = this.expandCandidates(raw.bestPath, raw.alternatives, corpus, signals);
       this.setTask(tasks, "generate", "completed");
 
       // 3. Evaluate (hard constraints disqualify; soft + EV score)
       this.setTask(tasks, "evaluate", "running");
       const evaluated = generated.map((path) =>
-        this.evaluatePath(path, input, objective, signals)
+        this.evaluatePath(path, input, objective, signals, seed)
       );
       this.setTask(tasks, "evaluate", "completed");
 
@@ -376,8 +468,16 @@ export class SimulationEngine {
           "All futures violated hard constraints. Relax constraints or reframe the objective."
         );
       }
+      const runnerUp = rankedEligible[1] ?? null;
       const risks = this.collectRisks(best, raw.bestPath, input.constraints, signals, ineligible.length);
-      const recommendation = this.buildRecommendation(best, input, risks, signals);
+      const recommendation = this.buildRecommendation(
+        best,
+        runnerUp,
+        input,
+        risks,
+        signals,
+        objective
+      );
       const timeline = this.buildTimeline(input.simulationId, objective, futures, plannerTaskTitles);
       this.setTask(tasks, "collapse", "completed");
 
@@ -497,13 +597,22 @@ export class SimulationEngine {
   }
 
   private buildCorpus(input: SimulationEngineInput, objective: string): string {
+    // simulationId salts MC draws so each product run is fresh; same id stays deterministic.
+    // Skip pure learning soft constraints in the seed so preference spam doesn't collapse variety.
+    const seedConstraints = input.constraints.filter(
+      (c) => !(c.kind === "soft" && c.id.startsWith("learn-pref-"))
+    );
     return [
+      `run:${input.simulationId}`,
+      `workspace:${input.workspaceId}`,
       input.goal?.title,
       input.goal?.description,
       objective,
-      ...input.knowledge.map((k) => `${k.type}: ${k.title}\n${k.content.slice(0, 400)}`),
+      ...input.knowledge
+        .filter((k) => k.metadata?.source !== "learning")
+        .map((k) => `${k.type}: ${k.title}\n${k.content.slice(0, 400)}`),
       ...input.notes.map((n) => `note: ${n.title}\n${n.content.slice(0, 400)}`),
-      ...input.constraints.map((c) => `constraint(${c.kind}): ${c.text}`),
+      ...seedConstraints.map((c) => `constraint(${c.kind}): ${c.text}`),
     ]
       .filter(Boolean)
       .join("\n\n");
@@ -672,12 +781,15 @@ export class SimulationEngine {
     path: Path,
     input: SimulationEngineInput,
     objective: string,
-    signals: DecisionSignals
+    signals: DecisionSignals,
+    seed: number
   ): FutureRecord {
-    const name = path.name ?? "Future";
-    const thesis = path.thesis ?? "";
+    // Policy checks use the raw catalog path (never objective-contaminated text).
     const probability = typeof path.probability === "number" ? path.probability : 0.1;
     const violations = this.hardConstraintViolations(path, input.constraints, signals);
+    const display = contextualizePath(path, objective, seed);
+    const name = display.name;
+    const thesis = display.thesis;
 
     if (violations.length > 0) {
       return {
@@ -733,38 +845,56 @@ export class SimulationEngine {
       }
     }
 
-    // Soft constraints: penalize mismatch, never zero
+    // Soft constraints: targeted only (no uniform penalty on every path)
+    // Score against the raw catalog path so framed objective text cannot poison matches.
+    const catalogHay = pathText(path);
     for (const c of input.constraints.filter((x) => x.kind === "soft")) {
-      const token = c.text.toLowerCase().slice(0, 32).trim();
-      const hay = `${name} ${thesis} ${objective}`.toLowerCase();
-      if (token.length >= 4 && !hay.includes(token.slice(0, Math.min(12, token.length)))) {
-        // Semantic soft matches
-        if (/(runway|bootstrap|raise|enterprise|compliance)/i.test(token)) {
-          const wantsBootstrap = /bootstrap|runway/i.test(token);
-          const wantsRaise = /raise|fund/i.test(token);
-          if (wantsBootstrap && isAggressivePath(path)) {
-            score = clamp01(score - 0.05);
-          }
-          if (wantsRaise && isConservativePath(path)) {
-            score = clamp01(score - 0.04);
-          }
-        } else {
-          score = clamp01(score - 0.03);
-          conf = clamp01(conf - 0.02);
+      const prefer = parsePreferOver(c.text);
+      if (prefer) {
+        if (catalogHay.includes(prefer.prefer.slice(0, Math.min(24, prefer.prefer.length)))) {
+          score = clamp01(score + 0.07);
+          conf = clamp01(conf + 0.03);
         }
+        if (catalogHay.includes(prefer.avoid.slice(0, Math.min(24, prefer.avoid.length)))) {
+          score = clamp01(score - 0.09);
+          risk = clamp01(risk + 0.04);
+        }
+        continue;
+      }
+
+      const ct = c.text.toLowerCase();
+      if (/(runway|bootstrap|self[- ]fund)/i.test(ct) && isAggressivePath(path)) {
+        score = clamp01(score - 0.05);
+      }
+      if (/(raise|fund|dilution)/i.test(ct) && isConservativePath(path)) {
+        score = clamp01(score - 0.04);
+      }
+      if (/(compliance|hipaa|soc\s*2|security)/i.test(ct) && isAggressivePath(path)) {
+        score = clamp01(score - 0.05);
       }
     }
 
-    // Knowledge title overlap small boost
-    const titleCorpus = input.knowledge.map((item) => item.title.toLowerCase()).join(" ");
+    // Knowledge title overlap small boost (exclude learning dual-write noise)
+    const titleCorpus = input.knowledge
+      .filter((item) => item.metadata?.source !== "learning")
+      .map((item) => item.title.toLowerCase())
+      .join(" ");
     if (
       titleCorpus &&
-      name
+      (path.name ?? "")
         .toLowerCase()
         .split(/\s+/)
         .some((word) => word.length > 4 && titleCorpus.includes(word))
     ) {
       score = clamp01(score + 0.03);
+      conf = clamp01(conf + 0.02);
+    }
+
+    // Objective token resonance on catalog path + objective (not framed display thesis)
+    const resonanceHay = `${catalogHay} ${objective.toLowerCase()}`;
+    const objHits = significantTokens(objective).filter((t) => resonanceHay.includes(t)).length;
+    if (objHits > 0) {
+      score = clamp01(score + Math.min(0.06, objHits * 0.015));
       conf = clamp01(conf + 0.02);
     }
 
@@ -786,35 +916,61 @@ export class SimulationEngine {
     signals: DecisionSignals,
     disqualifiedCount: number
   ): string[] {
-    const risks = [...(bestPath.risks ?? [])];
+    const risks = [...(bestPath.risks ?? [])].slice(0, 3);
     if (best.risk >= 0.55) risks.push("Elevated execution risk relative to confidence.");
-    for (const c of constraints.filter((x) => x.kind === "hard")) {
-      risks.push(`Hard constraint in force: ${c.text}`);
-    }
+    // One hard constraint reminder max — avoid repeating the same policy block every run
+    const hard = constraints.find((x) => x.kind === "hard" && !x.id.startsWith("learn-pref-"));
+    if (hard) risks.push(`Hard constraint: ${hard.text}`);
     if (disqualifiedCount > 0) {
       risks.push(`${disqualifiedCount} path(s) disqualified by hard constraints.`);
     }
     if (signals.runwayMonths != null && signals.runwayMonths < 9) {
       risks.push(`Short runway signal (~${signals.runwayMonths} months) limits aggressive paths.`);
     }
-    return [...new Set(risks)].slice(0, 8);
+    return [...new Set(risks)].slice(0, 6);
   }
 
   private buildRecommendation(
     best: FutureRecord,
-    input: SimulationEngineInput,
+    runnerUp: FutureRecord | null,
+    _input: SimulationEngineInput,
     risks: string[],
-    signals: DecisionSignals
+    signals: DecisionSignals,
+    objective: string
   ): string {
-    const goal = input.goal?.title ?? input.objective;
-    const riskNote = risks[0] ? ` Watch: ${risks[0]}` : "";
-    const policy =
-      signals.raiseForbidden
-        ? " (raise disallowed)"
-        : signals.bootstrapPreferred
-          ? " (bootstrap-biased)"
-          : "";
-    return `Best path for “${goal}”${policy}: ${best.name}. ${best.summary}${riskNote}`;
+    const focus = objectiveFocus(objective);
+    const confPct = Math.round(best.confidence * 100);
+    const next = nextActionsFor(best, signals, objective);
+    const riskNote = risks[0] ? ` Risk to manage: ${risks[0]}.` : "";
+
+    const policyBit = signals.raiseForbidden
+      ? " Raise paths are out of policy."
+      : signals.bootstrapPreferred
+        ? " Scoring favors capital-efficient options."
+        : "";
+
+    let edgeBit = "";
+    if (runnerUp && best.score > runnerUp.score) {
+      const delta = Math.round((best.score - runnerUp.score) * 100);
+      edgeBit = ` It leads “${runnerUp.name.split(" · ")[0]}” by ~${delta} score points.`;
+    }
+
+    const isQuestion = /^(should|can|will|do|how|what)\b/i.test(objective.trim());
+    if (isQuestion) {
+      return (
+        `On “${focus}”: choose ${best.name} (${confPct}% confidence). ` +
+        `${best.summary} ` +
+        `Next: ${next}.${edgeBit}${policyBit}${riskNote}`
+      ).replace(/\s+/g, " ").trim();
+    }
+
+    return (
+      `For “${focus}”, rank ${best.name} first (${confPct}% confidence). ` +
+      `${best.summary} ` +
+      `Next: ${next}.${edgeBit}${policyBit}${riskNote}`
+    )
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   private buildTimeline(

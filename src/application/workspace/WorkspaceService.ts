@@ -478,11 +478,10 @@ export class WorkspaceService {
 
     const knowledgeUsed = snapshotKnowledgeUsed(home.knowledge, home.notes);
 
-    // Feed prior learning preferences into planner + soft constraints for this run.
-    const learnedPreferences = learningMemoryStore.listPreferences(
-      home.workspace.id,
-      5
-    );
+    // Feed prior learning preferences into planner + soft constraints (cap + dedupe).
+    const learnedPreferences = [
+      ...new Set(learningMemoryStore.listPreferences(home.workspace.id, 8)),
+    ].slice(0, 3);
     const learnedSoftConstraints = learnedPreferences.map((text, index) => ({
       id: `learn-pref-${index}`,
       text,

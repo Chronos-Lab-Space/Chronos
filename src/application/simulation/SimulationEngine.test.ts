@@ -122,7 +122,9 @@ describe("SimulationEngine", () => {
     expect(out.best.name).toBe(out.futures[0].name);
     expect(out.best.score).toBeGreaterThan(0);
     expect(out.confidence).toBe(out.best.confidence);
-    expect(out.recommendation).toContain("Best path");
+    expect(out.recommendation.length).toBeGreaterThan(40);
+    expect(out.recommendation.toLowerCase()).toMatch(/kickstart|raise|bootstrap|path|confidence|next/i);
+    expect(out.futures[0].summary.length).toBeGreaterThan(out.futures[0].name.length);
     expect(out.risks.length).toBeGreaterThan(0);
     expect(out.plannerTaskTitles.length).toBeGreaterThan(0);
     expect(out.pathsEvaluated).toBeGreaterThanOrEqual(8);
@@ -197,6 +199,47 @@ describe("SimulationEngine", () => {
     expect(a.best.score).toBe(b.best.score);
     expect(a.confidence).toBe(b.confidence);
     expect(a.pathsEvaluated).toBe(b.pathsEvaluated);
+    expect(a.recommendation).toBe(b.recommendation);
+  });
+
+  it("varies recommendation text across different objectives", () => {
+    const base = {
+      workspaceId: "w1",
+      goal,
+      knowledge,
+      notes: [] as const,
+      constraints: [] as const,
+    };
+    const a = engine.run({
+      ...base,
+      simulationId: "sim-obj-a",
+      objective: "Should we open a enterprise sales motion for regulated buyers?",
+    });
+    const b = engine.run({
+      ...base,
+      simulationId: "sim-obj-b",
+      objective: "Should we ship a free developer wedge before any sales hire?",
+    });
+    expect(a.recommendation).not.toBe(b.recommendation);
+    expect(a.recommendation.toLowerCase()).toMatch(/enterprise|regulated|sales|compliance|trust/);
+    expect(b.recommendation.toLowerCase()).toMatch(/developer|wedge|ship|partner|free/);
+    // Futures are grounded in the ask, not bare catalog titles alone
+    expect(a.futures.some((f) => f.summary.toLowerCase().includes("framed for"))).toBe(true);
+  });
+
+  it("salts Monte Carlo by simulationId so re-runs are not byte-identical", () => {
+    const base = {
+      workspaceId: "w1",
+      goal,
+      objective: "How should we price the private beta?",
+      knowledge,
+      notes: [] as const,
+      constraints: [] as const,
+    };
+    const a = engine.run({ ...base, simulationId: "sim-salt-1" });
+    const b = engine.run({ ...base, simulationId: "sim-salt-2" });
+    // Names may share archetypes but summaries/recommendations should not be identical
+    expect(a.recommendation === b.recommendation && a.best.score === b.best.score).toBe(false);
   });
 
   it("fails cleanly on empty objective", () => {
