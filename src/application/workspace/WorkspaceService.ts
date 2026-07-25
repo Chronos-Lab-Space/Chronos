@@ -1,7 +1,10 @@
 import {
   simulationEngine,
   type SimulationConstraint,
+  type SimulationEngineOutput,
 } from "../simulation/SimulationEngine";
+import { planner } from "../../core/planner/planner";
+import { eventBus, runtime } from "../../core/runtime";
 import { sanitizeWorkspaceHomeIds } from "../../domain/workspace/persistedIds";
 import { snapshotKnowledgeUsed } from "../../domain/workspace/simulationReport";
 import { archiveGoalIfChanged } from "../../domain/workspace/workspaceMemory";
@@ -22,6 +25,14 @@ import {
   localWorkspaceStore,
 } from "../../infrastructure/repositories/LocalWorkspaceStore";
 import { supabaseWorkspaceRepository } from "../../infrastructure/repositories/SupabaseWorkspaceRepository";
+
+function engineOutputFromAgent(data: Record<string, unknown>): SimulationEngineOutput {
+  const engine = data.engine;
+  if (!engine || typeof engine !== "object") {
+    throw new Error("Simulation agent returned no engine output.");
+  }
+  return engine as SimulationEngineOutput;
+}
 
 /** Minimal cloud port used for dual-write + sync (Supabase or test double). */
 export type WorkspaceCloudStore = {
@@ -463,9 +474,48 @@ export class WorkspaceService {
       notes: home.notes,
       constraints,
     };
-    // Deterministic core; optional LLM polish when VITE_AI_SIM_ENRICH + non-noop provider
-    let output = simulationEngine.run(engineInput);
+
+    // Product path: Planner → Agent Runtime → SimulationAgent → SimulationEngine
+    const plan = await planner.createPlan({
+      goal: objectiveForEngine,
+      workspace: { id: home.workspace.id },
+      context: {
+        simulationId: simId,
+        constraints: constraints.map((c) => c.text),
+      },
+      decisionId: simId,
+    });
+
+    const agentResult = await runtime.run("simulation.execute", {
+      simulation: engineInput,
+    });
+
+    if (!agentResult.ok) {
+      throw new Error(agentResult.error ?? "Simulation runtime failed.");
+    }
+
+    // Deterministic core via agent; optional LLM polish when VITE_AI_SIM_ENRICH + non-noop provider
+    let output = engineOutputFromAgent(agentResult.data);
     output = await simulationEngine.maybeEnrichRecommendation(output, engineInput);
+
+    await eventBus.publish("SimulationFinished", {
+      simulationId: simId,
+      workspaceId: home.workspace.id,
+      graphId: plan.id,
+      plannerTasks: plan.tasks.map((t) => t.title),
+      confidence: output.confidence,
+      bestFuture: output.best.name,
+    });
+
+    await eventBus.publish("DecisionRanked", {
+      simulationId: simId,
+      recommendation: output.recommendation,
+      futures: output.futures.map((f) => ({
+        id: f.id,
+        name: f.name,
+        score: f.score,
+      })),
+    });
 
     const failed = output.tasks.some((t) => t.status === "failed");
     const sim: SimulationRecord = {
