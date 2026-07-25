@@ -28,9 +28,9 @@ export function HqPipeline({ latest }: { latest: SimulationRecord | null }) {
     <nav
       aria-label="Decision lifecycle"
       data-testid="hq-pipeline"
-      className="overflow-x-auto rounded-2xl border border-line bg-bg-soft/20 px-3 py-4 sm:px-5"
+      className="overflow-x-auto rounded-2xl border border-line bg-bg-soft/20 px-3 py-4 sm:px-5 [-webkit-overflow-scrolling:touch]"
     >
-      <ol className="flex min-w-[640px] items-start justify-between gap-1">
+      <ol className="flex min-w-[36rem] items-start justify-between gap-1 md:min-w-0">
         {STAGES.map((stage, index) => {
           const done = index < active;
           const current = index === active;

@@ -695,23 +695,32 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: end;
   gap: 0;
-  padding: 0.35rem 0.4rem calc(0.35rem + env(safe-area-inset-bottom));
+  padding: 0.25rem 0.25rem calc(0.25rem + env(safe-area-inset-bottom));
 }
 
 .workspace-mobile-tab {
   display: flex;
   min-height: 2.75rem;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
   border-radius: 0.65rem;
+  padding: 0.15rem 0.1rem;
   font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 9px;
-  letter-spacing: 0.04em;
+  font-size: 8px;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-ink-faint, #989898) 100%, transparent);
   transition: color 160ms ease, background-color 160ms ease;
+}
+
+@media (min-width: 400px) {
+  .workspace-mobile-tab {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
 }
 
 .workspace-mobile-tab[aria-current="page"],
@@ -728,23 +737,32 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 
 .workspace-mobile-create {
   display: flex;
-  height: 3.25rem;
-  width: 3.25rem;
-  translate: 0 -0.55rem;
+  height: 3.1rem;
+  width: 3.1rem;
+  translate: 0 -0.45rem;
   align-items: center;
   justify-content: center;
   justify-self: center;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--color-ink, #f2edea) 92%, #c4c2aa);
   color: #111;
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   line-height: 1;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   transition: transform 160ms ease, background-color 160ms ease;
 }
 
-.workspace-mobile-create:hover {
+.workspace-mobile-create:hover,
+.workspace-mobile-create:focus-visible {
   transform: scale(1.04);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-mobile-create:hover,
+  .workspace-mobile-create:focus-visible {
+    transform: none;
+  }
 }
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
