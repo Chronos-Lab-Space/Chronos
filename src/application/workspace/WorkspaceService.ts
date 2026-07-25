@@ -5,7 +5,11 @@ import {
 } from "../simulation/SimulationEngine";
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
+import { registerProductEventSubscribers } from "../runtime/productEventSubscribers";
 import { sanitizeWorkspaceHomeIds } from "../../domain/workspace/persistedIds";
+
+// Side effects (analytics, memory) attach via the event bus once per process.
+registerProductEventSubscribers();
 import { snapshotKnowledgeUsed } from "../../domain/workspace/simulationReport";
 import { archiveGoalIfChanged } from "../../domain/workspace/workspaceMemory";
 import type {
@@ -463,6 +467,14 @@ export class WorkspaceService {
     });
 
     const objectiveForEngine = parent ? parent.title : title;
+    await eventBus.publish("SimulationStarted", {
+      simulationId: simId,
+      workspaceId: home.workspace.id,
+      rerun: Boolean(parent),
+      objectiveLength: objectiveForEngine.length,
+      constraintCount: constraints.length,
+    });
+
     const knowledgeUsed = snapshotKnowledgeUsed(home.knowledge, home.notes);
 
     const engineInput = {
@@ -498,6 +510,8 @@ export class WorkspaceService {
     let output = engineOutputFromAgent(agentResult.data);
     output = await simulationEngine.maybeEnrichRecommendation(output, engineInput);
 
+    const failed = output.tasks.some((t) => t.status === "failed");
+
     await eventBus.publish("SimulationFinished", {
       simulationId: simId,
       workspaceId: home.workspace.id,
@@ -505,6 +519,8 @@ export class WorkspaceService {
       plannerTasks: plan.tasks.map((t) => t.title),
       confidence: output.confidence,
       bestFuture: output.best.name,
+      status: failed ? "failed" : "completed",
+      futuresCount: output.futures.length,
     });
 
     await eventBus.publish("DecisionRanked", {
@@ -516,8 +532,6 @@ export class WorkspaceService {
         score: f.score,
       })),
     });
-
-    const failed = output.tasks.some((t) => t.status === "failed");
     const sim: SimulationRecord = {
       id: simId,
       workspace_id: home.workspace.id,

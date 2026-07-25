@@ -1,4 +1,5 @@
 export type ChronosEventType =
+  | "SimulationStarted"
   | "SimulationFinished"
   | "DecisionRanked"
   | "MemoryUpdated"
