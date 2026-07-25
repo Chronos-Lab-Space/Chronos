@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { accountBootstrapService } from "../../application/workspace/AccountBootstrapService";
 import { authService } from "../../infrastructure/auth/SupabaseAuthService";
 import { trackProductEvent } from "../../infrastructure/analytics/productAnalytics";
+import { WorkspaceLoadingScreen } from "../features/workspace/WorkspaceLoadingScreen";
 
 /**
  * OAuth / magic-link landing.
@@ -95,21 +96,10 @@ export function AuthCallbackPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg px-6">
-      <div className="text-center">
-        <div className="workspace-loading-orbits mx-auto scale-75" aria-hidden>
-          <div className="workspace-loading-ring workspace-loading-ring-outer">
-            <span className="workspace-loading-node" />
-          </div>
-          <div className="workspace-loading-ring workspace-loading-ring-mid">
-            <span className="workspace-loading-node" />
-          </div>
-          <div className="workspace-loading-core" />
-        </div>
-        <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-ink-faint">
-          {phase}
-        </div>
-        <p className="mt-3 text-sm text-ink-dim">
+    <div className="flex min-h-screen items-center justify-center bg-bg px-4 py-10">
+      <div className="w-full max-w-xl">
+        <WorkspaceLoadingScreen message={phase} />
+        <p className="mt-3 text-center text-sm text-ink-dim">
           Profile → workspace → membership → dashboard
         </p>
       </div>
