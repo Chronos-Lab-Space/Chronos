@@ -5,6 +5,8 @@ export type LaunchStartupPlanInput = {
   workspaceId: string;
   decisionId: string;
   prompt: string;
+  /** Preference strings from prior learning (injected into task context). */
+  learnedPreferences?: readonly string[];
 };
 
 /**
@@ -15,7 +17,11 @@ export class StartupLaunchPlanner {
   constructor(private readonly planner = new Planner()) {}
 
   decompose(input: LaunchStartupPlanInput): TaskGraph {
-    const context = { prompt: input.prompt, workspaceId: input.workspaceId };
+    const context = {
+      prompt: input.prompt,
+      workspaceId: input.workspaceId,
+      learnedPreferences: input.learnedPreferences ?? [],
+    };
     return this.planner.createGraph({
       id: `task-graph-${input.decisionId}`,
       workspaceId: input.workspaceId,
