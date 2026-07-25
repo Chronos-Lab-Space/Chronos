@@ -9,11 +9,12 @@ import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/se
 import {
   listDecisionHistory,
 } from "../../../domain/workspace/workspaceMemory";
+import { learningMemoryStore } from "../../../infrastructure/memory/LearningMemoryStore";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 
 /**
  * Persistent memory — leave and come back to:
- * previous goals · simulations · decision history · knowledge · past outcomes
+ * previous goals · simulations · decision history · knowledge · past outcomes · learning
  */
 export function MemoryPage() {
   const { home } = useWorkspace();
@@ -25,10 +26,17 @@ export function MemoryPage() {
     () => (home ? listDecisionHistory(home) : []),
     [home]
   );
+  const learning = useMemo(
+    () => (home ? learningMemoryStore.list(home.workspace.id) : []),
+    [home]
+  );
 
   if (!home) return null;
 
   const previousGoals = home.goalHistory ?? [];
+  const learningFromKnowledge = home.knowledge.filter(
+    (k) => k.metadata?.source === "learning"
+  );
 
   return (
     <div className="space-y-12">
@@ -39,13 +47,63 @@ export function MemoryPage() {
         <h1 className="mt-2 font-serif text-3xl text-ink">History</h1>
         <p className="mt-2 max-w-xl text-sm text-ink-dim">
           Chronos keeps durable memory across sessions: goals, simulations, decisions,
-          knowledge, and outcomes. Leave and come back — nothing resets.
+          knowledge, outcomes, and learned preferences from ranked futures.
         </p>
         <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
           {home.workspace.name} · {home.recentSimulations.length} runs ·{" "}
-          {decisions.length} decisions · {home.knowledge.length} knowledge
+          {decisions.length} decisions · {learning.length} learned ·{" "}
+          {home.knowledge.length} knowledge
         </div>
       </div>
+
+      {/* Learned preferences + outcomes from Evaluation → Memory agents */}
+      <section>
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+          Learned from decisions
+        </div>
+        {learning.length === 0 && learningFromKnowledge.length === 0 ? (
+          <p className="mt-4 text-sm text-ink-dim">
+            Run a simulation and rank futures — Chronos stores outcomes and preferences
+            for the next plan.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-3">
+            {learning.slice(0, 24).map((item) => (
+              <li
+                key={item.id}
+                className="rounded-2xl border border-line px-4 py-3 transition hover:border-chronos/35"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={
+                      item.kind === "preference"
+                        ? "rounded-full bg-chronos/15 px-2 py-0.5 font-mono text-[10px] uppercase text-chronos"
+                        : item.kind === "outcome"
+                          ? "rounded-full bg-accent-warm/15 px-2 py-0.5 font-mono text-[10px] uppercase text-accent-warm"
+                          : "rounded-full border border-line px-2 py-0.5 font-mono text-[10px] uppercase text-ink-faint"
+                    }
+                  >
+                    {item.kind}
+                  </span>
+                  <span className="font-mono text-[10px] text-ink-faint">
+                    {formatCreatedAt(item.createdAt)}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-ink">{item.content}</p>
+              </li>
+            ))}
+            {learning.length === 0 &&
+              learningFromKnowledge.slice(0, 12).map((k) => (
+                <li key={k.id} className="rounded-2xl border border-line px-4 py-3">
+                  <span className="font-mono text-[10px] uppercase text-chronos">
+                    {String(k.metadata?.learning_kind ?? "learning")}
+                  </span>
+                  <p className="mt-2 text-sm text-ink">{k.content || k.title}</p>
+                </li>
+              ))}
+          </ul>
+        )}
+      </section>
 
       {/* Active + previous goals */}
       <section>

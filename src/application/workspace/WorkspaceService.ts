@@ -6,6 +6,7 @@ import {
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
 import { registerProductEventSubscribers } from "../runtime/productEventSubscribers";
+import { learningMemoryStore } from "../../infrastructure/memory/LearningMemoryStore";
 import { sanitizeWorkspaceHomeIds } from "../../domain/workspace/persistedIds";
 
 // Side effects (analytics, memory) attach via the event bus once per process.
@@ -477,6 +478,18 @@ export class WorkspaceService {
 
     const knowledgeUsed = snapshotKnowledgeUsed(home.knowledge, home.notes);
 
+    // Feed prior learning preferences into planner + soft constraints for this run.
+    const learnedPreferences = learningMemoryStore.listPreferences(
+      home.workspace.id,
+      5
+    );
+    const learnedSoftConstraints = learnedPreferences.map((text, index) => ({
+      id: `learn-pref-${index}`,
+      text,
+      kind: "soft" as const,
+    }));
+    const engineConstraints = [...constraints, ...learnedSoftConstraints];
+
     const engineInput = {
       simulationId: simId,
       workspaceId: home.workspace.id,
@@ -484,7 +497,7 @@ export class WorkspaceService {
       objective: objectiveForEngine,
       knowledge: home.knowledge,
       notes: home.notes,
-      constraints,
+      constraints: engineConstraints,
     };
 
     // Product path: Planner → Agent Runtime → SimulationAgent → SimulationEngine
@@ -493,7 +506,8 @@ export class WorkspaceService {
       workspace: { id: home.workspace.id },
       context: {
         simulationId: simId,
-        constraints: constraints.map((c) => c.text),
+        constraints: engineConstraints.map((c) => c.text),
+        learnedPreferences,
       },
       decisionId: simId,
     });

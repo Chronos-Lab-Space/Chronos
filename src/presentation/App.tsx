@@ -5,6 +5,7 @@ import { HomePage } from "./components/HomePage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
+import { WorkspaceLoadingScreen } from "./features/workspace/WorkspaceLoadingScreen";
 
 // Route-level code splitting: the marketing shell ships first; large product,
 // documentation, and legal page compositions load only after navigation.
@@ -67,12 +68,9 @@ const ComparePage = lazy(async () => ({
 
 function RouteFallback() {
   return (
-    <div className="flex min-h-[45vh] items-center justify-center bg-bg">
-      <div className="text-center">
-        <div className="mx-auto h-6 w-6 rounded-full border border-chronos border-t-transparent animate-spin" />
-        <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-ink-faint">
-          Loading Chronos
-        </div>
+    <div className="flex min-h-[45vh] items-center justify-center bg-bg px-4 py-10">
+      <div className="w-full max-w-lg">
+        <WorkspaceLoadingScreen message="Loading Chronos" />
       </div>
     </div>
   );

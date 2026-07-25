@@ -22,15 +22,33 @@ export class ChronosPlanner {
         ? crypto.randomUUID()
         : `decision-${Date.now()}`);
 
+    const learnedPreferences = Array.isArray(input.context?.learnedPreferences)
+      ? (input.context!.learnedPreferences as string[]).map(String)
+      : [];
+
     const promptParts = [input.goal];
-    if (input.context && Object.keys(input.context).length > 0) {
-      promptParts.push(JSON.stringify(input.context));
+    if (learnedPreferences.length > 0) {
+      promptParts.push(
+        "Learned preferences from prior decisions:",
+        ...learnedPreferences.map((p, i) => `${i + 1}. ${p}`)
+      );
+    }
+    if (input.context) {
+      const rest: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(input.context)) {
+        if (key === "learnedPreferences") continue;
+        rest[key] = value;
+      }
+      if (Object.keys(rest).length > 0) {
+        promptParts.push(JSON.stringify(rest));
+      }
     }
 
     return this.launchPlanner.decompose({
       workspaceId: input.workspace.id,
       decisionId,
       prompt: promptParts.join("\n"),
+      learnedPreferences,
     });
   }
 }

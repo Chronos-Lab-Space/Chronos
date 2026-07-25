@@ -3,6 +3,8 @@
  * Storage is an adapter concern — this module only derives records.
  */
 
+import { stableUuidFromSeed } from "./stableUuid";
+
 export type RankedFutureSignal = {
   id: string;
   name: string;
@@ -13,6 +15,7 @@ export type RankedFutureSignal = {
 };
 
 export type LearningMemoryRecord = {
+  /** UUID — stable for local + Supabase dual-write. */
   id: string;
   workspaceId: string;
   simulationId: string;
@@ -32,6 +35,10 @@ export type ProductLearningSnapshot = {
 
 function slug(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "unknown";
+}
+
+function learningId(parts: string[]): string {
+  return stableUuidFromSeed(`learning:${parts.join(":")}`);
 }
 
 /**
@@ -58,7 +65,7 @@ export function deriveProductLearning(input: {
 
   if (top) {
     memories.push({
-      id: `learn-outcome-${input.simulationId}-${top.id}`,
+      id: learningId(["outcome", input.simulationId, top.id]),
       workspaceId: input.workspaceId,
       simulationId: input.simulationId,
       kind: "outcome",
@@ -66,6 +73,8 @@ export function deriveProductLearning(input: {
         typeof top.expectedValue === "number" ? `, EV ${top.expectedValue.toFixed(3)}` : ""
       }).`,
       metadata: {
+        source: "learning",
+        learningKey: `outcome:${input.simulationId}:${top.id}`,
         futureId: top.id,
         name: top.name,
         score: top.score,
@@ -79,12 +88,14 @@ export function deriveProductLearning(input: {
 
   if (input.recommendation?.trim()) {
     memories.push({
-      id: `learn-decision-${input.simulationId}`,
+      id: learningId(["decision", input.simulationId]),
       workspaceId: input.workspaceId,
       simulationId: input.simulationId,
       kind: "decision",
       content: input.recommendation.trim().slice(0, 500),
       metadata: {
+        source: "learning",
+        learningKey: `decision:${input.simulationId}`,
         topFutureId: top?.id ?? null,
         topFutureName: top?.name ?? null,
       },
@@ -99,12 +110,14 @@ export function deriveProductLearning(input: {
       const hint = `Prefer paths resembling "${top?.name ?? "top ranked"}" over "${loser.name}" when similar trade-offs appear.`;
       preferenceHints.push(hint);
       memories.push({
-        id: `learn-pref-${input.simulationId}-${slug(loser.id)}`,
+        id: learningId(["pref", input.simulationId, slug(loser.id)]),
         workspaceId: input.workspaceId,
         simulationId: input.simulationId,
         kind: "preference",
         content: hint,
         metadata: {
+          source: "learning",
+          learningKey: `pref:${input.simulationId}:${slug(loser.id)}`,
           avoidedFutureId: loser.id,
           avoidedName: loser.name,
           avoidedScore: loser.score,

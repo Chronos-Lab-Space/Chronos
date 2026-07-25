@@ -1,4 +1,5 @@
 import type { LearningMemoryRecord } from "../../domain/workspace/productLearning";
+import { isSupabaseConfigured, supabase } from "../supabase/client";
 
 const STORAGE_KEY = "chronos.learning.memory.v1";
 
@@ -31,9 +32,19 @@ function writeStore(store: StoreShape): void {
   }
 }
 
+function titleFor(record: LearningMemoryRecord): string {
+  const label =
+    record.kind === "outcome"
+      ? "Learning · outcome"
+      : record.kind === "preference"
+        ? "Learning · preference"
+        : "Learning · decision";
+  return `${label}: ${record.content.slice(0, 72)}`;
+}
+
 /**
- * Durable product learning memory (local). Never throws.
- * Cloud dual-write can be layered later without changing agents.
+ * Durable product learning memory.
+ * Local: always. Cloud: best-effort upsert into public.knowledge (type=note).
  */
 export class LearningMemoryStore {
   append(workspaceId: string, records: readonly LearningMemoryRecord[]): number {
@@ -45,12 +56,13 @@ export class LearningMemoryStore {
       for (const record of records) {
         byId.set(record.id, record);
       }
-      // Newest first, cap history
       const merged = [...byId.values()]
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, 200);
       store.byWorkspace[workspaceId] = merged;
       writeStore(store);
+
+      void this.dualWriteKnowledge(records);
       return records.length;
     } catch {
       return 0;
@@ -66,6 +78,14 @@ export class LearningMemoryStore {
     }
   }
 
+  /** Preferences for planner injection (newest first). */
+  listPreferences(workspaceId: string, limit = 5): string[] {
+    return this.list(workspaceId)
+      .filter((r) => r.kind === "preference")
+      .slice(0, limit)
+      .map((r) => r.content);
+  }
+
   clear(workspaceId?: string): void {
     try {
       if (!workspaceId) {
@@ -77,6 +97,33 @@ export class LearningMemoryStore {
       writeStore(store);
     } catch {
       /* ignore */
+    }
+  }
+
+  /** Best-effort cloud dual-write — never throws to callers. */
+  private async dualWriteKnowledge(records: readonly LearningMemoryRecord[]): Promise<void> {
+    if (!isSupabaseConfigured || records.length === 0) return;
+    try {
+      const rows = records.map((r) => ({
+        id: r.id,
+        workspace_id: r.workspaceId,
+        type: "note" as const,
+        title: titleFor(r),
+        content: r.content,
+        metadata: {
+          ...r.metadata,
+          source: "learning",
+          learning_kind: r.kind,
+          simulation_id: r.simulationId,
+        },
+        created_at: r.createdAt,
+      }));
+      const { error } = await supabase.from("knowledge").upsert(rows);
+      if (error) {
+        console.warn("[learning] Supabase dual-write failed", error.message);
+      }
+    } catch (err) {
+      console.warn("[learning] Supabase dual-write error", err);
     }
   }
 }

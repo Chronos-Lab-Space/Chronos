@@ -97,7 +97,15 @@ export function AuthCallbackPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg px-6">
       <div className="text-center">
-        <div className="mx-auto h-6 w-6 rounded-full border border-chronos border-t-transparent animate-spin" />
+        <div className="workspace-loading-orbits mx-auto scale-75" aria-hidden>
+          <div className="workspace-loading-ring workspace-loading-ring-outer">
+            <span className="workspace-loading-node" />
+          </div>
+          <div className="workspace-loading-ring workspace-loading-ring-mid">
+            <span className="workspace-loading-node" />
+          </div>
+          <div className="workspace-loading-core" />
+        </div>
         <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.24em] text-ink-faint">
           {phase}
         </div>
