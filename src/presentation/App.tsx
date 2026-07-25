@@ -5,7 +5,7 @@ import { HomePage } from "./components/HomePage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
-import { WorkspaceLoadingScreen } from "./features/workspace/WorkspaceLoadingScreen";
+import { QuietLoading } from "./features/workspace/WorkspaceLoadingScreen";
 
 // Route-level code splitting: the marketing shell ships first; large product,
 // documentation, and legal page compositions load only after navigation.
@@ -67,7 +67,7 @@ const ComparePage = lazy(async () => ({
 }));
 
 function RouteFallback() {
-  return <WorkspaceLoadingScreen message="Loading Chronos" fullScreen />;
+  return <QuietLoading message="Loading Chronos" />;
 }
 
 function lazyRoute(element: React.ReactNode) {

@@ -5,7 +5,6 @@ import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 import { ChronosCMark } from "../../components/ChronosCMark";
 import { WorkspaceContextRail } from "./WorkspaceContextRail";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
-import { WorkspaceLoadingScreen } from "./WorkspaceLoadingScreen";
 import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
@@ -57,9 +56,6 @@ function WorkspaceShellInner() {
   const showContextRail =
     ready &&
     (location.pathname === "/workspace" || location.pathname === "/workspace/");
-  const isDashboard =
-    location.pathname === "/workspace" || location.pathname === "/workspace/";
-
   const handleSignOut = async () => {
     await authService.signOut();
     navigate("/login", { replace: true });
@@ -82,13 +78,8 @@ function WorkspaceShellInner() {
     setMoreOpen(false);
   };
 
-  // Full-screen brand load before home exists
-  if (loading && !home) {
-    return <WorkspaceLoadingScreen message="Opening decision workspace…" fullScreen />;
-  }
-
   return (
-    <div className="workspace-shell-enter min-h-dvh bg-bg pb-[4.75rem] lg:pb-0">
+    <div className="workspace-shell-enter min-h-dvh bg-bg pb-[5.25rem] lg:pb-0">
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-xl">
         <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-3 sm:px-4 lg:px-5">
@@ -103,12 +94,6 @@ function WorkspaceShellInner() {
                   Lab
                 </span>
               </div>
-              {/* Mobile: workspace name under brand when on dashboard */}
-              {ready && home && isDashboard ? (
-                <div className="mt-0.5 truncate text-[11px] text-ink-dim lg:hidden">
-                  {home.workspace.name}
-                </div>
-              ) : null}
             </div>
           </div>
 
@@ -227,13 +212,24 @@ function WorkspaceShellInner() {
           </aside>
         )}
 
-        <main className="min-w-0 flex-1 px-3 py-4 sm:px-5 sm:py-6 lg:px-6">
+        <main className="min-w-0 flex-1 overflow-x-hidden px-3 py-4 sm:px-5 sm:py-6 lg:px-6">
           {error && (
             <div className="workspace-banner-enter mb-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-[13px] text-ink-dim">
               {error}
             </div>
           )}
-          {!ready ? (
+          {/* Brand full-screen loading is only on AuthCallback (sign-in → workspace). */}
+          {loading && !home ? (
+            <div className="page-enter flex min-h-[50vh] flex-col items-center justify-center gap-3">
+              <div
+                className="h-6 w-6 rounded-full border-2 border-chronos/30 border-t-chronos animate-spin"
+                aria-hidden
+              />
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
+                Opening workspace…
+              </p>
+            </div>
+          ) : !ready ? (
             <div key="onboarding" className="page-enter">
               <WorkspaceOnboarding />
               {loading ? (
