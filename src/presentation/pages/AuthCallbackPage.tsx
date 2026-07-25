@@ -95,5 +95,6 @@ export function AuthCallbackPage() {
     );
   }
 
+  // Brand loading only on sign-in → workspace entry
   return <WorkspaceLoadingScreen message={phase} fullScreen />;
 }

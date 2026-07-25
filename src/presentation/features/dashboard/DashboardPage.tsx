@@ -59,9 +59,9 @@ export function DashboardPage() {
         : "bg-chronos";
 
   return (
-    <div className="ws-cascade mx-auto max-w-5xl space-y-4 sm:space-y-5">
+    <div className="ws-cascade mx-auto w-full max-w-5xl space-y-4 sm:space-y-5">
       {/* Desktop lifecycle strip only — mobile mock stacks content */}
-      <div className="hidden sm:block">
+      <div className="hidden min-w-0 sm:block">
         <HqPipeline latest={latest} />
       </div>
 
