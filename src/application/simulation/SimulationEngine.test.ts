@@ -39,7 +39,7 @@ describe("SimulationEngine", () => {
   });
 
   it("maybeEnrich is a no-op when enrich flag is off", async () => {
-    vi.stubEnv("VITE_AI_SIM_ENRICH", "");
+    vi.stubEnv("VITE_AI_SIM_ENRICH", "false");
     const out = engine.run({
       simulationId: "sim-enrich-off",
       workspaceId: "w1",
@@ -62,7 +62,7 @@ describe("SimulationEngine", () => {
     expect(enriched.best.id).toBe(out.best.id);
   });
 
-  it("maybeEnrich rewrites recommendation when flag on and AI returns text", async () => {
+  it("maybeEnrich rewrites recommendation when AI returns text (default enrich on)", async () => {
     vi.stubEnv("VITE_AI_SIM_ENRICH", "true");
     class FakeAI implements AIPort {
       readonly id = "fake";

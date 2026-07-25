@@ -1,7 +1,6 @@
-import {
-  simulationEngine,
-  type SimulationConstraint,
-  type SimulationEngineOutput,
+import type {
+  SimulationConstraint,
+  SimulationEngineOutput,
 } from "../simulation/SimulationEngine";
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
@@ -519,9 +518,8 @@ export class WorkspaceService {
       throw new Error(agentResult.error ?? "Simulation runtime failed.");
     }
 
-    // Deterministic core via agent; optional LLM polish when VITE_AI_SIM_ENRICH + non-noop provider
-    let output = engineOutputFromAgent(agentResult.data);
-    output = await simulationEngine.maybeEnrichRecommendation(output, engineInput);
+    // SimulationAgent already ran engine + AI recommendation enrich (fail-open).
+    const output = engineOutputFromAgent(agentResult.data);
 
     const failed = output.tasks.some((t) => t.status === "failed");
 
