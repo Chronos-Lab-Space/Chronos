@@ -512,6 +512,36 @@ export class WorkspaceService {
 
     const failed = output.tasks.some((t) => t.status === "failed");
 
+    // Evaluation agent ranks futures by expected value (deterministic).
+    const evaluation = await runtime.run("outcome.evaluate", {
+      futures: output.futures.map((f) => ({
+        id: f.id,
+        name: f.name,
+        score: f.score,
+        risk: f.risk,
+        confidence: f.confidence,
+        summary: f.summary,
+      })),
+    });
+
+    const rankedFutures = Array.isArray(evaluation.data.ranked)
+      ? (evaluation.data.ranked as Array<{
+          id: string;
+          name: string;
+          score: number;
+          risk?: number;
+          expectedValue?: number;
+          rank?: number;
+        }>)
+      : output.futures.map((f, index) => ({
+          id: f.id,
+          name: f.name,
+          score: f.score,
+          risk: f.risk,
+          expectedValue: f.score,
+          rank: index + 1,
+        }));
+
     await eventBus.publish("SimulationFinished", {
       simulationId: simId,
       workspaceId: home.workspace.id,
@@ -525,12 +555,12 @@ export class WorkspaceService {
 
     await eventBus.publish("DecisionRanked", {
       simulationId: simId,
+      workspaceId: home.workspace.id,
       recommendation: output.recommendation,
-      futures: output.futures.map((f) => ({
-        id: f.id,
-        name: f.name,
-        score: f.score,
-      })),
+      evaluationRationale:
+        typeof evaluation.data.rationale === "string" ? evaluation.data.rationale : undefined,
+      edge: typeof evaluation.data.edge === "number" ? evaluation.data.edge : undefined,
+      futures: rankedFutures,
     });
     const sim: SimulationRecord = {
       id: simId,
