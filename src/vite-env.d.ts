@@ -20,6 +20,8 @@ interface ImportMetaEnv {
   readonly VITE_AI_PROVIDER?: string;
   readonly VITE_OLLAMA_URL?: string;
   readonly VITE_OLLAMA_MODEL?: string;
+  /** Opt-in: polish recommendation text via AIPort (scores stay deterministic) */
+  readonly VITE_AI_SIM_ENRICH?: string;
 }
 
 interface ImportMeta {

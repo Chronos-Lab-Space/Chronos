@@ -22,6 +22,20 @@ function envString(key: string): string | undefined {
 }
 
 /**
+ * Opt-in LLM polish for sim recommendation text only.
+ * Scoring/futures stay deterministic. Requires a non-noop provider
+ * (e.g. VITE_AI_PROVIDER=ollama) or enrich is a no-op.
+ */
+export function isAISimEnrichEnabled(): boolean {
+  const v = (
+    envString("VITE_AI_SIM_ENRICH") ??
+    envString("AI_SIM_ENRICH") ??
+    ""
+  ).toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "on";
+}
+
+/**
  * Build AIPort from env.
  * Default: noop (deterministic, offline-safe for public beta sims).
  *

@@ -454,7 +454,7 @@ export class WorkspaceService {
     const objectiveForEngine = parent ? parent.title : title;
     const knowledgeUsed = snapshotKnowledgeUsed(home.knowledge, home.notes);
 
-    const output = simulationEngine.run({
+    const engineInput = {
       simulationId: simId,
       workspaceId: home.workspace.id,
       goal: home.goal,
@@ -462,7 +462,10 @@ export class WorkspaceService {
       knowledge: home.knowledge,
       notes: home.notes,
       constraints,
-    });
+    };
+    // Deterministic core; optional LLM polish when VITE_AI_SIM_ENRICH + non-noop provider
+    let output = simulationEngine.run(engineInput);
+    output = await simulationEngine.maybeEnrichRecommendation(output, engineInput);
 
     const failed = output.tasks.some((t) => t.status === "failed");
     const sim: SimulationRecord = {

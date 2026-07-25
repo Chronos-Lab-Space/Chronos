@@ -2,6 +2,10 @@ import { StartupLaunchPlanner } from "../planner/StartupLaunchPlanner";
 import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import { simulate, type Path } from "../../domain/chronos/startup-sim";
+import {
+  createAIPortFromEnv,
+  isAISimEnrichEnabled,
+} from "../../infrastructure/ai";
 import type {
   FutureRecord,
   GoalRecord,
@@ -248,9 +252,60 @@ export class SimulationEngine {
     private readonly ai: AIPort = new NoopAIProvider()
   ) {}
 
-  /** Exposed for future enrich paths / tests — not used in default run(). */
+  /** Exposed for enrich paths / tests. */
   getAIPort(): AIPort {
     return this.ai;
+  }
+
+  /**
+   * Optional LLM polish of recommendation prose only.
+   * Requires VITE_AI_SIM_ENRICH=true and a non-noop AIPort (e.g. Ollama).
+   * Futures, scores, risks, and confidence stay deterministic.
+   * Fail-open: any AI error returns the original output.
+   */
+  async maybeEnrichRecommendation(
+    output: SimulationEngineOutput,
+    input: SimulationEngineInput
+  ): Promise<SimulationEngineOutput> {
+    if (!isAISimEnrichEnabled()) return output;
+    // Pure noop skips network; router+noop yields empty text and is treated as no-op below.
+    if (this.ai.id === "noop") return output;
+
+    try {
+      const result = await this.ai.generate({
+        system:
+          "You write concise decision recommendations for founders and PMs. " +
+          "2–4 sentences max. No hype, no invented metrics. Preserve the chosen path name. " +
+          "Focus on why this path fits the objective and what to do next.",
+        prompt: [
+          `Objective: ${input.objective}`,
+          input.goal?.title ? `Goal: ${input.goal.title}` : null,
+          `Chosen path: ${output.best.name}`,
+          `Path summary: ${output.best.summary}`,
+          `Deterministic recommendation: ${output.recommendation}`,
+          `Risks: ${output.risks.slice(0, 4).join("; ") || "none listed"}`,
+          `Confidence: ${(output.confidence * 100).toFixed(0)}%`,
+          "",
+          "Rewrite the recommendation more clearly. Do not change the chosen path.",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        temperature: 0.35,
+        maxTokens: 220,
+      });
+      const text = result.text.trim();
+      if (!text) return output;
+      return {
+        ...output,
+        recommendation: text,
+      };
+    } catch (err) {
+      console.warn(
+        "[chronos] AI sim enrich failed; keeping deterministic recommendation.",
+        err
+      );
+      return output;
+    }
   }
 
   run(input: SimulationEngineInput): SimulationEngineOutput {
@@ -806,4 +861,8 @@ export class SimulationEngine {
   }
 }
 
-export const simulationEngine = new SimulationEngine();
+/** Product singleton: AI from env (default Noop); enrich only when flagged. */
+export const simulationEngine = new SimulationEngine(
+  new StartupLaunchPlanner(),
+  createAIPortFromEnv()
+);

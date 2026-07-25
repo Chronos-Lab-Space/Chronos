@@ -1,7 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
+import type { GenerateRequest, GenerateResult } from "../../domain/ai/types";
 import type { GoalRecord, KnowledgeRecord } from "../../domain/workspace/types";
 import { extractDecisionSignals, SimulationEngine } from "./SimulationEngine";
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 const goal: GoalRecord = {
   id: "g1",
@@ -30,6 +36,71 @@ describe("SimulationEngine", () => {
 
   it("defaults to Noop AI and does not require a live model", () => {
     expect(engine.getAIPort().id).toBe("noop");
+  });
+
+  it("maybeEnrich is a no-op when enrich flag is off", async () => {
+    vi.stubEnv("VITE_AI_SIM_ENRICH", "");
+    const out = engine.run({
+      simulationId: "sim-enrich-off",
+      workspaceId: "w1",
+      goal,
+      objective: "Should we raise funding before Kickstart?",
+      knowledge,
+      notes: [],
+      constraints: [{ id: "c1", text: "no raise before launch", kind: "hard" }],
+    });
+    const enriched = await engine.maybeEnrichRecommendation(out, {
+      simulationId: "sim-enrich-off",
+      workspaceId: "w1",
+      goal,
+      objective: "Should we raise funding before Kickstart?",
+      knowledge,
+      notes: [],
+      constraints: [{ id: "c1", text: "no raise before launch", kind: "hard" }],
+    });
+    expect(enriched.recommendation).toBe(out.recommendation);
+    expect(enriched.best.id).toBe(out.best.id);
+  });
+
+  it("maybeEnrich rewrites recommendation when flag on and AI returns text", async () => {
+    vi.stubEnv("VITE_AI_SIM_ENRICH", "true");
+    class FakeAI implements AIPort {
+      readonly id = "fake";
+      async generate(_req: GenerateRequest): Promise<GenerateResult> {
+        return { text: "  AI polished recommendation.  ", model: "fake", provider: "fake" };
+      }
+      async embed() {
+        return { vectors: [], model: "fake", provider: "fake" };
+      }
+      async reason(req: GenerateRequest) {
+        return this.generate(req);
+      }
+      async code(req: GenerateRequest) {
+        return this.generate(req);
+      }
+    }
+    const withAi = new SimulationEngine(undefined, new FakeAI());
+    const out = withAi.run({
+      simulationId: "sim-enrich-on",
+      workspaceId: "w1",
+      goal,
+      objective: "Should we raise funding before Kickstart?",
+      knowledge,
+      notes: [],
+      constraints: [{ id: "c1", text: "no raise before launch", kind: "hard" }],
+    });
+    const enriched = await withAi.maybeEnrichRecommendation(out, {
+      simulationId: "sim-enrich-on",
+      workspaceId: "w1",
+      goal,
+      objective: "Should we raise funding before Kickstart?",
+      knowledge,
+      notes: [],
+      constraints: [{ id: "c1", text: "no raise before launch", kind: "hard" }],
+    });
+    expect(enriched.recommendation).toBe("AI polished recommendation.");
+    expect(enriched.best.name).toBe(out.best.name);
+    expect(enriched.confidence).toBe(out.confidence);
   });
 
   it("runs planner → futures → evaluate → rank → best future", () => {

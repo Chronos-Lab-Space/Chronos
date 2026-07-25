@@ -143,11 +143,8 @@ constructor(
 ```
 
 - **Noop default:** `run()` behavior **identical** to pre-AI (deterministic path only).  
-- Do **not** call `ai.generate` in the default product path in this slice (avoids latency/CORS/product drift).  
-- Keep `this.ai` available for future enrichment behind an explicit flag (out of this slice).  
-- Unit test: `new SimulationEngine(planner, noop).run(...)` still passes existing tests.
-
-Optional later (not this PR): `VITE_AI_SIM_ENRICH=true` drafts thesis via generate; never required for beta.
+- **Opt-in enrich:** `VITE_AI_SIM_ENRICH=true` + non-noop provider → `maybeEnrichRecommendation()` rewrites **recommendation prose only** (fail-open). Futures/scores unchanged.  
+- Unit test: `new SimulationEngine(planner, noop).run(...)` still passes; enrich tests cover flag off/on.
 
 ---
 
