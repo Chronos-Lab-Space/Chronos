@@ -933,7 +933,7 @@ export class SimulationEngine {
   private buildRecommendation(
     best: FutureRecord,
     runnerUp: FutureRecord | null,
-    input: SimulationEngineInput,
+    _input: SimulationEngineInput,
     risks: string[],
     signals: DecisionSignals,
     objective: string
