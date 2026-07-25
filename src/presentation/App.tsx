@@ -67,13 +67,7 @@ const ComparePage = lazy(async () => ({
 }));
 
 function RouteFallback() {
-  return (
-    <div className="flex min-h-[45vh] items-center justify-center bg-bg px-4 py-10">
-      <div className="w-full max-w-lg">
-        <WorkspaceLoadingScreen message="Loading Chronos" />
-      </div>
-    </div>
-  );
+  return <WorkspaceLoadingScreen message="Loading Chronos" fullScreen />;
 }
 
 function lazyRoute(element: React.ReactNode) {

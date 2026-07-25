@@ -95,14 +95,5 @@ export function AuthCallbackPage() {
     );
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-bg px-4 py-10">
-      <div className="w-full max-w-xl">
-        <WorkspaceLoadingScreen message={phase} />
-        <p className="mt-3 text-center text-sm text-ink-dim">
-          Profile → workspace → membership → dashboard
-        </p>
-      </div>
-    </div>
-  );
+  return <WorkspaceLoadingScreen message={phase} fullScreen />;
 }
