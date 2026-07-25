@@ -22,61 +22,49 @@ export function DecisionCardView({ card }: { card: DecisionCardModel }) {
   return (
     <section
       data-testid="decision-card"
-      className="rounded-2xl border border-chronos/40 bg-gradient-to-br from-chronos/15 via-bg-soft/30 to-bg p-5 sm:p-7"
+      className="relative overflow-hidden rounded-2xl border border-chronos/35 bg-gradient-to-br from-chronos/12 via-bg-soft/25 to-bg p-5 sm:p-6"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <div
+        className="pointer-events-none absolute -right-8 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-chronos/10 blur-2xl"
+        aria-hidden
+      />
+      <div className="relative">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
-            Workspace pulse
+            Recommendation
           </div>
-          <p className="mt-2 text-sm text-ink-dim">
-            Working on{" "}
-            <span className="text-ink" data-testid="decision-card-goal">
-              {card.decisionTitle}
-            </span>
-          </p>
+          <span
+            data-testid="decision-card-status"
+            className="rounded-full border border-chronos/30 bg-bg/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-chronos"
+          >
+            {card.statusLabel}
+          </span>
         </div>
-        <span
-          data-testid="decision-card-status"
-          className="rounded-full border border-chronos/30 bg-bg/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-chronos"
-        >
-          {card.statusLabel}
-        </span>
-      </div>
+        <p className="sr-only" data-testid="decision-card-goal">
+          {card.decisionTitle}
+        </p>
 
-      <div className="mt-6">
-        <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-          Recommendation
-        </div>
         <h2
           data-testid="decision-card-recommendation"
-          className="mt-2 font-serif text-3xl text-ink sm:text-4xl"
+          className="mt-4 font-serif text-2xl text-ink sm:text-3xl"
         >
-          {card.recommendation ?? "No recommendation yet"}
-          {card.recommendation ? (
-            <span className="ml-2 text-chronos" aria-hidden>
-              ⭐
-            </span>
-          ) : null}
+          {card.recommendation ?? "No recommendation available."}
         </h2>
-        <div className="mt-4 flex flex-wrap items-baseline gap-4">
-          <div>
-            <div className="font-mono text-[10px] uppercase text-ink-faint">Confidence</div>
-            <div className="mt-0.5 font-mono text-3xl tabular-nums text-chronos sm:text-4xl">
-              {conf}
-            </div>
-          </div>
-        </div>
         {card.reason ? (
-          <p className="mt-4 max-w-xl text-sm leading-relaxed text-ink-dim">{card.reason}</p>
-        ) : null}
-      </div>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-dim">{card.reason}</p>
+        ) : (
+          <p className="mt-3 max-w-xl text-sm text-ink-dim">
+            Run a simulation to generate ranked futures and a recommendation.
+          </p>
+        )}
 
-      <div className="mt-6 border-t border-line/80 pt-5">
-        <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-          Next action
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
+        {card.confidence != null ? (
+          <div className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+            Confidence <span className="text-chronos">{conf}</span>
+          </div>
+        ) : null}
+
+        <div className="mt-6 flex flex-wrap gap-2">
           <Link
             to={card.primaryCtaHref}
             data-testid="decision-card-cta"
@@ -93,10 +81,6 @@ export function DecisionCardView({ card }: { card: DecisionCardModel }) {
             </Link>
           ) : null}
         </div>
-        <p className="mt-3 text-xs text-ink-faint">
-          Review evidence and alternatives before saving a path — commitment happens on the
-          simulation page.
-        </p>
       </div>
     </section>
   );
