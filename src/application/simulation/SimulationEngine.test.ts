@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import type { GoalRecord, KnowledgeRecord } from "../../domain/workspace/types";
 import { extractDecisionSignals, SimulationEngine } from "./SimulationEngine";
 
@@ -25,7 +26,11 @@ const knowledge: KnowledgeRecord[] = [
 ];
 
 describe("SimulationEngine", () => {
-  const engine = new SimulationEngine();
+  const engine = new SimulationEngine(undefined, new NoopAIProvider());
+
+  it("defaults to Noop AI and does not require a live model", () => {
+    expect(engine.getAIPort().id).toBe("noop");
+  });
 
   it("runs planner → futures → evaluate → rank → best future", () => {
     const out = engine.run({

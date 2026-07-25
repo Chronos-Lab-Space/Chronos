@@ -1,4 +1,6 @@
 import { StartupLaunchPlanner } from "../planner/StartupLaunchPlanner";
+import type { AIPort } from "../../domain/ai/AIPort";
+import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import { simulate, type Path } from "../../domain/chronos/startup-sim";
 import type {
   FutureRecord,
@@ -235,7 +237,21 @@ function isConservativePath(path: Path): boolean {
  * Scores use path economics (probability, ARR, LTV/CAC, burn) + workspace signals.
  */
 export class SimulationEngine {
-  constructor(private readonly planner = new StartupLaunchPlanner()) {}
+  /**
+   * @param planner Task decomposition
+   * @param ai Provider-agnostic port (default pure Noop).
+   *           Product path does not call AI yet — keeps sims deterministic.
+   *           Composition roots may inject `createAIPortFromEnv()` for Ollama etc.
+   */
+  constructor(
+    private readonly planner = new StartupLaunchPlanner(),
+    private readonly ai: AIPort = new NoopAIProvider()
+  ) {}
+
+  /** Exposed for future enrich paths / tests — not used in default run(). */
+  getAIPort(): AIPort {
+    return this.ai;
+  }
 
   run(input: SimulationEngineInput): SimulationEngineOutput {
     const tasks = this.createTaskShell();
