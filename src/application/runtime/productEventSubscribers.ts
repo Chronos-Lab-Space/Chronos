@@ -55,24 +55,44 @@ export function registerProductEventSubscribers(): void {
   eventBus.subscribe("DecisionRanked", (event) => {
     const p = event.payload as {
       simulationId?: string;
+      workspaceId?: string;
       recommendation?: string;
-      futures?: readonly { id: string; name: string; score: number }[];
+      evaluationRationale?: string;
+      edge?: number;
+      futures?: readonly {
+        id: string;
+        name: string;
+        score: number;
+        risk?: number;
+        expectedValue?: number;
+        rank?: number;
+      }[];
     };
-    // Persist ranked decision signal via memory capability (stub-safe).
+
+    if (!p.workspaceId) {
+      return;
+    }
+
+    // Persist ranked decision learning via MemoryAgent (durable local store).
     void runtime
       .run("memory.write", {
+        workspaceId: p.workspaceId,
         record: {
           kind: "decision_ranked",
+          workspaceId: p.workspaceId,
           simulationId: p.simulationId,
-          recommendation: p.recommendation,
-          top: p.futures?.[0] ?? null,
-          rankedCount: p.futures?.length ?? 0,
+          recommendation: p.recommendation ?? p.evaluationRationale,
+          futures: p.futures ?? [],
+          edge: p.edge ?? null,
         },
       })
       .then((result) => {
         void eventBus.publish("MemoryUpdated", {
           simulationId: p.simulationId,
+          workspaceId: p.workspaceId,
           ok: result.ok,
+          written: result.data.written === true,
+          writtenCount: result.data.writtenCount ?? 0,
           agent: result.agent,
         });
       })

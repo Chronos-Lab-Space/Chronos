@@ -1,0 +1,131 @@
+/**
+ * Deterministic learning artifacts from product decision rankings.
+ * Storage is an adapter concern — this module only derives records.
+ */
+
+export type RankedFutureSignal = {
+  id: string;
+  name: string;
+  score: number;
+  risk?: number;
+  expectedValue?: number;
+  rank?: number;
+};
+
+export type LearningMemoryRecord = {
+  id: string;
+  workspaceId: string;
+  simulationId: string;
+  kind: "outcome" | "preference" | "decision";
+  content: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type ProductLearningSnapshot = {
+  workspaceId: string;
+  simulationId: string;
+  memories: readonly LearningMemoryRecord[];
+  successfulFuture: RankedFutureSignal | null;
+  preferenceHints: readonly string[];
+};
+
+function slug(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "unknown";
+}
+
+/**
+ * Derive reusable memory from a ranked decision (product simulation path).
+ */
+export function deriveProductLearning(input: {
+  workspaceId: string;
+  simulationId: string;
+  recommendation?: string;
+  futures?: readonly RankedFutureSignal[];
+  now?: string;
+}): ProductLearningSnapshot {
+  const now = input.now ?? new Date().toISOString();
+  const futures = [...(input.futures ?? [])].sort(
+    (a, b) =>
+      (a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER) ||
+      b.score - a.score ||
+      a.name.localeCompare(b.name)
+  );
+
+  const top = futures[0] ?? null;
+  const losers = futures.slice(1);
+  const memories: LearningMemoryRecord[] = [];
+
+  if (top) {
+    memories.push({
+      id: `learn-outcome-${input.simulationId}-${top.id}`,
+      workspaceId: input.workspaceId,
+      simulationId: input.simulationId,
+      kind: "outcome",
+      content: `Successful future: ${top.name} (score ${top.score.toFixed(3)}${
+        typeof top.expectedValue === "number" ? `, EV ${top.expectedValue.toFixed(3)}` : ""
+      }).`,
+      metadata: {
+        futureId: top.id,
+        name: top.name,
+        score: top.score,
+        risk: top.risk ?? null,
+        expectedValue: top.expectedValue ?? null,
+        rank: top.rank ?? 1,
+      },
+      createdAt: now,
+    });
+  }
+
+  if (input.recommendation?.trim()) {
+    memories.push({
+      id: `learn-decision-${input.simulationId}`,
+      workspaceId: input.workspaceId,
+      simulationId: input.simulationId,
+      kind: "decision",
+      content: input.recommendation.trim().slice(0, 500),
+      metadata: {
+        topFutureId: top?.id ?? null,
+        topFutureName: top?.name ?? null,
+      },
+      createdAt: now,
+    });
+  }
+
+  const preferenceHints: string[] = [];
+  for (const loser of losers) {
+    const risk = loser.risk ?? 0.5;
+    if (risk >= 0.55 || (top && loser.score < top.score - 0.05)) {
+      const hint = `Prefer paths resembling "${top?.name ?? "top ranked"}" over "${loser.name}" when similar trade-offs appear.`;
+      preferenceHints.push(hint);
+      memories.push({
+        id: `learn-pref-${input.simulationId}-${slug(loser.id)}`,
+        workspaceId: input.workspaceId,
+        simulationId: input.simulationId,
+        kind: "preference",
+        content: hint,
+        metadata: {
+          avoidedFutureId: loser.id,
+          avoidedName: loser.name,
+          avoidedScore: loser.score,
+          avoidedRisk: risk,
+        },
+        createdAt: now,
+      });
+    }
+  }
+
+  // Cap preference noise — keep strongest few
+  const capped = [
+    ...memories.filter((m) => m.kind !== "preference"),
+    ...memories.filter((m) => m.kind === "preference").slice(0, 3),
+  ];
+
+  return {
+    workspaceId: input.workspaceId,
+    simulationId: input.simulationId,
+    memories: capped,
+    successfulFuture: top,
+    preferenceHints: preferenceHints.slice(0, 3),
+  };
+}

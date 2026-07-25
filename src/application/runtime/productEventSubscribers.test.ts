@@ -65,8 +65,12 @@ describe("productEventSubscribers", () => {
 
     await eventBus.publish("DecisionRanked", {
       simulationId: "s1",
+      workspaceId: "w1",
       recommendation: "Ship MVP",
-      futures: [{ id: "f1", name: "MVP", score: 0.9 }],
+      futures: [
+        { id: "f1", name: "MVP", score: 0.9, risk: 0.2, rank: 1, expectedValue: 0.6 },
+        { id: "f2", name: "Raise", score: 0.4, risk: 0.7, rank: 2 },
+      ],
     });
 
     // allow async memory agent
@@ -75,7 +79,12 @@ describe("productEventSubscribers", () => {
 
     expect(memoryEvents.length).toBeGreaterThanOrEqual(1);
     expect(memoryEvents[0]).toEqual(
-      expect.objectContaining({ simulationId: "s1", ok: true })
+      expect.objectContaining({
+        simulationId: "s1",
+        workspaceId: "w1",
+        ok: true,
+        written: true,
+      })
     );
     unsub();
   });
