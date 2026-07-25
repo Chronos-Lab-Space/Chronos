@@ -290,35 +290,18 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         await withOwner((id) => workspaceService.deleteNote(id, noteId));
       },
       runSimulation: async (objective, constraints = []) => {
-        trackProductEvent("simulation_started", {
-          objectiveLength: objective.trim().length,
-          constraintCount: constraints.length,
-        });
+        // Analytics: SimulationStarted/Finished → productEventSubscribers
         const next = await withOwner((id) =>
           workspaceService.runSimulation(id, objective, constraints)
         );
         const sim = next.recentSimulations[0];
-        trackProductEvent("simulation_completed", {
-          simulationId: sim?.id,
-          status: sim?.status,
-          futures: sim?.result?.futures_count,
-        });
         return sim?.id ?? null;
       },
       rerunSimulation: async (parentSimulationId, constraints) => {
-        trackProductEvent("simulation_started", {
-          parentSimulationId,
-          rerun: true,
-        });
         const next = await withOwner((id) =>
           workspaceService.rerunSimulation(id, parentSimulationId, constraints)
         );
         const sim = next.recentSimulations[0];
-        trackProductEvent("simulation_completed", {
-          simulationId: sim?.id,
-          status: sim?.status,
-          rerun: true,
-        });
         return sim?.id ?? null;
       },
       chooseBestPath: async (simulationId, futureId) => {
