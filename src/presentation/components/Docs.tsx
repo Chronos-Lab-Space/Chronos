@@ -32,7 +32,7 @@ const NAV: {
       { id: "how-it-works", label: "How it works" },
       { id: "getting-started", label: "Getting started" },
       { id: "auth", label: "Auth & access" },
-      { id: "beta", label: "Beta limitations" },
+      { id: "beta", label: "Public beta" },
       { id: "faq", label: "FAQ" },
     ],
   },
@@ -588,17 +588,56 @@ function AuthAccessDocs() {
 function BetaLimitationsDocs() {
   return (
     <div>
-      <DocTitle>Current beta limitations</DocTitle>
+      <DocTitle>Public beta</DocTitle>
       <DocBody>
-        Chronos is in public beta. The decision loop works end-to-end; some
-        platform depth is still landing. Knowing the edges reduces surprises.
+        Chronos is decision infrastructure, not a chatbot. It explores multiple
+        futures, scores trade-offs, and recommends a path — you still decide.
       </DocBody>
 
+      <Callout tone="tip" title="Honest beta">
+        <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[14px] leading-relaxed text-ink-dim">
+          <li>
+            <strong className="text-ink">You decide.</strong> Chronos recommends;
+            Save decision is explicit and reviewable.
+          </li>
+          <li>
+            <strong className="text-ink">Multi-future, honest N.</strong> Sample
+            counts and disqualified paths match the engine — no padded “1000 paths.”
+          </li>
+          <li>
+            <strong className="text-ink">Local-first cloud.</strong> If sync fails,
+            work stays on this device; watch the cloud banner when present.
+          </li>
+          <li>
+            <strong className="text-ink">Prefer Google / GitHub.</strong> Email
+            signup may require confirmation before the workspace unlocks.
+          </li>
+        </ul>
+      </Callout>
+
+      <DocSub>Tester checklist (first session)</DocSub>
+      <FlowSteps
+        steps={[
+          "Sign in with Google or GitHub",
+          "Answer: What decision are you trying to make?",
+          "Add one knowledge note or URL",
+          "Run a simulation and open the Decision Report",
+          "Review Recommendation → Evidence · Why · Expected value",
+          "Save decision (choose a path), then log an outcome",
+        ]}
+      />
+      <DocBody>
+        Success = you can name the recommendation and the next step without
+        hunting. If anything feels like a single chat answer, that is a bug in
+        the product experience — tell us.
+      </DocBody>
+
+      <DocSub>Current limitations</DocSub>
       <TopicList
         items={[
           {
             title: "Simulation engine",
-            body: "Honest Monte Carlo over strategy archetypes (sample counts match what was scored — not marketing “1000 paths”). Useful for structured decisions; not a calibrated model of markets or codebases.",
+            body: "Honest Monte Carlo over strategy archetypes (sample counts match what was scored). Useful for structured decisions; not a calibrated model of markets or codebases. Optional AI polish (env flag) only rewrites recommendation prose — scores stay deterministic.",
           },
           {
             title: "Hard constraints",
@@ -667,7 +706,11 @@ function DocsFaq() {
     },
     {
       q: "Is Chronos production-ready?",
-      a: "It is public beta. The core decision loop is usable; see Beta limitations for known edges (engine depth, collab, API, etc.).",
+      a: "It is public beta. The core decision loop is usable; see Public beta for the tester checklist and known edges (engine depth, collab, API, etc.).",
+    },
+    {
+      q: "Does Chronos use an LLM for every recommendation?",
+      a: "No. Ranking is deterministic by default. Optional AI polish (env-only) may rewrite recommendation wording; scores and futures stay engine-owned.",
     },
     {
       q: "Who is it for?",
@@ -717,21 +760,22 @@ function GettingStarted() {
 
       <FlowSteps
         steps={[
-          "Join public beta (Google / GitHub / email)",
-          "Set goal",
+          "Join public beta (prefer Google / GitHub)",
+          "What decision are you trying to make?",
           "Add knowledge",
           "Generate futures",
-          "Keep Decision Report",
-          "Save path · log outcome",
+          "Review Decision Report (Evidence · Why · Expected value)",
+          "Save decision · log outcome",
         ]}
       />
 
       <DocSub>1. Join public beta</DocSub>
       <DocBody>
         From the landing page choose <strong className="text-ink">Join public beta</strong>{" "}
-        or <strong className="text-ink">Get started</strong>, then continue with Google,
-        GitHub, or email. Chronos creates your profile and a personal workspace with
-        owner membership automatically.
+        or <strong className="text-ink">Get started</strong>. Prefer{" "}
+        <strong className="text-ink">Google or GitHub</strong> for the fastest path;
+        email may require confirmation. Chronos creates your profile and a personal
+        workspace with owner membership automatically.
       </DocBody>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
