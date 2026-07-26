@@ -1,6 +1,143 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { eventBus, runtime } from "../../core/runtime";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
-import { WorkspaceService } from "./WorkspaceService";
+import { MAX_RETAINED_SIMULATIONS, WorkspaceService } from "./WorkspaceService";
+
+describe("workspace payload bounds", () => {
+  const ownerId = "user-cap-1";
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("caps retained simulations and prunes orphaned relations on load", async () => {
+    const store = new LocalWorkspaceStore();
+    const service = new WorkspaceService({ local: store, remote: null });
+    const created = await service.createWorkspace(ownerId, "Cap Lab", "");
+
+    const total = MAX_RETAINED_SIMULATIONS + 5;
+    const sims = Array.from({ length: total }, (_, i) => ({
+      id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+      workspace_id: created.workspace.id,
+      goal_id: null,
+      title: `Sim ${i}`,
+      status: "completed" as const,
+      confidence: 0.5,
+      result: {},
+      created_at: new Date(Date.UTC(2026, 0, 1) + i * 60_000).toISOString(),
+      version: 1,
+      lineage_id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+      parent_simulation_id: null,
+    }));
+    const futuresBySimulation = Object.fromEntries(
+      sims.map((s) => [
+        s.id,
+        [
+          {
+            id: `${s.id.slice(0, -1)}f`,
+            simulation_id: s.id,
+            name: "F",
+            score: 0.5,
+            risk: 0.3,
+            confidence: 0.5,
+            summary: "s",
+          },
+        ],
+      ])
+    );
+    // Orphaned relation: no matching simulation record
+    futuresBySimulation["99999999-9999-4999-8999-999999999999"] = [];
+
+    store.save(ownerId, {
+      ...created,
+      // newest-last on purpose: the cap must keep the NEWEST records
+      recentSimulations: sims,
+      futuresBySimulation,
+    });
+
+    const loaded = await service.load(ownerId);
+    expect(loaded?.recentSimulations).toHaveLength(MAX_RETAINED_SIMULATIONS);
+    // Newest survive (highest created_at → the last `total` minus cap dropped)
+    expect(loaded?.recentSimulations.some((s) => s.title === `Sim ${total - 1}`)).toBe(true);
+    expect(loaded?.recentSimulations.some((s) => s.title === "Sim 0")).toBe(false);
+    const keptIds = new Set(loaded?.recentSimulations.map((s) => s.id));
+    for (const key of Object.keys(loaded?.futuresBySimulation ?? {})) {
+      expect(keptIds.has(key)).toBe(true);
+    }
+  });
+});
+
+describe("decision ranking consistency", () => {
+  const ownerId = "user-rank-1";
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("publishes DecisionRanked in the same order the product persists", async () => {
+    const service = new WorkspaceService({ local: new LocalWorkspaceStore(), remote: null });
+    await service.createWorkspace(ownerId, "Rank Lab", "");
+
+    let published: { id: string; rank?: number }[] = [];
+    const unsubscribe = eventBus.subscribe("DecisionRanked", (event) => {
+      const payload = event.payload as { futures?: { id: string; rank?: number }[] };
+      published = payload.futures ?? [];
+    });
+    try {
+      const home = await service.runSimulation(
+        ownerId,
+        "Grow our B2B SaaS revenue with a small team",
+        []
+      );
+      const simId = home.recentSimulations[0].id;
+      const persisted = home.futuresBySimulation[simId] ?? [];
+
+      // What the learning layer records must be what the user sees.
+      expect(published.map((f) => f.id)).toEqual(persisted.map((f) => f.id));
+      expect(published.map((f) => f.rank)).toEqual(persisted.map((_, i) => i + 1));
+    } finally {
+      unsubscribe();
+    }
+  });
+});
+
+describe("simulation failure recovery", () => {
+  const ownerId = "user-fail-1";
+  let store: LocalWorkspaceStore;
+  let service: WorkspaceService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    store = new LocalWorkspaceStore();
+    service = new WorkspaceService({ local: store, remote: null });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("marks the simulation record failed when the agent runtime fails", async () => {
+    await service.createWorkspace(ownerId, "Fail Lab", "");
+    vi.spyOn(runtime, "run").mockResolvedValueOnce({
+      ok: false,
+      capability: "simulation.execute",
+      agent: "simulation",
+      data: {},
+      error: "engine exploded",
+    });
+
+    await expect(service.runSimulation(ownerId, "Will this survive a crash?", [])).rejects.toThrow(
+      /engine exploded/
+    );
+
+    // The phantom "running" record must not survive the failure.
+    const home = await service.load(ownerId);
+    const sim = home?.recentSimulations[0];
+    expect(sim).toBeDefined();
+    expect(sim?.status).toBe("failed");
+    expect(sim?.result.tasks?.some((t) => t.status === "running")).toBe(false);
+  });
+});
 
 describe("WorkspaceService success metric", () => {
   const ownerId = "user-test-1";
@@ -78,7 +215,10 @@ describe("WorkspaceService success metric", () => {
     expect(resumed?.recentSimulations).toHaveLength(2);
     expect(resumed?.recentSimulations[0].id).toBe(v2.id);
     expect(resumed?.futuresBySimulation[sim.id]?.[0].name).toBeTruthy();
-    expect(resumed?.futuresBySimulation[v2.id]?.length).toBe(5);
+    // Resume returns the complete futures set for v2 (engine contract:
+    // up to 5, fewer when the category catalog is thin).
+    expect(resumed?.futuresBySimulation[v2.id]?.length).toBe(v2.result.futures_count);
+    expect(resumed?.futuresBySimulation[v2.id]?.length).toBeGreaterThanOrEqual(3);
   });
 
   it("rejects empty names and requires a workspace before mutations", async () => {

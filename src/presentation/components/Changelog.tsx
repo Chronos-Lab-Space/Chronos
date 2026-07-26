@@ -12,6 +12,107 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.4.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "The future graph",
+    summary:
+      "Chronos' signature visualization lands on the simulation report: NOW forks into ranked futures, each branch ending in its risk node. The engine's pick carries the accent, the chosen path is marked, and clicking a branch selects that future across the whole page — comparison, timeline cards, and save.",
+    highlights: [
+      {
+        label: "Future graph",
+        detail:
+          "Branching SVG on every completed run · rank-ordered top to bottom · recommended branch accented · CHOSEN marker · risk % terminals",
+      },
+      {
+        label: "One selection",
+        detail: "Graph, comparison, and timeline cards share the same selected future",
+      },
+      {
+        label: "Pure layout",
+        detail:
+          "layoutFutureGraph(futures) in the domain layer — geometry unit-tested, scales with branch count",
+      },
+    ],
+  },
+  {
+    version: "5.3.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "The new workspace shell",
+    summary:
+      "The rest of the decision-workspace redesign lands in the chrome. ⌘K opens a real command palette — type to filter, Enter runs, unmatched queries fall back to knowledge search. The six-state lifecycle band now persists on every workspace page. The sidebar shows live counts and the context rail gains a real Notes tab backed by workspace notes.",
+    highlights: [
+      {
+        label: "Command palette",
+        detail:
+          "⌘K / Ctrl+K anywhere in the workspace · commands derived from real state (review recommendation and log outcome appear once a run completes) · knowledge-search fallback",
+      },
+      {
+        label: "Lifecycle band",
+        detail: "Draft → Learned band on every workspace page, not just the brief",
+      },
+      {
+        label: "Sidebar",
+        detail: "Live counts for Knowledge / Simulations / Memory · pulse on the current decision",
+      },
+      {
+        label: "Context rail",
+        detail:
+          "Details / Notes tabs — Notes shows real workspace notes · rail also on Workspace HQ",
+      },
+    ],
+  },
+  {
+    version: "5.2.1",
+    date: "2026-07-26",
+    tag: "patch",
+    title: "Decision Brief becomes the workspace home",
+    summary:
+      "Opening the workspace now lands on the Decision Brief — the editorial read of your current decision. The HQ dashboard moved to /workspace/hq (sidebar: Workspace HQ), old /workspace/decision links redirect, and the brief is reachable from the mobile More menu.",
+    highlights: [
+      {
+        label: "Default route",
+        detail:
+          "/workspace → Decision Brief · HQ dashboard at /workspace/hq · legacy links redirect",
+      },
+      {
+        label: "Mobile nav",
+        detail: "Decision Brief reachable on phones (More menu gained the missing entry)",
+      },
+    ],
+  },
+  {
+    version: "5.2.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "Decision Brief · sign-in polish",
+    summary:
+      "New decision-centric workspace surface: the Decision Brief reads one decision as an editorial page — six-state lifecycle band (Draft → Simulating → Evaluating → Collapsed → Observed → Learned), recommendation, honest confidence stats, evidence, and ranked futures, all derived from real workspace data. Sign-in loading is leaner and phones finally see the whole wordmark.",
+    highlights: [
+      {
+        label: "Decision Brief",
+        detail:
+          "/workspace/decision · deriveDecisionBrief(home) · lifecycle band from sim status, chosen path, and outcome fields · empty states instead of invented numbers",
+      },
+      {
+        label: "Lifecycle band",
+        detail:
+          "Draft → Simulating → Evaluating → Collapsed → Observed → Learned, with real dates from the run, the chosen path, and the logged outcome",
+      },
+      {
+        label: "Sign-in loading",
+        detail:
+          "Dead fullScreen/orbit variants removed · double bootstrap on fast sign-ins fixed (one ensureAccount, one session_start, one navigate) · regression-tested",
+      },
+      {
+        label: "Mobile art",
+        detail:
+          "Portrait crop of the loading art via <picture> — the full Chronos LAB wordmark survives phones down to 344px covers",
+      },
+    ],
+  },
+  {
     version: "5.1.0",
     date: "2026-07-25",
     tag: "minor",

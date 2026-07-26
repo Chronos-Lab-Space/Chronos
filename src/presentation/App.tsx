@@ -29,6 +29,9 @@ const PrivacyPage = lazy(async () => ({ default: (await import("./pages")).Priva
 const TermsPage = lazy(async () => ({ default: (await import("./pages")).TermsPage }));
 const SecurityPage = lazy(async () => ({ default: (await import("./pages")).SecurityPage }));
 const AccessPage = lazy(async () => ({ default: (await import("./pages")).AccessPage }));
+const WhitepaperPage = lazy(async () => ({
+  default: (await import("./pages/WhitepaperPage")).WhitepaperPage,
+}));
 const Docs = lazy(async () => ({ default: (await import("./components/Docs")).Docs }));
 const ChangelogPage = lazy(async () => ({
   default: (await import("./components/Changelog")).ChangelogPage,
@@ -42,6 +45,9 @@ const WorkspaceShell = lazy(async () => ({
 }));
 const DashboardPage = lazy(async () => ({
   default: (await import("./features/dashboard/DashboardPage")).DashboardPage,
+}));
+const DecisionBriefPage = lazy(async () => ({
+  default: (await import("./features/workspace/DecisionBriefPage")).DecisionBriefPage,
 }));
 const KnowledgePage = lazy(async () => ({
   default: (await import("./features/knowledge/KnowledgePages")).KnowledgePage,
@@ -114,7 +120,10 @@ function App() {
             </ProtectedRoute>
           )}
         >
-          <Route index element={lazyRoute(<DashboardPage />)} />
+          {/* Decision Brief is the workspace home; the HQ dashboard moved to /workspace/hq */}
+          <Route index element={lazyRoute(<DecisionBriefPage />)} />
+          <Route path="hq" element={lazyRoute(<DashboardPage />)} />
+          <Route path="decision" element={<Navigate to="/workspace" replace />} />
           <Route path="knowledge" element={lazyRoute(<KnowledgePage />)} />
           <Route path="simulations" element={lazyRoute(<SimulationsPage />)} />
           <Route path="simulations/:simulationId" element={lazyRoute(<SimulationDetailPage />)} />
@@ -146,6 +155,7 @@ function App() {
           <Route path="/about" element={lazyRoute(<AboutPage />)} />
           <Route path="/faq" element={lazyRoute(<FaqPage />)} />
           <Route path="/docs" element={lazyRoute(<Docs />)} />
+          <Route path="/whitepaper" element={lazyRoute(<WhitepaperPage />)} />
           <Route path="/changelog" element={lazyRoute(<ChangelogPage />)} />
           <Route path="/contact" element={lazyRoute(<ContactPage />)} />
           <Route path="/privacy" element={lazyRoute(<PrivacyPage />)} />

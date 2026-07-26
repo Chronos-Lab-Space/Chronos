@@ -59,17 +59,8 @@ function rationaleFor(future: EvaluableFuture, ev: number, rank: number): string
   return bits.join(" · ");
 }
 
-/**
- * Rank futures by expected value (desc), then lower risk, then name.
- * Soft policy: risk ≥ 0.85 is flagged non-compliant but still ranked.
- */
-export function evaluateFutures(
-  futures: readonly EvaluableFuture[],
-  options: { hardRiskCeiling?: number } = {}
-): FutureEvaluationResult {
-  const ceiling = options.hardRiskCeiling ?? 0.85;
-
-  const prepared = futures.map((future) => {
+function prepare(futures: readonly EvaluableFuture[], ceiling: number): RankedFuture[] {
+  return futures.map((future) => {
     const risk = clamp01(future.risk ?? 0.5);
     const confidence = clamp01(future.confidence ?? 0.5);
     const expectedValue = expectedValueOf({ ...future, risk, confidence });
@@ -84,11 +75,43 @@ export function evaluateFutures(
       rank: 0,
     } satisfies RankedFuture;
   });
+}
+
+/**
+ * Rank futures by expected value (desc), then lower risk, then name.
+ * Soft policy: risk ≥ 0.85 is flagged non-compliant but still ranked.
+ */
+export function evaluateFutures(
+  futures: readonly EvaluableFuture[],
+  options: { hardRiskCeiling?: number } = {}
+): FutureEvaluationResult {
+  const ceiling = options.hardRiskCeiling ?? 0.85;
+  const prepared = prepare(futures, ceiling);
 
   prepared.sort(
     (a, b) => b.expectedValue - a.expectedValue || a.risk - b.risk || a.name.localeCompare(b.name)
   );
 
+  return finalize(prepared);
+}
+
+/**
+ * Annotate futures with the SAME expected-value math but preserve the
+ * caller's order. Used when the product ranking is already decided (the
+ * simulation engine's collapse) so that what the learning layer records
+ * is exactly what the user was shown. `edge` stays honest: it is measured
+ * for the first future and may be negative when an alternative carries a
+ * higher EV.
+ */
+export function evaluateFuturesInGivenOrder(
+  futures: readonly EvaluableFuture[],
+  options: { hardRiskCeiling?: number } = {}
+): FutureEvaluationResult {
+  const ceiling = options.hardRiskCeiling ?? 0.85;
+  return finalize(prepare(futures, ceiling));
+}
+
+function finalize(prepared: RankedFuture[]): FutureEvaluationResult {
   const ranked = prepared.map((future, index) => ({
     ...future,
     rank: index + 1,

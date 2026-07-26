@@ -65,6 +65,13 @@ function emptyRelations(): Pick<WorkspaceHome, "futuresBySimulation" | "timeline
   return { futuresBySimulation: {}, timelineBySimulation: {} };
 }
 
+/**
+ * Whole-workspace dual-writes grow with history; cap retained simulations so
+ * localStorage quota and cloud upsert latency stay bounded during beta.
+ * Oldest simulations (and their futures/timeline relations) fall off first.
+ */
+export const MAX_RETAINED_SIMULATIONS = 40;
+
 export type WorkspaceServiceOptions = {
   local?: LocalWorkspaceStore;
   /** Pass null to disable remote (unit tests). */
@@ -485,6 +492,69 @@ export class WorkspaceService {
     };
 
     // Product path: Planner → Agent Runtime → SimulationAgent → SimulationEngine
+    try {
+      return await this.executeSimulation({
+        ownerId,
+        home,
+        simId,
+        objectiveForEngine,
+        engineInput,
+        engineConstraints,
+        constraints,
+        knowledgeUsed,
+        learnedPreferences,
+        createdAt,
+        version,
+        lineageId,
+        parent: parent ?? null,
+      });
+    } catch (err) {
+      // Never leave a phantom "running" record behind — locally or in the
+      // cloud. Mark it failed (best-effort), then surface the original error.
+      await this.markSimulationFailed(ownerId, simId, err);
+      throw err;
+    }
+  }
+
+  private async executeSimulation(args: {
+    ownerId: string;
+    home: WorkspaceHome;
+    simId: string;
+    objectiveForEngine: string;
+    engineInput: {
+      simulationId: string;
+      workspaceId: string;
+      goal: WorkspaceHome["goal"];
+      objective: string;
+      knowledge: WorkspaceHome["knowledge"];
+      notes: WorkspaceHome["notes"];
+      constraints: SimulationConstraint[];
+    };
+    engineConstraints: SimulationConstraint[];
+    constraints: readonly SimulationConstraint[];
+    knowledgeUsed: ReturnType<typeof snapshotKnowledgeUsed>;
+    learnedPreferences: string[];
+    createdAt: string;
+    version: number;
+    lineageId: string;
+    parent: SimulationRecord | null;
+  }): Promise<WorkspaceHome> {
+    const {
+      ownerId,
+      home,
+      simId,
+      objectiveForEngine,
+      engineInput,
+      engineConstraints,
+      constraints,
+      knowledgeUsed,
+      learnedPreferences,
+      createdAt,
+      version,
+      lineageId,
+      parent,
+    } = args;
+
     const plan = await planner.createPlan({
       goal: objectiveForEngine,
       workspace: { id: home.workspace.id },
@@ -509,8 +579,12 @@ export class WorkspaceService {
 
     const failed = output.tasks.some((t) => t.status === "failed");
 
-    // Evaluation agent ranks futures by expected value (deterministic).
+    // Evaluation agent annotates the engine's ranking with expected value.
+    // preserveOrder keeps ONE ranking across the product: what the user
+    // sees (engine collapse order) is what DecisionRanked publishes and
+    // what the learning memory records.
     const evaluation = await runtime.run("outcome.evaluate", {
+      preserveOrder: true,
       futures: output.futures.map((f) => ({
         id: f.id,
         name: f.name,
@@ -603,6 +677,43 @@ export class WorkspaceService {
         [simId]: output.timeline,
       },
     });
+  }
+
+  /**
+   * Failure recovery: flip a stranded "running" record to "failed" so it can
+   * never persist indefinitely (locally or in the cloud). Best-effort — the
+   * original engine error is what callers surface.
+   */
+  private async markSimulationFailed(
+    ownerId: string,
+    simulationId: string,
+    err: unknown
+  ): Promise<void> {
+    try {
+      const home = await this.require(ownerId);
+      const message = err instanceof Error ? err.message : "Simulation runtime failed.";
+      let changed = false;
+      const recentSimulations = home.recentSimulations.map((s) => {
+        if (s.id !== simulationId || s.status !== "running") return s;
+        changed = true;
+        return {
+          ...s,
+          status: "failed" as const,
+          result: {
+            ...s.result,
+            recommendation: `Simulation failed: ${message}`,
+            tasks: (s.result.tasks ?? []).map((t) =>
+              t.status === "completed" ? t : { ...t, status: "failed" as const }
+            ),
+          },
+        };
+      });
+      if (changed) {
+        await this.persist(ownerId, { ...home, recentSimulations });
+      }
+    } catch {
+      // Recovery is best-effort; never mask the original failure.
+    }
   }
 
   async rerunSimulation(
@@ -839,15 +950,31 @@ export class WorkspaceService {
         description: home.workspace.description ?? "",
       },
     });
-    return {
-      ...repaired,
-      recentSimulations: (repaired.recentSimulations ?? []).map((sim) => ({
+    const recentSimulations = (repaired.recentSimulations ?? [])
+      .map((sim) => ({
         ...sim,
         version: sim.version ?? 1,
         lineage_id: sim.lineage_id || sim.id,
         parent_simulation_id: sim.parent_simulation_id ?? null,
         result: sim.result ?? {},
-      })),
+      }))
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, MAX_RETAINED_SIMULATIONS);
+
+    // Prune relation maps to retained simulations (also drops orphans).
+    const keptIds = new Set(recentSimulations.map((sim) => sim.id));
+    const futuresBySimulation = Object.fromEntries(
+      Object.entries(repaired.futuresBySimulation ?? {}).filter(([id]) => keptIds.has(id))
+    );
+    const timelineBySimulation = Object.fromEntries(
+      Object.entries(repaired.timelineBySimulation ?? {}).filter(([id]) => keptIds.has(id))
+    );
+
+    return {
+      ...repaired,
+      recentSimulations,
+      futuresBySimulation,
+      timelineBySimulation,
     };
   }
 }

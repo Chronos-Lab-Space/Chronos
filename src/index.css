@@ -574,46 +574,31 @@ svg [stopColor="#4a5168"] {
   }
 }
 
-/* Brand loading — full-screen chronos_loading.webp + light motion */
+/* Brand loading — full-screen chronos_loading.webp + light motion.
+   Only surface: sign-in → workspace entry (AuthCallbackPage). */
 .workspace-loading-screen {
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
   display: flex;
-  min-height: min(72vh, 580px);
+  min-height: 100dvh;
+  width: 100%;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid rgba(242, 237, 234, 0.08);
   background: #0a0a0a;
   animation: workspace-loading-enter 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.workspace-loading-screen--full {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  min-height: 100dvh;
-  width: 100%;
-  border-radius: 0;
-  border: none;
-  justify-content: flex-end;
-}
-
 .workspace-loading-art-wrap {
-  position: relative;
-  width: min(92vw, 520px);
-  aspect-ratio: 1536 / 1024;
-  animation: workspace-art-breathe 4.2s ease-in-out infinite;
-}
-
-.workspace-loading-screen--full .workspace-loading-art-wrap {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
   animation: workspace-art-breathe-full 5s ease-in-out infinite;
+}
+
+.workspace-loading-art-picture {
+  display: contents;
 }
 
 .workspace-loading-art {
@@ -621,15 +606,9 @@ svg [stopColor="#4a5168"] {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 0.75rem;
+  object-position: center;
   user-select: none;
   pointer-events: none;
-}
-
-.workspace-loading-screen--full .workspace-loading-art {
-  border-radius: 0;
-  object-fit: cover;
-  object-position: center;
 }
 
 .workspace-loading-art-shine {
@@ -651,15 +630,11 @@ svg [stopColor="#4a5168"] {
   position: relative;
   z-index: 2;
   display: flex;
+  width: 100%;
   flex-direction: column;
   align-items: center;
-  padding: 0 1.25rem 2.5rem;
+  padding: 0 1.25rem max(2.5rem, env(safe-area-inset-bottom));
   background: linear-gradient(to top, rgba(10, 10, 10, 0.92) 20%, transparent);
-  width: 100%;
-}
-
-.workspace-loading-screen--full .workspace-loading-footer {
-  padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
 }
 
 .workspace-loading-sub {
@@ -708,53 +683,6 @@ svg [stopColor="#4a5168"] {
   background: rgba(96, 137, 155, 0.7);
 }
 
-/* Compact orbits fallback (auth callback etc.) */
-.workspace-loading-orbits {
-  position: relative;
-  width: 88px;
-  height: 88px;
-  animation: workspace-art-breathe 3.8s ease-in-out infinite;
-}
-
-.workspace-loading-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1px solid rgba(96, 137, 155, 0.4);
-  animation: workspace-orbit 5.2s linear infinite;
-}
-
-.workspace-loading-ring-mid {
-  inset: 14px;
-  border-color: rgba(196, 194, 170, 0.35);
-  animation-duration: 7s;
-  animation-direction: reverse;
-}
-
-.workspace-loading-ring-outer {
-  inset: 0;
-}
-
-.workspace-loading-core {
-  position: absolute;
-  inset: 30px;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 38% 32%, #7aa6b6, #2a4d5f 55%, #111111 90%);
-  box-shadow: 0 0 24px rgba(96, 137, 155, 0.4);
-  animation: workspace-phase-pulse 2.2s ease-in-out infinite;
-}
-
-.workspace-loading-node {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: #f2edea;
-  box-shadow: 0 0 10px rgba(96, 137, 155, 0.9);
-  top: -3px;
-  left: calc(50% - 3px);
-}
-
 @keyframes workspace-loading-enter {
   from {
     opacity: 0;
@@ -763,18 +691,6 @@ svg [stopColor="#4a5168"] {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes workspace-art-breathe {
-  0%,
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  50% {
-    transform: scale(1.02);
-    filter: brightness(1.06);
   }
 }
 
@@ -805,15 +721,6 @@ svg [stopColor="#4a5168"] {
   100% {
     background-position: -40% 0;
     opacity: 0;
-  }
-}
-
-@keyframes workspace-orbit {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -892,12 +799,9 @@ svg [stopColor="#4a5168"] {
   .workspace-banner-enter,
   .workspace-msg-enter,
   .workspace-shell-enter,
-  .workspace-loading-ring,
-  .workspace-loading-core,
   .workspace-loading-sub,
   .workspace-loading-phases,
   .workspace-loading-phases > span,
-  .workspace-loading-orbits,
   .workspace-loading-art-wrap,
   .workspace-loading-art-shine,
   .workspace-loading-footer,
@@ -1654,5 +1558,585 @@ svg [stopColor="#4a5168"] {
   .tree-collapse,
   .tree-prune {
     transition-duration: 1ms !important;
+  }
+}
+
+/* === Whitepaper document ===
+   /whitepaper renders the Chronos whitepaper as what it is: a printed
+   document, laid on the dark desk. Letter geometry (8.5in sheet, 0.8in
+   margin), Instrument Serif display type, Cormorant masthead. The colors
+   below are the document's PRINT palette (warm paper, near-black ink) —
+   deliberately outside the six-color screen palette, because ink on
+   paper is not UI. Scoped under .wp-sheet so nothing leaks. */
+.wp-desk {
+  --wp-paper: #fdfcfa;
+  --wp-panel: #f7f4ee;
+  --wp-ink: #1c1b19;
+  --wp-ink-soft: #55534d;
+  --wp-field: #2a4d5f;
+  --wp-chronos: #60899b;
+  --wp-muted: #989898;
+  --wp-rule: #ddd8cd;
+  --wp-rule-soft: #e6e1d6;
+  --wp-sand: #c4c2aa;
+  padding: 2.5rem 1rem 5rem;
+}
+
+.wp-sheet {
+  width: min(8.5in, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: clamp(1.5rem, 5.5vw, 0.8in);
+  background: var(--wp-paper);
+  color: var(--wp-ink);
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  border-radius: 7px;
+  box-shadow: 0 2px 10px rgba(20, 20, 19, 0.12);
+  text-wrap: pretty;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* The running-footer table is a print device only: on screen it is a plain
+   block flow (see the print block for the table roles it takes at export). */
+.wp-frame,
+.wp-frame > tbody,
+.wp-frame > tfoot,
+.wp-frame > tbody > tr,
+.wp-frame > tfoot > tr,
+.wp-frame > tbody > tr > td,
+.wp-frame > tfoot > tr > td {
+  display: block;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  font-weight: inherit;
+}
+
+.wp-sheet a {
+  color: var(--wp-field);
+  text-decoration: underline;
+  text-decoration-color: rgba(96, 137, 155, 0.5);
+  text-underline-offset: 2px;
+}
+
+.wp-sheet a:hover {
+  color: var(--wp-chronos);
+}
+
+/* --- Masthead --- */
+.wp-masthead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--wp-ink);
+  padding-bottom: 14px;
+}
+
+.wp-wordmark {
+  font-family: "Cormorant Garamond", "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  color: var(--wp-ink);
+}
+
+.wp-wordmark span {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--wp-chronos);
+  vertical-align: super;
+}
+
+.wp-masthead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+
+/* --- Display type --- */
+.wp-title {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 6vw, 46px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 56px 0 18px;
+  max-width: 13em;
+  text-wrap: balance;
+}
+
+.wp-lede {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.15rem, 3.4vw, 21px);
+  line-height: 1.4;
+  color: var(--wp-field);
+  margin: 0 0 40px;
+  max-width: 30em;
+}
+
+.wp-h2 {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(1.6rem, 4.6vw, 30px);
+  margin: 52px 0 6px;
+}
+
+.wp-h2 .wp-num {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--wp-chronos);
+  letter-spacing: 0.1em;
+  margin-right: 14px;
+}
+
+.wp-h3 {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(1.2rem, 3.4vw, 21px);
+  margin: 30px 0 10px;
+}
+
+.wp-rule {
+  width: 44px;
+  height: 2px;
+  background: var(--wp-chronos);
+  margin: 0 0 22px;
+}
+
+/* --- Body copy --- */
+.wp-sheet p,
+.wp-sheet li {
+  orphans: 3;
+  widows: 3;
+}
+
+.wp-p {
+  font-size: 16px;
+  line-height: 1.62;
+  margin: 0 0 16px;
+}
+
+.wp-p-lead {
+  margin-bottom: 12px;
+}
+
+.wp-p-wide {
+  margin-bottom: 20px;
+}
+
+.wp-list {
+  font-size: 16px;
+  line-height: 1.62;
+  margin: 0 0 16px;
+  padding-left: 26px;
+}
+
+.wp-list > li {
+  margin-bottom: 10px;
+}
+
+.wp-list > li:last-child {
+  margin-bottom: 0;
+}
+
+.wp-mono-inline {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 14px;
+}
+
+/* --- Abstract & callout --- */
+.wp-abstract {
+  border: 1px solid var(--wp-rule);
+  background: var(--wp-panel);
+  padding: 26px clamp(20px, 4vw, 30px);
+  break-inside: avoid;
+}
+
+.wp-label {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--wp-chronos);
+  margin-bottom: 12px;
+}
+
+.wp-abstract p {
+  font-size: 16px;
+  line-height: 1.62;
+  margin: 0;
+}
+
+.wp-claim {
+  border: 1px solid var(--wp-rule);
+  padding: 20px clamp(18px, 4vw, 26px);
+  margin: 26px 0;
+  break-inside: avoid;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  align-items: baseline;
+}
+
+.wp-claim p {
+  font-size: 16.5px;
+  line-height: 1.55;
+  margin: 0;
+  font-weight: 500;
+}
+
+.wp-claim .wp-label {
+  margin-bottom: 0;
+}
+
+/* --- Figures --- */
+.wp-figure {
+  margin: 0 0 8px;
+  break-inside: avoid;
+}
+
+.wp-figure-spaced {
+  margin-top: 24px;
+}
+
+.wp-figcaption {
+  font-size: 12.5px;
+  color: var(--wp-muted);
+  margin-top: 10px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
+
+.wp-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--wp-rule);
+  background: var(--wp-panel);
+  padding: 22px clamp(16px, 3.5vw, 24px);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+}
+
+.wp-chip {
+  border: 1px solid var(--wp-field);
+  color: var(--wp-field);
+  padding: 7px 14px;
+}
+
+.wp-chip-strong {
+  background: var(--wp-field);
+  border: 1px solid var(--wp-field);
+  color: #f2edea;
+  padding: 7px 14px;
+}
+
+.wp-arrow {
+  color: var(--wp-sand);
+}
+
+.wp-branch-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--wp-rule);
+  background: var(--wp-panel);
+}
+
+/* --- Table --- */
+.wp-table-scroll {
+  overflow-x: auto;
+}
+
+.wp-table {
+  width: 100%;
+  min-width: 30rem;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.wp-table thead tr {
+  border-bottom: 1.5px solid var(--wp-ink);
+}
+
+.wp-table th {
+  text-align: left;
+  padding: 10px 14px 10px 0;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wp-chronos);
+  font-weight: 500;
+}
+
+.wp-table tbody tr {
+  border-bottom: 1px solid var(--wp-rule-soft);
+}
+
+.wp-table tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.wp-table td {
+  padding: 9px 14px 9px 0;
+}
+
+.wp-table td:first-child {
+  font-weight: 600;
+}
+
+.wp-table td:last-child {
+  padding-right: 0;
+  color: var(--wp-ink-soft);
+}
+
+.wp-table th:last-child {
+  padding-right: 0;
+}
+
+/* --- Shipped / Next panels --- */
+.wp-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--wp-rule);
+  break-inside: avoid;
+  margin: 22px 0;
+}
+
+.wp-split > div {
+  padding: 22px clamp(18px, 3.5vw, 26px);
+}
+
+.wp-split > div:first-child {
+  border-right: 1px solid var(--wp-rule);
+}
+
+.wp-split > div:last-child {
+  background: var(--wp-panel);
+}
+
+.wp-split .wp-label-muted {
+  color: var(--wp-muted);
+}
+
+.wp-split ul {
+  font-size: 14.5px;
+  line-height: 1.75;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.wp-split > div:last-child ul {
+  color: var(--wp-ink-soft);
+}
+
+/* --- Stat strip --- */
+.wp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--wp-rule);
+  break-inside: avoid;
+  margin: 22px 0;
+}
+
+.wp-stat {
+  padding: 18px 20px;
+  border-right: 1px solid var(--wp-rule);
+}
+
+.wp-stat:last-child {
+  border-right: 0;
+}
+
+.wp-stat-value {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 24px;
+  color: var(--wp-field);
+}
+
+.wp-stat-label {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+  margin-top: 6px;
+}
+
+/* --- Pull quote & colophon --- */
+.wp-quote {
+  border-top: 1px solid var(--wp-ink);
+  border-bottom: 1px solid var(--wp-ink);
+  padding: 34px 0;
+  margin: 34px 0;
+  text-align: center;
+  break-inside: avoid;
+}
+
+.wp-quote p {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.35rem, 4vw, 27px);
+  line-height: 1.35;
+  color: var(--wp-ink);
+  margin: 0;
+}
+
+.wp-colophon {
+  margin-top: 44px;
+  padding-top: 18px;
+  border-top: 1px solid var(--wp-rule);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--wp-ink-soft);
+  break-inside: avoid;
+}
+
+/* Running footer: once at the foot of the sheet on screen, repeated on
+   every sheet at print (fixed elements stamp each printed page). */
+.wp-runfoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 40px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wp-muted);
+}
+
+@media (max-width: 40rem) {
+  .wp-claim {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .wp-split {
+    grid-template-columns: 1fr;
+  }
+
+  .wp-split > div:first-child {
+    border-right: 0;
+    border-bottom: 1px solid var(--wp-rule);
+  }
+
+  .wp-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .wp-stat:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .wp-stat:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--wp-rule);
+  }
+}
+
+/* --- Print: the sheet IS the paper --- */
+@media print {
+  @page {
+    margin: 0.8in;
+  }
+
+  /* The site declares `color-scheme: dark`, which makes the browser paint the
+     printed page canvas dark — the document would come out white-on-black.
+     The route opts into a light canvas while the whitepaper is mounted; the
+     paper is then the sheet the printer feeds. */
+  html.wp-route {
+    color-scheme: light;
+  }
+
+  html.wp-route,
+  html.wp-route body,
+  html.wp-route #root {
+    /* Transparent, not paper-colored: a filled box ends where the content
+       ends and bands against the canvas on the last page. */
+    background: transparent;
+    color: #1c1b19;
+  }
+
+  .wp-desk {
+    padding: 0;
+  }
+
+  .wp-sheet {
+    width: 100%;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    /* The page canvas is the paper at print; a sheet fill would band the
+       content area against the margins. */
+    background: transparent;
+  }
+
+  .wp-sheet a {
+    text-decoration: none;
+  }
+
+  /* Real table roles at print: the browser repeats the footer group on every
+     sheet and reserves its height in the page box. */
+  .wp-frame {
+    display: table;
+    border-collapse: collapse;
+  }
+
+  .wp-frame > tbody {
+    display: table-row-group;
+  }
+
+  .wp-frame > tfoot {
+    display: table-footer-group;
+  }
+
+  .wp-frame > tbody > tr,
+  .wp-frame > tfoot > tr {
+    display: table-row;
+  }
+
+  .wp-frame > tbody > tr > td,
+  .wp-frame > tfoot > tr > td {
+    display: table-cell;
+  }
+
+  .wp-runfoot {
+    margin-top: 0;
+    padding-top: 22px;
+  }
+
+  .wp-break-before {
+    break-before: page;
+  }
+
+  /* Never end a sheet on a heading (or the rule under it) with its text
+     stranded on the next one. */
+  .wp-h2,
+  .wp-h3,
+  .wp-rule {
+    break-after: avoid;
   }
 }

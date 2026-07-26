@@ -12,7 +12,11 @@ export default defineConfig({
       reporter: ["text", "html", "lcov"],
       include: [
         "src/application/chronos/**/*.ts",
+        "src/application/simulation/**/*.ts",
+        "src/application/workspace/**/*.ts",
         "src/domain/chronos/**/*.ts",
+        "src/domain/workspace/**/*.ts",
+        "src/infrastructure/repositories/**/*.ts",
         "src/presentation/components/**/*.tsx",
       ],
       exclude: ["src/**/*.test.{ts,tsx}", "src/test/**"],

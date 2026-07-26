@@ -3,7 +3,7 @@ import { ChronosCMark } from "./ChronosCMark";
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-line bg-bg">
+    <footer className="relative border-t border-line bg-bg print:hidden">
       {/* Giant wordmark */}
       <div className="relative overflow-hidden border-b border-line">
         <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10 lg:py-24">
@@ -111,6 +111,11 @@ export function Footer() {
             <li>
               <Link to="/docs" className="text-ink-dim transition hover:text-ink">
                 Docs
+              </Link>
+            </li>
+            <li>
+              <Link to="/whitepaper" className="text-ink-dim transition hover:text-ink">
+                Whitepaper
               </Link>
             </li>
             <li>

@@ -349,7 +349,7 @@ function SignUpModal({ onClose }: { onClose: () => void }) {
                 value={password}
                 onChange={setPassword}
                 autoComplete={tab === "signup" ? "new-password" : "current-password"}
-                minLength={6}
+                minLength={8}
               />
               <button
                 type="submit"

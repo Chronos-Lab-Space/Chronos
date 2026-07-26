@@ -147,27 +147,28 @@ export function extractDecisionSignals(
     /(\d+(?:\.\d+)?)\s*mo(?:nth)?s?\s+runway/,
   ]);
 
-  const mrr = parseNumberNear(corpus, [
+  // k-denominated patterns first: if one matches, the value is in thousands.
+  // Anchoring the "k" to the captured number avoids inflating "$500 MRR"
+  // when an unrelated "80k" sits elsewhere in the corpus.
+  const mrrK = parseNumberNear(corpus, [
     /\$?\s*(\d+(?:\.\d+)?)\s*k\s*mrr/,
     /mrr[:\s]+\$?\s*(\d+(?:\.\d+)?)\s*k/,
-    /\$?\s*(\d+(?:\.\d+)?)\s*(?:k\s+)?mrr/,
+  ]);
+  const mrrRaw = parseNumberNear(corpus, [
+    /\$?\s*(\d+(?:\.\d+)?)\s*mrr/,
     /mrr[:\s]+\$?\s*(\d{2,})/,
   ]);
-  // Normalize "40k MRR" style (already k) vs raw dollars
-  let mrrNorm = mrr;
-  if (mrrNorm != null && mrrNorm < 1000 && /k\s*mrr|mrr.*k\b/.test(corpus)) {
-    mrrNorm = mrrNorm * 1000;
-  }
+  const mrrNorm = mrrK != null ? mrrK * 1000 : mrrRaw;
 
-  const burnMonthly = parseNumberNear(corpus, [
+  const burnK = parseNumberNear(corpus, [
     /burn[:\s]+\$?\s*(\d+(?:\.\d+)?)\s*k/,
     /\$?\s*(\d+(?:\.\d+)?)\s*k\s*(?:\/\s*mo(?:nth)?|per\s+month)?\s*burn/,
-    /monthly\s+burn[:\s]+\$?\s*(\d+(?:\.\d+)?)/,
   ]);
-  let burnNorm = burnMonthly;
-  if (burnNorm != null && burnNorm < 1000 && /k.*burn|burn.*k\b/.test(corpus)) {
-    burnNorm = burnNorm * 1000;
-  }
+  const burnRaw = parseNumberNear(corpus, [
+    /monthly\s+burn[:\s]+\$?\s*(\d+(?:\.\d+)?)/,
+    /burn[:\s]+\$?\s*(\d{3,})/,
+  ]);
+  const burnNorm = burnK != null ? burnK * 1000 : burnRaw;
 
   const raiseForbidden =
     constraints.some(
@@ -181,9 +182,14 @@ export function extractDecisionSignals(
     constraints.some((c) => /bootstrap|self[- ]fund/i.test(c.text)) ||
     /bootstrap|self[- ]fund/i.test(corpus);
 
+  // A question ("Should we raise…?") states no intent — only a declarative
+  // objective or an explicit soft constraint counts as a raise preference.
+  const objectiveIsQuestion =
+    /\?/.test(objective) ||
+    /^\s*(should|shall|do|does|is|are|can|could|would|which|what|whether)\b/i.test(objective);
   const raisePreferred =
     !raiseForbidden &&
-    (/(raise|seed|series\s*[abc]|fundraise)/i.test(objective) ||
+    ((!objectiveIsQuestion && /(raise|seed|series\s*[abc]|fundraise)/i.test(objective)) ||
       constraints.some((c) => /raise|fund/i.test(c.text) && c.kind === "soft"));
 
   const complianceHeavy =
@@ -212,19 +218,41 @@ function pathText(path: Path): string {
   return `${path.name} ${path.thesis} ${path.highlights.join(" ")} ${path.risks.join(" ")}`.toLowerCase();
 }
 
-function isRaiseHeavyPath(path: Path): boolean {
-  return /(fund|raise|series|venture|dilution|enterprise\s+sales|top-down)/i.test(pathText(path));
-}
-
-function isAggressivePath(path: Path): boolean {
-  return (
-    /(aggressive|scale|blitz|subsid|capital-intensive|top-down)/i.test(pathText(path)) ||
-    path.burn > 90000
-  );
+/**
+ * Text used for POLICY classification. Deliberately excludes `risks`:
+ * risks describe what could go wrong on a path, so matching policy words
+ * there inverts meaning — a bottom-up path whose risk is "Slow enterprise
+ * sales" is not an enterprise-sales path.
+ */
+function policyText(path: Path): string {
+  return `${path.name} ${path.thesis} ${path.highlights.join(" ")}`.toLowerCase();
 }
 
 function isConservativePath(path: Path): boolean {
-  return /(conserv|hold|bootstrap|bottom-up|wedge|hunker|extend\s+runway)/i.test(pathText(path));
+  return /(conserv|hold|bootstrap|bottom-up|wedge|hunker|extend\s+runway|no\s+dilution|runway-first)/i.test(
+    policyText(path)
+  );
+}
+
+function isRaiseHeavyPath(path: Path): boolean {
+  // A capital-efficient path is never raise-heavy, even when its thesis
+  // mentions raising in the negative ("extend runway without a raise").
+  if (isConservativePath(path)) return false;
+  const text = policyText(path).replace(
+    /without\s+(a\s+)?raise|no\s+(raise|dilution|funding)/g,
+    ""
+  );
+  return /(fund|raise|series|venture|dilution|enterprise\s+sales|top-down)/i.test(text);
+}
+
+function isAggressivePath(path: Path): boolean {
+  // Bare /scale/ over-matches ("Scale through practices"); require an
+  // aggressive context around it.
+  return (
+    /(aggressive|blitz|subsid|capital-intensive|top-down|scale\s+(fast|hard|aggressively|quickly)|hire\s+ahead)/i.test(
+      policyText(path)
+    ) || path.burn > 90000
+  );
 }
 
 /** True when the port (or router default) cannot produce model text. */
@@ -781,34 +809,55 @@ export class SimulationEngine {
     for (const c of constraints.filter((x) => x.kind === "hard")) {
       const ct = c.text.toLowerCase();
 
-      if (/(no\s+raise|bootstrap|no\s+funding|no\s+seed)/i.test(ct) && isRaiseHeavyPath(path)) {
+      if (
+        /(no\s+raise|bootstrap|no\s+funding|no\s+seed)/i.test(ct) &&
+        isRaiseHeavyPath(path) &&
+        !isConservativePath(path)
+      ) {
         violations.push(`Hard constraint violated: ${c.text}`);
       }
 
-      if (
-        /(budget|runway|cash|capital)/i.test(ct) &&
-        isAggressivePath(path) &&
-        (signals.runwayMonths != null ? signals.runwayMonths < 10 : true)
-      ) {
-        // If user named a runway floor, enforce burn vs runway
-        if (/(12|twelve)\s*month/i.test(ct) && path.burn > 0) {
-          const impliedRunway =
-            signals.mrr != null && signals.mrr > 0
-              ? // rough cash proxy: treat mrr*runway as buffer; high burn paths need more
-                (signals.runwayMonths ?? 12) * (signals.mrr / path.burn)
-              : (signals.runwayMonths ?? 12);
-          if (impliedRunway < 10 || path.burn > 100000) {
-            violations.push(`Hard constraint violated: ${c.text} (path burn too high)`);
+      if (/(budget|runway|cash|capital)/i.test(ct) && isAggressivePath(path)) {
+        // Runway math uses real dimensions only: cash ≈ current runway ×
+        // current burn, and months-a-path-sustains = cash / path burn.
+        // Applies regardless of how much runway remains — a stated floor
+        // is a stated floor. When cash cannot be derived, this is NEVER a
+        // hard kill: evaluatePath applies a soft penalty instead.
+        const floorMatch =
+          ct.match(/(\d+)\s*[- ]?month/) ?? (/twelve\s*[- ]?month/.test(ct) ? [ct, "12"] : null);
+        const floorMonths = floorMatch ? Number(floorMatch[1]) : null;
+        const { runwayMonths, burnMonthly } = signals;
+        if (
+          floorMonths != null &&
+          runwayMonths != null &&
+          burnMonthly != null &&
+          burnMonthly > 0 &&
+          path.burn > 0
+        ) {
+          const cashOnHand = runwayMonths * burnMonthly;
+          const impliedMonths = cashOnHand / path.burn;
+          // Only paths that burn faster than today can violate the floor —
+          // the constraint must not nuke capital-efficient alternatives.
+          if (impliedMonths < floorMonths && path.burn > burnMonthly) {
+            violations.push(
+              `Hard constraint violated: ${c.text} (path burn cannot sustain the stated runway floor)`
+            );
           }
-        } else if (isAggressivePath(path) && /must|keep|require/i.test(ct)) {
+        } else if (runwayMonths != null && burnMonthly != null && /must|keep|require/i.test(ct)) {
+          // Imperative budget constraint without a parsable floor, cash known.
           violations.push(`Hard constraint violated: ${c.text}`);
         }
       }
 
+      // Compliance evidence often lives in milestones ("HIPAA + SOC 2"),
+      // which pathText() excludes — include them before disqualifying.
+      const complianceEvidence = `${text} ${path.milestones
+        .map((m) => `${m.title} ${m.description}`)
+        .join(" ")}`.toLowerCase();
       if (
         /(compliance|hipaa|security|legal|soc\s*2|gdpr)/i.test(ct) &&
         isAggressivePath(path) &&
-        !/(compliance|trust|hipaa|soc)/i.test(text)
+        !/(compliance|trust|hipaa|soc)/i.test(complianceEvidence)
       ) {
         violations.push(
           `Hard constraint violated: ${c.text} (aggressive path skips compliance sequencing)`
@@ -932,6 +981,20 @@ export class SimulationEngine {
       if (/(compliance|hipaa|soc\s*2|security)/i.test(ct) && isAggressivePath(path)) {
         score = clamp01(score - 0.05);
       }
+    }
+
+    // Hard budget constraints whose cash math is unverifiable (runway or
+    // burn unknown) demote to a score penalty on aggressive paths — never
+    // a fantasy-math disqualification.
+    if (
+      (signals.runwayMonths == null || signals.burnMonthly == null) &&
+      isAggressivePath(path) &&
+      input.constraints.some(
+        (c) => c.kind === "hard" && /(budget|runway|cash|capital)/i.test(c.text)
+      )
+    ) {
+      score = clamp01(score - 0.06);
+      risk = clamp01(risk + 0.03);
     }
 
     // Knowledge title overlap small boost (exclude learning dual-write noise)
