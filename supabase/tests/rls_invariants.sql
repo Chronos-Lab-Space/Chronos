@@ -104,11 +104,18 @@ begin
   end if;
 end $$;
 
--- No SECURITY DEFINER function in the exposed schema may be callable
--- without signing in. has_function_privilege is used rather than reading
--- proacl because it resolves grants inherited from PUBLIC *and* direct
--- grants — the distinction that made this bite on the hosted project but
--- not locally. See 20260726150000_revoke_function_grants_from_api_roles.
+-- No SECURITY DEFINER function in the exposed schema may be callable by
+-- either API role. Anything in public that anon or authenticated can
+-- execute is published by PostgREST at /rest/v1/rpc/<name>, so a definer
+-- function there is an API endpoint whether or not anyone meant it to be.
+-- The RLS helpers satisfy this by living in `private` instead — see
+-- 20260726170000_move_rls_helpers_to_private_schema.
+--
+-- has_function_privilege rather than reading proacl directly: it resolves
+-- grants inherited from PUBLIC *and* direct grants. That distinction is
+-- what made this bite on the hosted project but not locally, where the
+-- project's default privileges grant EXECUTE on new functions straight to
+-- anon and authenticated.
 do $$
 declare
   offenders text;
@@ -119,11 +126,41 @@ begin
   join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public'
     and p.prosecdef
-    and has_function_privilege('anon', p.oid, 'EXECUTE');
+    and (
+      has_function_privilege('anon', p.oid, 'EXECUTE')
+      or has_function_privilege('authenticated', p.oid, 'EXECUTE')
+    );
 
   if offenders is not null then
     raise exception
-      'SECURITY DEFINER function(s) executable by anon: %', offenders;
+      'SECURITY DEFINER function(s) in public executable by an API role: %', offenders;
+  end if;
+end $$;
+
+-- The helpers live in private, and anon cannot reach that schema at all.
+do $$
+declare
+  missing text;
+begin
+  select string_agg(f, ', ' order by f)
+  into missing
+  from unnest(array[
+    'is_workspace_member', 'is_workspace_admin', 'is_workspace_editor',
+    'is_simulation_member', 'is_simulation_editor'
+  ]) f
+  where to_regprocedure(format('private.%I(uuid)', f)) is null;
+
+  if missing is not null then
+    raise exception 'RLS helper(s) missing from the private schema: %', missing;
+  end if;
+
+  if has_schema_privilege('anon', 'private', 'USAGE') then
+    raise exception 'anon holds USAGE on the private schema';
+  end if;
+
+  if not has_schema_privilege('authenticated', 'private', 'USAGE') then
+    raise exception
+      'authenticated lost USAGE on private — every workspace policy will fail closed';
   end if;
 end $$;
 
