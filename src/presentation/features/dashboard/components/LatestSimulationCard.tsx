@@ -12,7 +12,9 @@ export function LatestSimulationCard({ simulation }: { simulation: SimulationRec
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Simulation card
         </div>
-        <p className="mt-3 text-sm text-ink-dim">No runs yet. Start a simulation to rank futures.</p>
+        <p className="mt-3 text-sm text-ink-dim">
+          No runs yet. Start a simulation to rank futures.
+        </p>
         <span className="mt-4 inline-flex font-mono text-[11px] uppercase text-chronos">
           Run Simulation →
         </span>

@@ -37,12 +37,8 @@ export class MemoryAgent implements Agent {
 
   async execute(task: AgentTask): Promise<AgentResult> {
     const record = (task.input.record ?? task.input) as Record<string, unknown>;
-    const workspaceId = String(
-      task.input.workspaceId ?? record.workspaceId ?? ""
-    ).trim();
-    const simulationId = String(
-      record.simulationId ?? task.input.simulationId ?? ""
-    ).trim();
+    const workspaceId = String(task.input.workspaceId ?? record.workspaceId ?? "").trim();
+    const simulationId = String(record.simulationId ?? task.input.simulationId ?? "").trim();
 
     if (!workspaceId) {
       return {
@@ -64,8 +60,7 @@ export class MemoryAgent implements Agent {
     const learning = deriveProductLearning({
       workspaceId,
       simulationId: simulationId || `sim-${Date.now()}`,
-      recommendation:
-        typeof record.recommendation === "string" ? record.recommendation : undefined,
+      recommendation: typeof record.recommendation === "string" ? record.recommendation : undefined,
       futures,
     });
 

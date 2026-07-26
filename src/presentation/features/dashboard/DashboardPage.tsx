@@ -12,13 +12,18 @@ import { HqPipeline } from "./components/HqPipeline";
 
 /**
  * Decision Workspace HQ
- * Desktop: public/image.png · Mobile: public/mobile.png
+ * Desktop: docs/images/workspace-desktop-mock.png · Mobile: docs/images/workspace-mobile-mock.png
  */
 export function DashboardPage() {
   const { home, preferences } = useWorkspace();
-  if (!home?.goal) return null;
+  // Hooks must run unconditionally — guard inside, early-return after.
+  const card = useMemo(() => (home?.goal ? deriveDecisionCard(home) : null), [home]);
+  const checklist = useMemo(
+    () => (home?.goal ? evaluateBetaChecklist(home, preferences) : []),
+    [home, preferences]
+  );
+  if (!home?.goal || !card) return null;
 
-  const card = useMemo(() => deriveDecisionCard(home), [home]);
   const latest = home.recentSimulations[0] ?? null;
   const completed = home.recentSimulations.filter((s) => s.status === "completed");
   const futures =
@@ -36,10 +41,6 @@ export function DashboardPage() {
     })),
   ].slice(0, 6);
 
-  const checklist = useMemo(
-    () => evaluateBetaChecklist(home, preferences),
-    [home, preferences]
-  );
   const checklistOpen = checklist.some((item) => !item.done && !item.optional);
 
   const confLabel =
@@ -93,8 +94,8 @@ export function DashboardPage() {
             </p>
           ) : (
             <p className="mt-2 max-w-2xl text-sm text-ink-dim">
-              Define the best path forward — simulate futures, rank outcomes, and
-              collapse to a recommendation.
+              Define the best path forward — simulate futures, rank outcomes, and collapse to a
+              recommendation.
             </p>
           )}
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.08em] text-ink-faint">
@@ -118,13 +119,7 @@ export function DashboardPage() {
               <div className="mt-1 text-xs text-ink-dim">{confLabel}</div>
             </div>
             {/* Decorative sparkline placeholder */}
-            <svg
-              width="72"
-              height="28"
-              viewBox="0 0 72 28"
-              className="mb-1 opacity-70"
-              aria-hidden
-            >
+            <svg width="72" height="28" viewBox="0 0 72 28" className="mb-1 opacity-70" aria-hidden>
               <path
                 d="M1 22 C12 20 14 8 24 10 C34 12 36 18 46 14 C56 10 60 6 71 4"
                 fill="none"
@@ -137,9 +132,7 @@ export function DashboardPage() {
           <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono text-[10px] uppercase text-ink-faint sm:grid-cols-1 sm:space-y-1.5 sm:gap-0">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-2">
               <dt>Evidence</dt>
-              <dd className="text-ink-dim">
-                {home.knowledge.length + home.notes.length}
-              </dd>
+              <dd className="text-ink-dim">{home.knowledge.length + home.notes.length}</dd>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-2">
               <dt>Sims</dt>
@@ -196,10 +189,7 @@ export function DashboardPage() {
 
       {/* Ranked futures | Activity */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <section
-          data-testid="ranked-futures-hq"
-          className="rounded-2xl border border-line p-5"
-        >
+        <section data-testid="ranked-futures-hq" className="rounded-2xl border border-line p-5">
           <div className="flex items-center justify-between gap-2">
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
               Ranked futures ({futures.length})
@@ -254,10 +244,7 @@ export function DashboardPage() {
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
               Recent activity
             </div>
-            <Link
-              to="/workspace/timeline"
-              className="font-mono text-[10px] uppercase text-chronos"
-            >
+            <Link to="/workspace/timeline" className="font-mono text-[10px] uppercase text-chronos">
               View all
             </Link>
           </div>
@@ -266,10 +253,7 @@ export function DashboardPage() {
           ) : (
             <ul className="mt-4 space-y-3">
               {activity.map((e) => (
-                <li
-                  key={e.id}
-                  className="flex items-start justify-between gap-3 text-sm"
-                >
+                <li key={e.id} className="flex items-start justify-between gap-3 text-sm">
                   <span className="text-ink">• {e.label}</span>
                   <span className="shrink-0 font-mono text-[10px] uppercase text-ink-faint">
                     {formatRelativeTime(e.at)}
@@ -309,9 +293,7 @@ export function DashboardPage() {
                   <span className="text-ink">{s.title}</span>
                   <span className="font-mono text-[10px] uppercase text-ink-faint">
                     {s.status}
-                    {s.confidence != null
-                      ? ` · ${confidencePercent(s.confidence)}`
-                      : ""}
+                    {s.confidence != null ? ` · ${confidencePercent(s.confidence)}` : ""}
                   </span>
                 </Link>
               </li>

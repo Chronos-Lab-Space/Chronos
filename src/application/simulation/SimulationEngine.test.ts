@@ -123,7 +123,9 @@ describe("SimulationEngine", () => {
     expect(out.best.score).toBeGreaterThan(0);
     expect(out.confidence).toBe(out.best.confidence);
     expect(out.recommendation.length).toBeGreaterThan(40);
-    expect(out.recommendation.toLowerCase()).toMatch(/kickstart|raise|bootstrap|path|confidence|next/i);
+    expect(out.recommendation.toLowerCase()).toMatch(
+      /kickstart|raise|bootstrap|path|confidence|next/i
+    );
     expect(out.futures[0].summary.length).toBeGreaterThan(out.futures[0].name.length);
     expect(out.risks.length).toBeGreaterThan(0);
     expect(out.plannerTaskTitles.length).toBeGreaterThan(0);
@@ -152,8 +154,7 @@ describe("SimulationEngine", () => {
     }
 
     // Cloud tables require uuid PKs — never leak demo `0x…` path ids
-    const uuidRe =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     for (const f of out.futures) {
       expect(f.id).toMatch(uuidRe);
       expect(f.id.startsWith("0x")).toBe(false);
@@ -177,7 +178,9 @@ describe("SimulationEngine", () => {
     expect(out.best.score).toBeGreaterThan(0);
     expect(out.best.summary.toLowerCase()).not.toMatch(/infeasible/);
     // Winner should not be an obvious raise/capitalized path when hard-forbidden
-    expect(out.best.name.toLowerCase()).not.toMatch(/capitalized scale|raise series|top-down enterprise/);
+    expect(out.best.name.toLowerCase()).not.toMatch(
+      /capitalized scale|raise series|top-down enterprise/
+    );
     // At least one path should be marked infeasible when catalog includes raise paths
     const infeasible = out.futures.filter((f) => f.score === 0 || /infeasible/i.test(f.summary));
     expect(out.disqualifiedCount + infeasible.length).toBeGreaterThanOrEqual(0);

@@ -19,26 +19,36 @@ Do not add new domains until Decision Report · Pulse · Comparison · History �
 ```text
 src/
 ├── domain/
-│   └── chronos/
-│       ├── types.ts          # Core entities and value types
-│       ├── agents.ts         # Agent world-model definitions
-│       ├── scenarios.ts      # Reusable domain scenarios
-│       ├── startup-sim.ts    # Deterministic startup simulation model
-│       └── language.ts       # Chronos language parser and compiler
+│   ├── chronos/
+│   │   ├── types.ts          # Core value types (world state, actions, phases)
+│   │   ├── entities.ts       # Decision lifecycle entities (Branch, Hypothesis, Outcome…)
+│   │   ├── agents.ts         # Agent world-model definitions
+│   │   ├── scenarios.ts      # Reusable domain scenarios
+│   │   ├── startup-sim.ts    # Deterministic startup simulation model
+│   │   └── language.ts       # Chronos language parser and compiler
+│   ├── workspace/            # Workspace decision rules (reports, pulse, evidence, gates)
+│   └── ai/                   # AIPort contract and provider-neutral AI types
 ├── application/
-│   └── chronos/
-│       └── engine.ts         # fork / evaluate / collapse use cases
+│   ├── chronos/
+│   │   └── engine.ts         # fork / evaluate / collapse use cases
+│   ├── simulation/           # SimulationEngine — plan → generate → evaluate → rank
+│   ├── planner/              # Startup planners and public simulator services
+│   └── workspace/            # WorkspaceService, product loop, account bootstrap
 ├── infrastructure/
 │   ├── supabase/
 │   │   └── client.ts         # Supabase bootstrap and configuration only
-│   ├── repositories/         # Supabase, SQLite, and in-memory persistence adapters
+│   ├── repositories/         # Supabase, local, and in-memory persistence adapters
 │   ├── auth/                 # Supabase Auth boundary
 │   ├── storage/              # Supabase Storage boundary
-│   └── queries/              # Read models and analytics query helpers
+│   ├── queries/              # Read models and analytics query helpers
+│   └── ai/                   # AIPort adapters (noop, Ollama) and provider router
 ├── presentation/
 │   ├── App.tsx               # Router and presentation composition root
 │   ├── components/           # React UI components and dashboard views
+│   ├── features/             # Feature surfaces (workspace, dashboard, planner, timeline…)
 │   └── pages/                # Route-level page compositions
+├── agents/                   # Agent role definitions (evaluation, memory…)
+├── core/                     # Cross-cutting facades (AI, planner preferences)
 ├── main.tsx                  # Browser bootstrap
 └── index.css                 # Global styles and visual motion
 ```
@@ -62,6 +72,19 @@ domain         -> nothing outside domain
 - **Presentation** renders the UI and coordinates user interactions. It may
   invoke application use cases and infrastructure adapters, but it owns no
   temporal decision rules.
+
+### Known deviations (accepted for now)
+
+The rules above are the target, not yet fully enforced. Current exceptions:
+
+- `application/workspace` and `application/simulation` import infrastructure
+  adapters directly (LocalWorkspaceStore, Supabase repositories, AI port
+  factory) instead of receiving them through a composition root.
+- `domain/workspace/simulationReport.ts` contains a browser download helper
+  (guarded no-op outside the DOM).
+
+Shrink this list over time — do not grow it. New code should follow the rules;
+moving these dependencies behind injected ports is welcome refactoring.
 
 ## Supabase Boundaries
 

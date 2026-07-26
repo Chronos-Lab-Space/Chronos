@@ -26,8 +26,12 @@ describe("StartupSimulationService cache", () => {
     const base = createSimulationCacheKey(request);
     expect(createSimulationCacheKey({ ...request, prompt: "A different startup" })).not.toBe(base);
     expect(createSimulationCacheKey({ ...request, workspaceId: "workspace-other" })).not.toBe(base);
-    expect(createSimulationCacheKey({ ...request, modelVersion: "startup-simulator-v3" })).not.toBe(base);
-    expect(createSimulationCacheKey({ ...request, configuration: { futureCount: 32 } })).not.toBe(base);
+    expect(createSimulationCacheKey({ ...request, modelVersion: "startup-simulator-v3" })).not.toBe(
+      base
+    );
+    expect(createSimulationCacheKey({ ...request, configuration: { futureCount: 32 } })).not.toBe(
+      base
+    );
   });
 
   it("computes once and serves equivalent requests from cache", async () => {

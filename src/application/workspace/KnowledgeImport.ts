@@ -141,7 +141,9 @@ export async function extractWebContent(rawUrl: string): Promise<UrlExtractionRe
  * Website: stores URL; attempts fetch when CORS allows.
  * Returns PreparedKnowledge; also attaches extraction metadata when available.
  */
-export async function prepareImportUrl(rawUrl: string): Promise<PreparedKnowledge & { extraction?: UrlExtractionResult }> {
+export async function prepareImportUrl(
+  rawUrl: string
+): Promise<PreparedKnowledge & { extraction?: UrlExtractionResult }> {
   const url = rawUrl.trim();
   if (!url) throw new Error("URL is required.");
 

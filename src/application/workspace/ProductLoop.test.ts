@@ -53,11 +53,10 @@ describe("Product validation loop", () => {
     expect(home.notes.length).toBeGreaterThanOrEqual(1);
 
     // 4. Run Simulation
-    home = await service.runSimulation(
-      ownerId,
-      "Should we raise funding before Kickstart?",
-      ["no raise before launch", "keep runway 12 months"]
-    );
+    home = await service.runSimulation(ownerId, "Should we raise funding before Kickstart?", [
+      "no raise before launch",
+      "keep runway 12 months",
+    ]);
     const sim = home.recentSimulations[0];
     expect(sim.status).toBe("completed");
     expect(sim.result.futures_count).toBeGreaterThanOrEqual(2);

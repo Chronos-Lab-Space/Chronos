@@ -23,9 +23,11 @@ describe("SimulationLearningService", () => {
       expect.objectContaining({ hypothesis: "Grasp directly", score: 0.82 }),
     ]);
     expect(learning.failurePatterns.map((pattern) => pattern.pattern)).toContain("human near");
-    expect(learning.memories).toHaveLength(learning.successfulFutures.length + learning.failurePatterns.length);
-    expect(learning.knowledgeGraph.nodes).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: completed.id, type: "simulation" }),
-    ]));
+    expect(learning.memories).toHaveLength(
+      learning.successfulFutures.length + learning.failurePatterns.length
+    );
+    expect(learning.knowledgeGraph.nodes).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: completed.id, type: "simulation" })])
+    );
   });
 });

@@ -9,9 +9,7 @@ import {
 } from "react";
 import { accountBootstrapService } from "../../../application/workspace/AccountBootstrapService";
 import { workspaceService } from "../../../application/workspace/WorkspaceService";
-import type {
-  UserPreferences,
-} from "../../../domain/workspace/betaChecklist";
+import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
 import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
 import type {
   KnowledgeType,
@@ -62,10 +60,7 @@ type WorkspaceContextValue = {
   runSimulation: (objective: string, constraints?: string[]) => Promise<string | null>;
   rerunSimulation: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
   chooseBestPath: (simulationId: string, futureId: string) => Promise<void>;
-  recordOutcomeFollowed: (
-    simulationId: string,
-    followed: OutcomeFollowed
-  ) => Promise<void>;
+  recordOutcomeFollowed: (simulationId: string, followed: OutcomeFollowed) => Promise<void>;
   recordOutcomeResult: (simulationId: string, resultNote: string) => Promise<void>;
   preferences: UserPreferences;
   updatePreferences: (patch: Partial<UserPreferences>) => void;
@@ -309,15 +304,11 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         trackProductEvent("path_chosen", { simulationId, futureId });
       },
       recordOutcomeFollowed: async (simulationId, followed) => {
-        await withOwner((id) =>
-          workspaceService.recordOutcomeFollowed(id, simulationId, followed)
-        );
+        await withOwner((id) => workspaceService.recordOutcomeFollowed(id, simulationId, followed));
         trackProductEvent("outcome_followed", { simulationId, followed });
       },
       recordOutcomeResult: async (simulationId, resultNote) => {
-        await withOwner((id) =>
-          workspaceService.recordOutcomeResult(id, simulationId, resultNote)
-        );
+        await withOwner((id) => workspaceService.recordOutcomeResult(id, simulationId, resultNote));
         trackProductEvent("outcome_result", {
           simulationId,
           noteLength: resultNote.trim().length,

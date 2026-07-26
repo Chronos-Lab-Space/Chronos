@@ -1,7 +1,7 @@
 import {
-  CapabilityRegistration,
+  type CapabilityRegistration,
   Evaluation,
-  Task,
+  type Task,
   TaskExecution,
   TaskGraph,
   TimelineRanking,
@@ -21,7 +21,9 @@ export class CapabilityRegistry {
   }
 
   resolve(task: Task): CapabilityRegistration | null {
-    return [...this.registrations.values()].find((capability) => capability.supportsTask(task)) ?? null;
+    return (
+      [...this.registrations.values()].find((capability) => capability.supportsTask(task)) ?? null
+    );
   }
 
   handler(capabilityId: string): TaskHandler | null {
@@ -107,7 +109,8 @@ export class ExecutionRuntime {
 export class OutcomeEvaluator {
   evaluate(execution: TaskExecution): Evaluation {
     const rawScore = typeof execution.output.score === "number" ? execution.output.score : 0;
-    const confidence = typeof execution.output.confidence === "number" ? execution.output.confidence : 0.5;
+    const confidence =
+      typeof execution.output.confidence === "number" ? execution.output.confidence : 0.5;
     return new Evaluation({
       id: `evaluation-${execution.id}`,
       executionId: execution.id,

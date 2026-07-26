@@ -4,8 +4,7 @@
  */
 const URL = process.env.SUPABASE_URL || "https://gkyhqnjgwxlyzptpiiob.supabase.co";
 const SEC = process.env.SUPABASE_SECRET_KEY;
-const PUB =
-  process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const PUB = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
 if (!SEC || !PUB) {
   console.error("Need SUPABASE_SECRET_KEY and SUPABASE_PUBLISHABLE_KEY in env");
@@ -158,10 +157,9 @@ async function main() {
   });
   console.log("futures insert", r.status, (await r.text()).slice(0, 300));
 
-  r = await fetch(
-    `${URL}/rest/v1/simulations?id=eq.${simId}&select=id,title,result`,
-    { headers: authHeaders }
-  );
+  r = await fetch(`${URL}/rest/v1/simulations?id=eq.${simId}&select=id,title,result`, {
+    headers: authHeaders,
+  });
   console.log("simulations select", r.status, (await r.text()).slice(0, 300));
 
   // cleanup workspace data with secret (bypass RLS)

@@ -9,6 +9,7 @@ export function Layout() {
   const { pathname } = useLocation();
 
   // Scroll to top on route change
+  // biome-ignore lint/correctness/useExhaustiveDependencies(pathname): re-run on every route change by design
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);

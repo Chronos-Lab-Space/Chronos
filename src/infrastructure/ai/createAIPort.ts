@@ -28,11 +28,7 @@ function envString(key: string): string | undefined {
  * Scoring/futures never change.
  */
 export function isAISimEnrichEnabled(): boolean {
-  const v = (
-    envString("VITE_AI_SIM_ENRICH") ??
-    envString("AI_SIM_ENRICH") ??
-    "true"
-  ).toLowerCase();
+  const v = (envString("VITE_AI_SIM_ENRICH") ?? envString("AI_SIM_ENRICH") ?? "true").toLowerCase();
   if (v === "0" || v === "false" || v === "no" || v === "off") return false;
   return v === "1" || v === "true" || v === "yes" || v === "on" || v === "";
 }
@@ -62,8 +58,7 @@ export function createAIPortFromEnv(
       envString("VITE_OLLAMA_URL") ??
       envString("OLLAMA_HOST") ??
       "http://127.0.0.1:11434",
-    defaultModel:
-      override?.ollamaModel ?? envString("VITE_OLLAMA_MODEL") ?? "llama3.2:1b",
+    defaultModel: override?.ollamaModel ?? envString("VITE_OLLAMA_MODEL") ?? "llama3.2:1b",
   });
 
   const providers: Record<string, AIPort> = {

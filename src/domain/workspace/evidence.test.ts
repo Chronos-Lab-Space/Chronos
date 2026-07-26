@@ -2,10 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildDecisionEvidence } from "./evidence";
 import type { FutureRecord, SimulationRecord, WorkspaceHome } from "./types";
 
-function base(
-  sim: SimulationRecord,
-  futures: FutureRecord[] = []
-): WorkspaceHome {
+function base(sim: SimulationRecord, futures: FutureRecord[] = []): WorkspaceHome {
   return {
     workspace: {
       id: "w1",

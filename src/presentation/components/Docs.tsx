@@ -65,9 +65,7 @@ export function Docs() {
   const isKnownSection = NAV.flatMap((group) => group.items).some(
     (item) => item.id === requestedSection
   );
-  const section: Section = isKnownSection
-    ? (requestedSection as Section)
-    : "introduction";
+  const section: Section = isKnownSection ? (requestedSection as Section) : "introduction";
 
   const selectSection = (next: Section) => {
     setSearchParams({ section: next }, { replace: true });
@@ -131,6 +129,7 @@ export function Docs() {
                         {group.items.map((item) => (
                           <li key={item.id}>
                             <button
+                              type="button"
                               onClick={() => selectSection(item.id)}
                               className={`flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-[13px] transition ${
                                 section === item.id
@@ -218,9 +217,7 @@ function DocTitle({ children }: { children: React.ReactNode }) {
 
 function DocSub({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="mt-10 border-t border-line pt-6 font-serif text-xl text-ink">
-      {children}
-    </h3>
+    <h3 className="mt-10 border-t border-line pt-6 font-serif text-xl text-ink">{children}</h3>
   );
 }
 
@@ -266,9 +263,7 @@ function Callout({
   return (
     <div className={`mt-6 rounded-lg border p-4 ${colors}`}>
       {title && (
-        <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.25em]">
-          {title}
-        </div>
+        <div className="mb-1 font-mono text-[10px] uppercase tracking-[0.25em]">{title}</div>
       )}
       <div className="text-[13px] leading-[1.65] text-ink-dim">{children}</div>
     </div>
@@ -348,16 +343,16 @@ function Introduction() {
     <div>
       <DocTitle>What is Chronos?</DocTitle>
       <DocBody>
-        Chronos is a decision intelligence platform. You bring a goal and
-        context; Chronos generates multiple possible futures, compares trade-offs,
-        and recommends a path — with transparent reasons, not a single opaque answer.
+        Chronos is a decision intelligence platform. You bring a goal and context; Chronos generates
+        multiple possible futures, compares trade-offs, and recommends a path — with transparent
+        reasons, not a single opaque answer.
       </DocBody>
 
       <DocSub>The problem</DocSub>
       <DocBody>
-        Most AI tools return one reply. High-stakes choices need options: risk vs
-        speed, upside vs dependencies, confidence vs uncertainty. Chronos is built
-        so you can see those trade-offs before you commit.
+        Most AI tools return one reply. High-stakes choices need options: risk vs speed, upside vs
+        dependencies, confidence vs uncertainty. Chronos is built so you can see those trade-offs
+        before you commit.
       </DocBody>
 
       <DocSub>What you get</DocSub>
@@ -441,10 +436,7 @@ function Introduction() {
           Getting started
         </Link>
         . Beta limits are listed under{" "}
-        <Link
-          to="/docs?section=beta"
-          className="text-chronos underline-offset-2 hover:underline"
-        >
+        <Link to="/docs?section=beta" className="text-chronos underline-offset-2 hover:underline">
           Beta limitations
         </Link>
         .
@@ -463,39 +455,41 @@ function HowItWorksDocs() {
       <DocTitle>How it works</DocTitle>
       <DocBody>
         Chronos does not answer in one shot. It runs a three-phase loop —
-        <strong className="text-ink"> branch → simulate → collapse</strong> — so
-        every recommendation is grounded in compared alternatives.
+        <strong className="text-ink"> branch → simulate → collapse</strong> — so every
+        recommendation is grounded in compared alternatives.
       </DocBody>
 
       <DocSub>Branch</DocSub>
       <DocBody>
-        From your goal, knowledge, and constraints, Chronos generates multiple
-        plausible futures (strategies). Each future is a distinct path: different
-        pace, risk, dependencies, and upside.
+        From your goal, knowledge, and constraints, Chronos generates multiple plausible futures
+        (strategies). Each future is a distinct path: different pace, risk, dependencies, and
+        upside.
       </DocBody>
 
       <DocSub>Simulate</DocSub>
       <DocBody>
-        Each branch is evaluated against your objective and constraints. The engine
-        scores success likelihood, risk, and confidence, and surfaces trade-offs —
-        what you gain and what you give up relative to other futures.
+        Each branch is evaluated against your objective and constraints. The engine scores success
+        likelihood, risk, and confidence, and surfaces trade-offs — what you gain and what you give
+        up relative to other futures.
       </DocBody>
 
       <DocSub>Collapse</DocSub>
       <DocBody>
-        Futures are ranked and collapsed into a Decision Report: recommendation,
-        confidence, evidence, trade-offs, risks, and next steps. You
-        still choose which path to save — Chronos recommends; you decide.
+        Futures are ranked and collapsed into a Decision Report: recommendation, confidence,
+        evidence, trade-offs, risks, and next steps. You still choose which path to save — Chronos
+        recommends; you decide.
       </DocBody>
 
       <FlowSteps
-        steps={["Branch (generate futures)", "Simulate (score & trade-offs)", "Collapse (rank & recommend)"]}
+        steps={[
+          "Branch (generate futures)",
+          "Simulate (score & trade-offs)",
+          "Collapse (rank & recommend)",
+        ]}
       />
 
       <DocSub>Why this builds trust</DocSub>
-      <DocBody>
-        Every Decision Report includes an Evidence section. Typical bullets:
-      </DocBody>
+      <DocBody>Every Decision Report includes an Evidence section. Typical bullets:</DocBody>
       <ul className="mt-4 space-y-2 text-[15px] text-ink">
         {[
           "lowest execution risk",
@@ -512,8 +506,8 @@ function HowItWorksDocs() {
       </ul>
 
       <Callout tone="note" title="Not a black box">
-        If Chronos cannot explain a recommendation relative to alternatives and your
-        goal, it is not finished product behavior. Comparison is the product.
+        If Chronos cannot explain a recommendation relative to alternatives and your goal, it is not
+        finished product behavior. Comparison is the product.
       </Callout>
     </div>
   );
@@ -528,8 +522,8 @@ function AuthAccessDocs() {
     <div>
       <DocTitle>Auth & access</DocTitle>
       <DocBody>
-        Public beta authentication is designed for speed: land, sign in with
-        Google or GitHub, and reach a Decision Workspace without a tutorial maze.
+        Public beta authentication is designed for speed: land, sign in with Google or GitHub, and
+        reach a Decision Workspace without a tutorial maze.
       </DocBody>
 
       <DocSub>User flow</DocSub>
@@ -559,22 +553,21 @@ function AuthAccessDocs() {
 
       <DocSub>Request authorization</DocSub>
       <DocBody>
-        Every workspace-scoped action should follow: verify JWT session → resolve
-        user → load workspace → check membership (or owner) → execute. The
-        browser app enforces this via ProtectedRoute + membership-aware RLS.
+        Every workspace-scoped action should follow: verify JWT session → resolve user → load
+        workspace → check membership (or owner) → execute. The browser app enforces this via
+        ProtectedRoute + membership-aware RLS.
       </DocBody>
 
       <DocSub>Progress checklist</DocSub>
       <DocBody>
-        Instead of a forced tour, Chronos unlocks progress as you act: connect LLM
-        (optional), create first decision, run first simulation, save memory, share
-        workspace.
+        Instead of a forced tour, Chronos unlocks progress as you act: connect LLM (optional),
+        create first decision, run first simulation, save memory, share workspace.
       </DocBody>
 
       <Callout tone="note" title="Provider setup">
         Enable Google and GitHub under Supabase Auth → Providers. Add redirect URL{" "}
-        <code className="text-chronos">https://your-host/auth/callback</code> (and
-        localhost for dev). Apply migration{" "}
+        <code className="text-chronos">https://your-host/auth/callback</code> (and localhost for
+        dev). Apply migration{" "}
         <code className="text-chronos">20260721120000_public_beta_auth.sql</code>.
       </Callout>
     </div>
@@ -590,27 +583,27 @@ function BetaLimitationsDocs() {
     <div>
       <DocTitle>Public beta</DocTitle>
       <DocBody>
-        Chronos is decision infrastructure, not a chatbot. It explores multiple
-        futures, scores trade-offs, and recommends a path — you still decide.
+        Chronos is decision infrastructure, not a chatbot. It explores multiple futures, scores
+        trade-offs, and recommends a path — you still decide.
       </DocBody>
 
       <Callout tone="tip" title="Honest beta">
         <ul className="mt-2 list-disc space-y-1.5 pl-5 text-[14px] leading-relaxed text-ink-dim">
           <li>
-            <strong className="text-ink">You decide.</strong> Chronos recommends;
-            Save decision is explicit and reviewable.
+            <strong className="text-ink">You decide.</strong> Chronos recommends; Save decision is
+            explicit and reviewable.
           </li>
           <li>
-            <strong className="text-ink">Multi-future, honest N.</strong> Sample
-            counts and disqualified paths match the engine — no padded “1000 paths.”
+            <strong className="text-ink">Multi-future, honest N.</strong> Sample counts and
+            disqualified paths match the engine — no padded “1000 paths.”
           </li>
           <li>
-            <strong className="text-ink">Local-first cloud.</strong> If sync fails,
-            work stays on this device; watch the cloud banner when present.
+            <strong className="text-ink">Local-first cloud.</strong> If sync fails, work stays on
+            this device; watch the cloud banner when present.
           </li>
           <li>
-            <strong className="text-ink">Prefer Google / GitHub.</strong> Email
-            signup may require confirmation before the workspace unlocks.
+            <strong className="text-ink">Prefer Google / GitHub.</strong> Email signup may require
+            confirmation before the workspace unlocks.
           </li>
         </ul>
       </Callout>
@@ -627,9 +620,8 @@ function BetaLimitationsDocs() {
         ]}
       />
       <DocBody>
-        Success = you can name the recommendation and the next step without
-        hunting. If anything feels like a single chat answer, that is a bug in
-        the product experience — tell us.
+        Success = you can name the recommendation and the next step without hunting. If anything
+        feels like a single chat answer, that is a bug in the product experience — tell us.
       </DocBody>
 
       <DocSub>Current limitations</DocSub>
@@ -667,8 +659,8 @@ function BetaLimitationsDocs() {
       />
 
       <Callout tone="tip" title="What is solid today">
-        Goal → Knowledge → Simulation → Decision Report → save path → log outcomes.
-        That loop — and the keepable report — is the beta focus.
+        Goal → Knowledge → Simulation → Decision Report → save path → log outcomes. That loop — and
+        the keepable report — is the beta focus.
       </Callout>
     </div>
   );
@@ -754,8 +746,8 @@ function GettingStarted() {
     <div>
       <DocTitle>Getting started</DocTitle>
       <DocBody>
-        This is the shortest path from zero to a recommendation. Public beta is
-        open — create an account to unlock the full Decision Workspace.
+        This is the shortest path from zero to a recommendation. Public beta is open — create an
+        account to unlock the full Decision Workspace.
       </DocBody>
 
       <FlowSteps
@@ -771,11 +763,11 @@ function GettingStarted() {
 
       <DocSub>1. Join public beta</DocSub>
       <DocBody>
-        From the landing page choose <strong className="text-ink">Join public beta</strong>{" "}
-        or <strong className="text-ink">Get started</strong>. Prefer{" "}
-        <strong className="text-ink">Google or GitHub</strong> for the fastest path;
-        email may require confirmation. Chronos creates your profile and a personal
-        workspace with owner membership automatically.
+        From the landing page choose <strong className="text-ink">Join public beta</strong> or{" "}
+        <strong className="text-ink">Get started</strong>. Prefer{" "}
+        <strong className="text-ink">Google or GitHub</strong> for the fastest path; email may
+        require confirmation. Chronos creates your profile and a personal workspace with owner
+        membership automatically.
       </DocBody>
       <div className="mt-4 flex flex-wrap gap-2">
         <button
@@ -795,41 +787,41 @@ function GettingStarted() {
 
       <DocSub>2. Create workspace</DocSub>
       <DocBody>
-        A workspace is the container for everything related to a decision
-        surface: goals, knowledge, simulations, timeline, and memory. Create one
-        for a company, product, research question, or personal project.
+        A workspace is the container for everything related to a decision surface: goals, knowledge,
+        simulations, timeline, and memory. Create one for a company, product, research question, or
+        personal project.
       </DocBody>
 
       <DocSub>3. Set goal</DocSub>
       <DocBody>
-        Write a clear goal in plain language. Add priorities, constraints, and
-        what “success” looks like. Better goals produce more useful futures.
+        Write a clear goal in plain language. Add priorities, constraints, and what “success” looks
+        like. Better goals produce more useful futures.
       </DocBody>
 
       <DocSub>4. Add knowledge</DocSub>
       <DocBody>
-        Ground the simulation with PDFs, markdown, notes, or imported URLs.
-        Chronos uses this library when generating and ranking futures. Onboarding
-        requires at least one source before the dashboard unlocks.
+        Ground the simulation with PDFs, markdown, notes, or imported URLs. Chronos uses this
+        library when generating and ranking futures. Onboarding requires at least one source before
+        the dashboard unlocks.
       </DocBody>
 
       <DocSub>5. Run simulation</DocSub>
       <DocBody>
-        From Simulations, state the decision and optional hard/soft constraints.
-        Chronos scores strategy futures (honest sample budget), disqualifies
-        paths that violate hard constraints, and opens the Decision Report.
+        From Simulations, state the decision and optional hard/soft constraints. Chronos scores
+        strategy futures (honest sample budget), disqualifies paths that violate hard constraints,
+        and opens the Decision Report.
       </DocBody>
 
       <DocSub>6. Keep the Decision Report</DocSub>
       <DocBody>
-        The report is the product: Goal · Recommendation · Confidence · Evidence ·
-        Trade-offs · Risks · Next steps. Copy or download markdown, choose a path
-        to save, then log whether you followed it and how it turned out.
+        The report is the product: Goal · Recommendation · Confidence · Evidence · Trade-offs ·
+        Risks · Next steps. Copy or download markdown, choose a path to save, then log whether you
+        followed it and how it turned out.
       </DocBody>
 
       <Callout tone="info" title="First simulation checklist">
-        Goal defined · at least one knowledge source · constraints listed · then
-        run — leave with a report you can keep.
+        Goal defined · at least one knowledge source · constraints listed · then run — leave with a
+        report you can keep.
       </Callout>
     </div>
   );
@@ -844,38 +836,35 @@ function WorkspacesDocs() {
     <div>
       <DocTitle>Workspaces</DocTitle>
       <DocBody>
-        A workspace is where your goals, knowledge, simulations, and decision
-        history live. Treat it as the home base for a decision domain — not a
-        one-off chat thread.
+        A workspace is where your goals, knowledge, simulations, and decision history live. Treat it
+        as the home base for a decision domain — not a one-off chat thread.
       </DocBody>
 
       <DocSub>Creating workspaces</DocSub>
       <DocBody>
-        Create a workspace after sign-in. Give it a clear name that reflects the
-        decision surface (for example, “Series A strategy” or “Product launch
-        Q3”). You can open it anytime from the workspace dashboard.
+        Create a workspace after sign-in. Give it a clear name that reflects the decision surface
+        (for example, “Series A strategy” or “Product launch Q3”). You can open it anytime from the
+        workspace dashboard.
       </DocBody>
 
       <DocSub>Managing goals</DocSub>
       <DocBody>
-        Each workspace holds active goals. Goals drive simulations: when you run
-        a simulation, Chronos uses the current goal plus knowledge and
-        constraints. Update goals as strategy shifts rather than starting from
-        scratch every time.
+        Each workspace holds active goals. Goals drive simulations: when you run a simulation,
+        Chronos uses the current goal plus knowledge and constraints. Update goals as strategy
+        shifts rather than starting from scratch every time.
       </DocBody>
 
       <DocSub>Organization</DocSub>
       <DocBody>
-        Keep one workspace per major decision domain when possible. That keeps
-        knowledge, simulation history, and memory coherent. Use notes and clear
-        goal titles so future you can find the right context quickly.
+        Keep one workspace per major decision domain when possible. That keeps knowledge, simulation
+        history, and memory coherent. Use notes and clear goal titles so future you can find the
+        right context quickly.
       </DocBody>
 
       <DocSub>Settings</DocSub>
       <DocBody>
-        Workspace settings cover identity and configuration for your private
-        environment. Use settings to review workspace details and keep your
-        decision space tidy as the product grows.
+        Workspace settings cover identity and configuration for your private environment. Use
+        settings to review workspace details and keep your decision space tidy as the product grows.
       </DocBody>
 
       <TopicList
@@ -903,42 +892,39 @@ function GoalsDocs() {
     <div>
       <DocTitle>Goals</DocTitle>
       <DocBody>
-        Goals define what Chronos optimizes for. A strong goal is specific enough
-        to rank futures, but open enough to explore more than one strategy.
+        Goals define what Chronos optimizes for. A strong goal is specific enough to rank futures,
+        but open enough to explore more than one strategy.
       </DocBody>
 
       <DocSub>Creating goals</DocSub>
       <DocBody>
-        Write the outcome you want in plain language. Example: “Reach $50k MRR
-        in 12 months without raising more than $1M.” Avoid vague goals like
-        “grow the business.”
+        Write the outcome you want in plain language. Example: “Reach $50k MRR in 12 months without
+        raising more than $1M.” Avoid vague goals like “grow the business.”
       </DocBody>
 
       <DocSub>Goal priorities</DocSub>
       <DocBody>
-        Priorities tell Chronos what matters most when futures conflict — speed
-        vs. risk, growth vs. runway, quality vs. cost. State ranked priorities so
-        trade-offs can be scored consistently.
+        Priorities tell Chronos what matters most when futures conflict — speed vs. risk, growth vs.
+        runway, quality vs. cost. State ranked priorities so trade-offs can be scored consistently.
       </DocBody>
 
       <DocSub>Constraints</DocSub>
       <DocBody>
-        Constraints are hard or soft limits: budget caps, team size, deadlines,
-        regulatory requirements, or “must not do X.” Clear constraints reduce
-        unrealistic futures and improve recommendation quality.
+        Constraints are hard or soft limits: budget caps, team size, deadlines, regulatory
+        requirements, or “must not do X.” Clear constraints reduce unrealistic futures and improve
+        recommendation quality.
       </DocBody>
 
       <DocSub>Success criteria</DocSub>
       <DocBody>
-        Define how you will know a path worked. Criteria can be metrics
-        (revenue, retention), milestones (shipped feature, signed pilot), or
-        qualitative outcomes (team capacity preserved). These become the yardstick
-        for ranking.
+        Define how you will know a path worked. Criteria can be metrics (revenue, retention),
+        milestones (shipped feature, signed pilot), or qualitative outcomes (team capacity
+        preserved). These become the yardstick for ranking.
       </DocBody>
 
       <Callout tone="tip" title="Goal quality tip">
-        Better inputs → better futures. Spend five minutes on priorities and
-        constraints before you run a large simulation.
+        Better inputs → better futures. Spend five minutes on priorities and constraints before you
+        run a large simulation.
       </Callout>
     </div>
   );
@@ -953,48 +939,44 @@ function KnowledgeDocs() {
     <div>
       <DocTitle>Knowledge Library</DocTitle>
       <DocBody>
-        The Knowledge Library stores documents, notes, and web resources that
-        provide context for simulations. Chronos is only as grounded as the
-        material you give it.
+        The Knowledge Library stores documents, notes, and web resources that provide context for
+        simulations. Chronos is only as grounded as the material you give it.
       </DocBody>
 
       <DocSub>Upload PDF</DocSub>
       <DocBody>
-        Upload PDFs such as pitch decks, research reports, contracts summaries,
-        or strategy memos. Use them when the source of truth lives in a document
-        you already have.
+        Upload PDFs such as pitch decks, research reports, contracts summaries, or strategy memos.
+        Use them when the source of truth lives in a document you already have.
       </DocBody>
 
       <DocSub>Markdown</DocSub>
       <DocBody>
-        Import markdown files for specs, READMEs, and structured notes. Markdown
-        is ideal for technical context and product definitions.
+        Import markdown files for specs, READMEs, and structured notes. Markdown is ideal for
+        technical context and product definitions.
       </DocBody>
 
       <DocSub>Notes</DocSub>
       <DocBody>
-        Write lightweight notes inside the workspace. Capture assumptions,
-        interview takeaways, or decision constraints that do not yet live in a
-        formal document.
+        Write lightweight notes inside the workspace. Capture assumptions, interview takeaways, or
+        decision constraints that do not yet live in a formal document.
       </DocBody>
 
       <DocSub>URL import</DocSub>
       <DocBody>
-        Import web resources and public GitHub README content when external
-        context matters — market pages, competitor pages, or product docs.
+        Import web resources and public GitHub README content when external context matters — market
+        pages, competitor pages, or product docs.
       </DocBody>
 
       <DocSub>Search</DocSub>
       <DocBody>
-        Search the library by keywords to find the right source before a run.
-        Keep titles descriptive so search stays useful as the library grows.
+        Search the library by keywords to find the right source before a run. Keep titles
+        descriptive so search stays useful as the library grows.
       </DocBody>
 
       <DocSub>Organization</DocSub>
       <DocBody>
-        Prefer fewer high-signal sources over dumping everything. Group related
-        notes, retire outdated material, and refresh knowledge when the world
-        changes — then re-run simulations.
+        Prefer fewer high-signal sources over dumping everything. Group related notes, retire
+        outdated material, and refresh knowledge when the world changes — then re-run simulations.
       </DocBody>
     </div>
   );
@@ -1009,30 +991,27 @@ function SimulationsDocs() {
     <div>
       <DocTitle>Simulations</DocTitle>
       <DocBody>
-        Simulations are the core of Chronos. Each run takes your goal, context,
-        and constraints, then explores multiple futures instead of producing a
-        single answer.
+        Simulations are the core of Chronos. Each run takes your goal, context, and constraints,
+        then explores multiple futures instead of producing a single answer.
       </DocBody>
 
       <DocSub>Inputs</DocSub>
       <DocBody>
-        Primary inputs are the active goal, knowledge library content, and any
-        explicit constraints or success criteria. Richer, cleaner inputs produce
-        more actionable recommendations.
+        Primary inputs are the active goal, knowledge library content, and any explicit constraints
+        or success criteria. Richer, cleaner inputs produce more actionable recommendations.
       </DocBody>
 
       <DocSub>Constraints</DocSub>
       <DocBody>
-        Constraints bound the search space. They prevent futures that violate
-        hard rules (budget, time, policy) and help the ranking step prefer
-        realistic paths.
+        Constraints bound the search space. They prevent futures that violate hard rules (budget,
+        time, policy) and help the ranking step prefer realistic paths.
       </DocBody>
 
       <DocSub>How futures are generated</DocSub>
       <DocBody>
-        Chronos generates multiple candidate strategies from your goal and
-        context. Each future is a coherent path: what you might do, what could
-        happen, and what trade-offs come with that path.
+        Chronos generates multiple candidate strategies from your goal and context. Each future is a
+        coherent path: what you might do, what could happen, and what trade-offs come with that
+        path.
       </DocBody>
       <FlowSteps
         steps={[
@@ -1047,28 +1026,26 @@ function SimulationsDocs() {
 
       <DocSub>Confidence</DocSub>
       <DocBody>
-        Confidence signals how strongly the evaluation supports a given future
-        relative to alternatives and available evidence. Use confidence as a
-        guide — not a guarantee — especially when knowledge is incomplete.
+        Confidence signals how strongly the evaluation supports a given future relative to
+        alternatives and available evidence. Use confidence as a guide — not a guarantee —
+        especially when knowledge is incomplete.
       </DocBody>
 
       <DocSub>Trade-offs</DocSub>
       <DocBody>
-        Every strong path has costs. Chronos surfaces trade-offs so you can see
-        what you gain and what you give up (speed, risk, capital, focus, or
-        optionality).
+        Every strong path has costs. Chronos surfaces trade-offs so you can see what you gain and
+        what you give up (speed, risk, capital, focus, or optionality).
       </DocBody>
 
       <DocSub>Decision reports</DocSub>
       <DocBody>
-        After a run, open the decision report for the recommended path, ranked
-        alternatives, risks, and reasoning. Reports are saved so you can return
-        later or compare versions.
+        After a run, open the decision report for the recommended path, ranked alternatives, risks,
+        and reasoning. Reports are saved so you can return later or compare versions.
       </DocBody>
 
       <Callout tone="info" title="Core loop">
-        Goal → context → multiple futures → trade-offs → ranking → recommendation.
-        Re-run when goals or knowledge change.
+        Goal → context → multiple futures → trade-offs → ranking → recommendation. Re-run when goals
+        or knowledge change.
       </Callout>
     </div>
   );
@@ -1083,36 +1060,33 @@ function TimelineDocs() {
     <div>
       <DocTitle>Timeline</DocTitle>
       <DocBody>
-        The timeline is how you inspect futures after a simulation — not as a
-        chat transcript, but as ranked paths you can compare over time.
+        The timeline is how you inspect futures after a simulation — not as a chat transcript, but
+        as ranked paths you can compare over time.
       </DocBody>
 
       <DocSub>Timeline view</DocSub>
       <DocBody>
-        The timeline presents the goal and the set of generated futures as cards
-        or nodes you can open. Each future includes summary, risk, confidence,
-        and next steps.
+        The timeline presents the goal and the set of generated futures as cards or nodes you can
+        open. Each future includes summary, risk, confidence, and next steps.
       </DocBody>
 
       <DocSub>Future comparison</DocSub>
       <DocBody>
-        Chronos does not return a single answer. Each ranked future gets a
-        distinctive hook — Fastest path, Lower risk, or Highest upside — with
-        confidence so you can see trade-offs at a glance. Comparison is the
-        product: decide which future fits, then save it to the timeline.
+        Chronos does not return a single answer. Each ranked future gets a distinctive hook —
+        Fastest path, Lower risk, or Highest upside — with confidence so you can see trade-offs at a
+        glance. Comparison is the product: decide which future fits, then save it to the timeline.
       </DocBody>
 
       <DocSub>Version history</DocSub>
       <DocBody>
-        Simulations are versioned as context evolves. Revisit earlier versions
-        of a decision to see how recommendations changed when goals, knowledge,
-        or constraints shifted.
+        Simulations are versioned as context evolves. Revisit earlier versions of a decision to see
+        how recommendations changed when goals, knowledge, or constraints shifted.
       </DocBody>
 
       <DocSub>Re-running simulations</DocSub>
       <DocBody>
-        Re-run when you add knowledge, tighten constraints, or revise the goal.
-        New runs keep lineage so you can track how the decision space moved.
+        Re-run when you add knowledge, tighten constraints, or revise the goal. New runs keep
+        lineage so you can track how the decision space moved.
       </DocBody>
     </div>
   );
@@ -1127,33 +1101,32 @@ function MemoryDocs() {
     <div>
       <DocTitle>Memory</DocTitle>
       <DocBody>
-        Memory is what makes Chronos cumulative. Past simulations and decisions
-        stay attached to the workspace so you do not start from zero every time.
+        Memory is what makes Chronos cumulative. Past simulations and decisions stay attached to the
+        workspace so you do not start from zero every time.
       </DocBody>
 
       <DocSub>Simulation history</DocSub>
       <DocBody>
-        Every simulation is saved. Browse prior runs, reopen details, and see
-        how recommendations evolved across versions.
+        Every simulation is saved. Browse prior runs, reopen details, and see how recommendations
+        evolved across versions.
       </DocBody>
 
       <DocSub>Saved reports</DocSub>
       <DocBody>
-        Decision reports remain available after a run. Use them for reviews,
-        stakeholder updates, or as context for the next simulation.
+        Decision reports remain available after a run. Use them for reviews, stakeholder updates, or
+        as context for the next simulation.
       </DocBody>
 
       <DocSub>Decision history</DocSub>
       <DocBody>
-        Over time, the workspace becomes a record of what you considered, what
-        you preferred, and why — useful for audits, retros, and learning.
+        Over time, the workspace becomes a record of what you considered, what you preferred, and
+        why — useful for audits, retros, and learning.
       </DocBody>
 
       <DocSub>Workspace continuity</DocSub>
       <DocBody>
-        Goals, knowledge, timeline, and memory stay connected. That continuity is
-        the difference between a one-off AI answer and an evolving decision
-        system.
+        Goals, knowledge, timeline, and memory stay connected. That continuity is the difference
+        between a one-off AI answer and an evolving decision system.
       </DocBody>
     </div>
   );
@@ -1168,10 +1141,10 @@ function DecisionReportsDocs() {
     <div>
       <DocTitle>Decision reports</DocTitle>
       <DocBody>
-        The Decision Report is the <strong className="text-ink">product centerpiece</strong>{" "}
-        — the keepable artifact after simulation. It is not a chat reply. Dashboard HQ
-        and simulation detail both lead with the report so you leave with something you
-        can copy, download, and reopen.
+        The Decision Report is the <strong className="text-ink">product centerpiece</strong> — the
+        keepable artifact after simulation. It is not a chat reply. Dashboard HQ and simulation
+        detail both lead with the report so you leave with something you can copy, download, and
+        reopen.
       </DocBody>
 
       <TopicList
@@ -1208,8 +1181,8 @@ function DecisionReportsDocs() {
       />
 
       <Callout tone="tip" title="How to use a report">
-        Copy or download markdown, share with stakeholders, challenge weak assumptions
-        with new knowledge, then re-run if the ranking still feels fragile.
+        Copy or download markdown, share with stakeholders, challenge weak assumptions with new
+        knowledge, then re-run if the ranking still feels fragile.
       </Callout>
     </div>
   );
@@ -1229,15 +1202,14 @@ function ApiDocs() {
         </span>
       </DocTitle>
       <DocBody>
-        A public API is planned so you can drive Chronos programmatically —
-        run simulations, manage workspaces and knowledge, and read timelines from
-        your own tools. This page is a directional preview, not a live contract.
+        A public API is planned so you can drive Chronos programmatically — run simulations, manage
+        workspaces and knowledge, and read timelines from your own tools. This page is a directional
+        preview, not a live contract.
       </DocBody>
 
       <Callout tone="warn" title="Status">
-        Endpoints below are illustrative. Paths, payloads, and auth details will
-        be finalized when the API ships. Join the public beta for product access
-        today; API & SDK are on the roadmap.
+        Endpoints below are illustrative. Paths, payloads, and auth details will be finalized when
+        the API ships. Join the public beta for product access today; API & SDK are on the roadmap.
       </Callout>
 
       <DocSub>Planned endpoints</DocSub>
@@ -1276,8 +1248,8 @@ Content-Type: application/json
 }`}</Code>
 
       <DocBody>
-        When the API launches, this section will expand into auth, rate limits,
-        SDKs, and full request/response schemas.
+        When the API launches, this section will expand into auth, rate limits, SDKs, and full
+        request/response schemas.
       </DocBody>
     </div>
   );
@@ -1292,9 +1264,8 @@ function RoadmapDocs() {
     <div>
       <DocTitle>Roadmap</DocTitle>
       <DocBody>
-        Chronos ships in focused phases. Below is what is available now versus
-        what is planned — so you can trust the product status, not marketing
-        blur.
+        Chronos ships in focused phases. Below is what is available now versus what is planned — so
+        you can trust the product status, not marketing blur.
       </DocBody>
 
       <DocSub>Available now</DocSub>
@@ -1373,57 +1344,47 @@ function SecurityDocs() {
     <div>
       <DocTitle>Security & privacy</DocTitle>
       <DocBody>
-        Users will trust Chronos with important information. This section
-        documents how we think about storage, encryption, authentication,
-        ownership, and privacy.
+        Users will trust Chronos with important information. This section documents how we think
+        about storage, encryption, authentication, ownership, and privacy.
       </DocBody>
 
       <DocSub>Data storage</DocSub>
       <DocBody>
-        Workspace data — goals, knowledge, simulations, timelines, and reports —
-        is stored in your private workspace environment. Product data is not
-        treated as a public feed.
+        Workspace data — goals, knowledge, simulations, timelines, and reports — is stored in your
+        private workspace environment. Product data is not treated as a public feed.
       </DocBody>
 
       <DocSub>Encryption</DocSub>
       <DocBody>
-        Data is protected in transit (TLS) and at rest using modern encryption
-        practices. Secrets such as AI provider keys are kept server-side (for
-        example via edge functions) and are not exposed to the browser.
+        Data is protected in transit (TLS) and at rest using modern encryption practices. Secrets
+        such as AI provider keys are kept server-side (for example via edge functions) and are not
+        exposed to the browser.
       </DocBody>
 
       <DocSub>Authentication</DocSub>
       <DocBody>
-        Access requires an authenticated session (magic link / password sign-in).
-        Workspace routes are protected so only signed-in users can reach private
-        product surfaces.
+        Access requires an authenticated session (magic link / password sign-in). Workspace routes
+        are protected so only signed-in users can reach private product surfaces.
       </DocBody>
 
       <DocSub>Privacy policy</DocSub>
       <DocBody>
-        Our privacy policy describes what we collect, how we use it, retention,
-        and your rights. Read the full policy on the privacy page.
+        Our privacy policy describes what we collect, how we use it, retention, and your rights.
+        Read the full policy on the privacy page.
       </DocBody>
       <div className="mt-4">
-        <Link
-          to="/privacy"
-          className="text-[13px] text-chronos underline-offset-2 hover:underline"
-        >
+        <Link to="/privacy" className="text-[13px] text-chronos underline-offset-2 hover:underline">
           Privacy policy →
         </Link>
       </div>
 
       <DocSub>Data ownership</DocSub>
       <DocBody>
-        You retain rights to the content you submit. Chronos processes it to
-        operate the product and run simulations. We do not sell your data. See
-        Terms for the legal framing of service use.
+        You retain rights to the content you submit. Chronos processes it to operate the product and
+        run simulations. We do not sell your data. See Terms for the legal framing of service use.
       </DocBody>
       <div className="mt-4 flex flex-wrap gap-4">
-        <Link
-          to="/terms"
-          className="text-[13px] text-chronos underline-offset-2 hover:underline"
-        >
+        <Link to="/terms" className="text-[13px] text-chronos underline-offset-2 hover:underline">
           Terms of service →
         </Link>
         <Link
@@ -1435,8 +1396,8 @@ function SecurityDocs() {
       </div>
 
       <Callout tone="warn" title="Security reports">
-        If you discover a vulnerability, contact us privately through our
-        support channels. Do not post exploit details publicly.
+        If you discover a vulnerability, contact us privately through our support channels. Do not
+        post exploit details publicly.
       </Callout>
     </div>
   );
@@ -1451,8 +1412,8 @@ function SupportDocs() {
     <div>
       <DocTitle>Support</DocTitle>
       <DocBody>
-        Need help, found a bug, or want to request a feature? Use the channels
-        below. We read every message.
+        Need help, found a bug, or want to request a feature? Use the channels below. We read every
+        message.
       </DocBody>
 
       <TopicList
@@ -1516,8 +1477,8 @@ function SupportDocs() {
       </div>
 
       <Callout tone="info" title="GitHub & Discord">
-        Public GitHub issues and Discord will be linked here when community
-        channels open. Until then, use Contact, Telegram, or X.
+        Public GitHub issues and Discord will be linked here when community channels open. Until
+        then, use Contact, Telegram, or X.
       </Callout>
     </div>
   );

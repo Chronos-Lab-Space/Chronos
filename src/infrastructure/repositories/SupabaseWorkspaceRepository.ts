@@ -90,8 +90,8 @@ export class SupabaseWorkspaceRepository {
     const simulations = (simRes.data ?? []).map(mapSimulation);
     const simIds = simulations.map((s) => s.id);
 
-    let futuresBySimulation: Record<string, FutureRecord[]> = {};
-    let timelineBySimulation: Record<string, TimelineNodeRecord[]> = {};
+    const futuresBySimulation: Record<string, FutureRecord[]> = {};
+    const timelineBySimulation: Record<string, TimelineNodeRecord[]> = {};
 
     if (simIds.length > 0) {
       const [futuresRes, nodesRes] = await Promise.all([
@@ -103,11 +103,13 @@ export class SupabaseWorkspaceRepository {
 
       for (const row of futuresRes.data ?? []) {
         const f = mapFuture(row);
-        (futuresBySimulation[f.simulation_id] ??= []).push(f);
+        futuresBySimulation[f.simulation_id] ??= [];
+        futuresBySimulation[f.simulation_id].push(f);
       }
       for (const row of nodesRes.data ?? []) {
         const n = mapTimelineNode(row);
-        (timelineBySimulation[n.simulation_id] ??= []).push(n);
+        timelineBySimulation[n.simulation_id] ??= [];
+        timelineBySimulation[n.simulation_id].push(n);
       }
       // Keep futures ranked by score desc
       for (const key of Object.keys(futuresBySimulation)) {
@@ -262,9 +264,7 @@ export class SupabaseWorkspaceRepository {
 }
 
 /** Topological order: roots first, then children by version/created_at. */
-export function orderSimulationsForUpsert(
-  sims: readonly SimulationRecord[]
-): SimulationRecord[] {
+export function orderSimulationsForUpsert(sims: readonly SimulationRecord[]): SimulationRecord[] {
   const byId = new Map(sims.map((s) => [s.id, s]));
   const visiting = new Set<string>();
   const done = new Set<string>();

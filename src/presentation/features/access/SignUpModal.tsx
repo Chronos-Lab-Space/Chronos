@@ -1,15 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  authService,
-  formatAuthError,
-} from "../../../infrastructure/auth/SupabaseAuthService";
+import { authService, formatAuthError } from "../../../infrastructure/auth/SupabaseAuthService";
 import { trackProductEvent } from "../../../infrastructure/analytics/productAnalytics";
 
 type SignUpModalContextValue = {
@@ -335,11 +326,7 @@ function SignUpModal({ onClose }: { onClose: () => void }) {
                 disabled={loading || onCooldown}
                 className="w-full rounded-full bg-ink px-4 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
               >
-                {loading
-                  ? "Sending…"
-                  : onCooldown
-                    ? `Wait ${cooldownSeconds}s`
-                    : "Send magic link"}
+                {loading ? "Sending…" : onCooldown ? `Wait ${cooldownSeconds}s` : "Send magic link"}
               </button>
             </form>
           ) : (

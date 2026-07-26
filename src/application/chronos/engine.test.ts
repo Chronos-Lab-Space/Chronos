@@ -41,9 +41,7 @@ describe("Temporal Decision Engine", () => {
       expect(branch.reason).toEqual(expect.any(String));
     }
 
-    const directGrasp = evaluated.branches.find(
-      (branch) => branch.actionId === "grasp-direct"
-    );
+    const directGrasp = evaluated.branches.find((branch) => branch.actionId === "grasp-direct");
     expect(directGrasp).toBeDefined();
     expect(directGrasp!.score).toBeCloseTo(0.82, 5);
     expect(directGrasp!.reason).toContain("grasped");
@@ -92,7 +90,11 @@ describe("Temporal Decision Engine", () => {
 
   it("scores agent domains differently from physical utility", () => {
     const forge = getAgent("forge");
-    const engine = createEngine(forge.scenario.id, forge.scenario.initialState, forge.scenario.actions);
+    const engine = createEngine(
+      forge.scenario.id,
+      forge.scenario.initialState,
+      forge.scenario.actions
+    );
     const evaluated = evaluate(fork(engine));
     const ship = evaluated.branches.find((b) => b.actionId === "ship-as-is")!;
     const tests = evaluated.branches.find((b) => b.actionId === "write-tests")!;

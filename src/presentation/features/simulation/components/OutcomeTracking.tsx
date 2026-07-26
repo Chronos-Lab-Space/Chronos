@@ -119,9 +119,7 @@ export function OutcomeTracking({
 
       {followed && (
         <div>
-          <div className="font-mono text-[10px] uppercase text-ink-faint">
-            How did it turn out?
-          </div>
+          <div className="font-mono text-[10px] uppercase text-ink-faint">How did it turn out?</div>
           {result ? (
             <div className="mt-3 rounded-xl border border-line px-4 py-3">
               <p className="text-[15px] text-ink whitespace-pre-wrap">{result}</p>

@@ -5,11 +5,7 @@
  */
 import type { WorkspaceHome } from "./types";
 
-export type BetaChecklistId =
-  | "decision"
-  | "simulation"
-  | "memory"
-  | "share";
+export type BetaChecklistId = "decision" | "simulation" | "memory" | "share";
 
 export type BetaChecklistItem = {
   id: BetaChecklistId;

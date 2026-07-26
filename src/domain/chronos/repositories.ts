@@ -1,10 +1,5 @@
 import type { Agent, KnowledgeGraph, Memory, Simulation, Workspace } from "./entities";
-import type {
-  CapabilityRegistration,
-  Evaluation,
-  TaskExecution,
-  TaskGraph,
-} from "./task-os";
+import type { CapabilityRegistration, Evaluation, TaskExecution, TaskGraph } from "./task-os";
 
 /** Every persisted Chronos record has a stable identifier. */
 export type RepositoryRecord = {

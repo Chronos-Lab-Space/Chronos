@@ -298,7 +298,15 @@ export function BranchingAnimation() {
             />
             {winner && (
               <circle r="2.4" fill="#ffd7a3" className="tree-flow-dot" filter="url(#tree-glow)">
-                <animateMotion dur="1.6s" repeatCount="indefinite" path={path} begin="0s" keyPoints="0;1" keyTimes="0;1" calcMode="linear" />
+                <animateMotion
+                  dur="1.6s"
+                  repeatCount="indefinite"
+                  path={path}
+                  begin="0s"
+                  keyPoints="0;1"
+                  keyTimes="0;1"
+                  calcMode="linear"
+                />
                 <animate
                   attributeName="opacity"
                   values="0;1;1;0"
@@ -380,13 +388,7 @@ export function BranchingAnimation() {
                 cx={node.x}
                 cy={node.y}
                 r={isOrigin ? 13 : onWinningPath ? 10 : 7}
-                fill={
-                  isOrigin
-                    ? "url(#tree-origin)"
-                    : onWinningPath
-                      ? "url(#tree-win)"
-                      : "#7b79be"
-                }
+                fill={isOrigin ? "url(#tree-origin)" : onWinningPath ? "url(#tree-win)" : "#7b79be"}
                 opacity={onWinningPath || isOrigin ? 1 : 0.78}
                 filter={onWinningPath || isOrigin ? "url(#tree-glow)" : undefined}
               />
@@ -465,15 +467,7 @@ export function BranchingAnimation() {
             strokeOpacity="0.5"
             filter="url(#tree-soft-glow)"
           />
-          <rect
-            x="300"
-            y="400"
-            width="4"
-            height="64"
-            rx="2"
-            fill="#ffd7a3"
-            opacity="0.9"
-          />
+          <rect x="300" y="400" width="4" height="64" rx="2" fill="#ffd7a3" opacity="0.9" />
           <circle cx="334" cy="432" r="8" fill="url(#tree-win)" filter="url(#tree-glow)" />
           <text
             x="354"

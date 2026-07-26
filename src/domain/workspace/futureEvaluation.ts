@@ -86,10 +86,7 @@ export function evaluateFutures(
   });
 
   prepared.sort(
-    (a, b) =>
-      b.expectedValue - a.expectedValue ||
-      a.risk - b.risk ||
-      a.name.localeCompare(b.name)
+    (a, b) => b.expectedValue - a.expectedValue || a.risk - b.risk || a.name.localeCompare(b.name)
   );
 
   const ranked = prepared.map((future, index) => ({
@@ -109,9 +106,8 @@ export function evaluateFutures(
   const aggregateConfidence =
     ranked.length === 0
       ? 0
-      : Math.round(
-          (ranked.reduce((sum, f) => sum + f.confidence, 0) / ranked.length) * 1000
-        ) / 1000;
+      : Math.round((ranked.reduce((sum, f) => sum + f.confidence, 0) / ranked.length) * 1000) /
+        1000;
 
   const policyCompliant = ranked.every((f) => f.policyCompliant) || ranked.length === 0;
 

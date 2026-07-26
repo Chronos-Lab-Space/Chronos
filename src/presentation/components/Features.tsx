@@ -19,9 +19,9 @@ export function Features() {
                   <span className="italic">in milliseconds.</span>
                 </h3>
                 <p className="mt-5 max-w-lg text-[14px] leading-[1.7] text-ink-dim">
-                  Create diverging compute paths from any state. Each branch is
-                  isolated, deterministic, and cheap enough to create millions
-                  of — then collapse them into the future you actually want.
+                  Create diverging compute paths from any state. Each branch is isolated,
+                  deterministic, and cheap enough to create millions of — then collapse them into
+                  the future you actually want.
                 </p>
               </div>
 
@@ -63,8 +63,8 @@ export function Features() {
               Zero <span className="italic">wasted</span> compute.
             </h3>
             <p className="mt-4 text-[13px] leading-[1.7] text-ink-dim">
-              The scheduler measures the informational entropy of every task and
-              routes high-entropy work to the deepest layer of the stack.
+              The scheduler measures the informational entropy of every task and routes high-entropy
+              work to the deepest layer of the stack.
             </p>
             <WaveViz />
           </div>
@@ -78,8 +78,8 @@ export function Features() {
               See what <span className="italic">comes next.</span>
             </h3>
             <p className="mt-4 text-[13px] leading-[1.7] text-ink-dim">
-              A built-in causal graph tracks every decision, counterfactual, and
-              dependency — so agents can answer "what if?" at any depth.
+              A built-in causal graph tracks every decision, counterfactual, and dependency — so
+              agents can answer "what if?" at any depth.
             </p>
             <GraphViz />
           </div>
@@ -93,8 +93,8 @@ export function Features() {
               State that <span className="italic">never lies.</span>
             </h3>
             <p className="mt-4 text-[13px] leading-[1.7] text-ink-dim">
-              Versioned simulations and saved paths stay in workspace memory so
-              you can reopen, re-run, and compare decisions over time.
+              Versioned simulations and saved paths stay in workspace memory so you can reopen,
+              re-run, and compare decisions over time.
             </p>
             <TimelineViz />
           </div>
@@ -112,8 +112,8 @@ export function Features() {
                   <span className="italic">evaluated in full.</span>
                 </h3>
                 <p className="mt-5 max-w-lg text-[14px] leading-[1.7] text-ink-dim">
-                  Compare ranked futures side by side — confidence, risk, and
-                  trade-offs — then collapse into a Decision Report you can save.
+                  Compare ranked futures side by side — confidence, risk, and trade-offs — then
+                  collapse into a Decision Report you can save.
                 </p>
               </div>
               <ParallelViz />
@@ -130,9 +130,8 @@ export function Features() {
                 Future-proof, <span className="italic">literally.</span>
               </h3>
               <p className="mt-4 text-[13px] leading-[1.7] text-ink-dim">
-                Lattice-based key agreement. Hash-based signatures. Every
-                temporal branch is sealed with algorithms that will survive the
-                computers we haven't built yet.
+                Lattice-based key agreement. Hash-based signatures. Every temporal branch is sealed
+                with algorithms that will survive the computers we haven't built yet.
               </p>
             </div>
             <div className="mt-10 flex items-center gap-3 border-t border-line pt-5">
@@ -196,10 +195,25 @@ function ForkViz() {
       ))}
 
       {/* Labels */}
-      <text x="40" y="118" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle" style={{ letterSpacing: 2 }}>
+      <text
+        x="40"
+        y="118"
+        fill="#4a5168"
+        fontSize="9"
+        fontFamily="JetBrains Mono"
+        textAnchor="middle"
+        style={{ letterSpacing: 2 }}
+      >
         ORIGIN
       </text>
-      <text x="400" y="175" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" style={{ letterSpacing: 2 }}>
+      <text
+        x="400"
+        y="175"
+        fill="#4a5168"
+        fontSize="9"
+        fontFamily="JetBrains Mono"
+        style={{ letterSpacing: 2 }}
+      >
         BRANCH · 0x7F2A
       </text>
     </svg>
@@ -224,7 +238,9 @@ function WaveViz() {
       {/* subtle bars */}
       {Array.from({ length: 42 }).map((_, i) => {
         const h = 2 + Math.abs(Math.sin(i * 0.6)) * 14;
-        return <rect key={i} x={i * 10} y={72 - h} width="3" height={h} fill="#c6f0ff" opacity="0.08" />;
+        return (
+          <rect key={i} x={i * 10} y={72 - h} width="3" height={h} fill="#c6f0ff" opacity="0.08" />
+        );
       })}
     </svg>
   );
@@ -241,7 +257,14 @@ function GraphViz() {
     { x: 370, y: 60 },
   ];
   const edges: [number, number][] = [
-    [0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [3, 5], [4, 6], [5, 6],
+    [0, 1],
+    [0, 2],
+    [1, 3],
+    [2, 3],
+    [3, 4],
+    [3, 5],
+    [4, 6],
+    [5, 6],
   ];
   return (
     <svg viewBox="0 0 400 120" className="mt-10 h-24 w-full">
@@ -276,10 +299,24 @@ function TimelineViz() {
         <g key={i}>
           <circle cx={x} cy={40} r="3" fill="#ffd7a3" opacity={0.5 + i * 0.1} />
           <circle cx={x} cy={40} r="7" fill="#ffd7a3" opacity="0.06" />
-          <text x={x} y={65} fill="#4a5168" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">
+          <text
+            x={x}
+            y={65}
+            fill="#4a5168"
+            fontSize="8"
+            fontFamily="JetBrains Mono"
+            textAnchor="middle"
+          >
             t{i}
           </text>
-          <text x={x} y={28} fill="#8a93a6" fontSize="7" fontFamily="JetBrains Mono" textAnchor="middle">
+          <text
+            x={x}
+            y={28}
+            fill="#8a93a6"
+            fontSize="7"
+            fontFamily="JetBrains Mono"
+            textAnchor="middle"
+          >
             SHA-256
           </text>
         </g>
@@ -295,7 +332,15 @@ function ParallelViz() {
     <svg viewBox="0 0 560 100" className="h-20 w-full">
       {Array.from({ length: rows }).map((_, r) => (
         <g key={r}>
-          <line x1="10" y1={15 + r * 18} x2="550" y2={15 + r * 18} stroke="#b79bff" strokeWidth="0.3" opacity="0.2" />
+          <line
+            x1="10"
+            y1={15 + r * 18}
+            x2="550"
+            y2={15 + r * 18}
+            stroke="#b79bff"
+            strokeWidth="0.3"
+            opacity="0.2"
+          />
           {Array.from({ length: cols }).map((_, c) => {
             const active = (r + c) % 4 === 0 || (r * c) % 7 === 0;
             return (
@@ -324,7 +369,13 @@ function ShieldIcon() {
         strokeWidth="1.2"
         strokeLinejoin="round"
       />
-      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M9 12l2 2 4-4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

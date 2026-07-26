@@ -27,7 +27,8 @@ export function LanguageSection() {
       const line = e?.line;
       const col = e?.col;
       const msg = e?.message ?? String(e);
-      const location = line !== undefined ? `line ${line}${col !== undefined ? `, col ${col}` : ""}: ` : "";
+      const location =
+        line !== undefined ? `line ${line}${col !== undefined ? `, col ${col}` : ""}: ` : "";
       return { ok: false, error: `${location}${msg}` } as const;
     }
   }, [source]);
@@ -88,7 +89,10 @@ export function LanguageSection() {
                 What is Chronos Language?
               </div>
               <p className="mt-2 max-w-3xl text-[14px] leading-[1.65] text-ink-dim">
-                A domain-specific language for temporal reasoning. Instead of hand-coding engine input, agents write Chronos: declare their world, define actions with risk and reward, express scoring logic in a few lines, and let the runtime do the rest. Same engine. Every domain.
+                A domain-specific language for temporal reasoning. Instead of hand-coding engine
+                input, agents write Chronos: declare their world, define actions with risk and
+                reward, express scoring logic in a few lines, and let the runtime do the rest. Same
+                engine. Every domain.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -100,30 +104,30 @@ export function LanguageSection() {
           </div>
         </div>
 
-          {/* REPL */}
-          <Repl
-            source={source}
-            onSourceChange={setSource}
-            program={program}
-            onLoadPreset={loadPreset}
-            compileResult={compileResult}
-            engine={engine}
-            strategy={strategy}
-            onStrategyChange={setStrategy}
-            onFork={runFork}
-            onEvaluate={runEvaluate}
-            onCollapse={runCollapse}
-            onReset={runReset}
-            onRunAll={runAll}
-            scoreFnName={scoreFnName}
-          />
+        {/* REPL */}
+        <Repl
+          source={source}
+          onSourceChange={setSource}
+          program={program}
+          onLoadPreset={loadPreset}
+          compileResult={compileResult}
+          engine={engine}
+          strategy={strategy}
+          onStrategyChange={setStrategy}
+          onFork={runFork}
+          onEvaluate={runEvaluate}
+          onCollapse={runCollapse}
+          onReset={runReset}
+          onRunAll={runAll}
+          scoreFnName={scoreFnName}
+        />
 
-          {/* Syntax reference */}
-          <div className="mt-12">
-            <SyntaxReference />
-          </div>
+        {/* Syntax reference */}
+        <div className="mt-12">
+          <SyntaxReference />
         </div>
-      </section>
+      </div>
+    </section>
   );
 }
 
@@ -134,9 +138,7 @@ type ReplProps = {
   onSourceChange: (s: string) => void;
   program: string;
   onLoadPreset: (key: keyof typeof presetPrograms) => void;
-  compileResult:
-    | { ok: true; compiled: ReturnType<typeof compile> }
-    | { ok: false; error: string };
+  compileResult: { ok: true; compiled: ReturnType<typeof compile> } | { ok: false; error: string };
   engine: Engine | null;
   strategy: CollapseStrategy;
   onStrategyChange: (s: CollapseStrategy) => void;
@@ -286,6 +288,7 @@ function Repl({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button
+              type="button"
               onClick={onFork}
               disabled={!compileResult.ok || !engine || engine.phase !== "idle"}
               className="rounded-md border border-chronos/40 bg-chronos/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-chronos transition hover:bg-chronos/20 disabled:cursor-not-allowed disabled:opacity-40"
@@ -293,6 +296,7 @@ function Repl({
               01 · fork
             </button>
             <button
+              type="button"
               onClick={onEvaluate}
               disabled={!engine || engine.phase !== "forked"}
               className="rounded-md border border-accent-2/40 bg-accent-2/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-accent-2 transition hover:bg-accent-2/20 disabled:cursor-not-allowed disabled:opacity-40"
@@ -300,6 +304,7 @@ function Repl({
               02 · evaluate
             </button>
             <button
+              type="button"
               onClick={onCollapse}
               disabled={!engine || engine.phase !== "evaluated"}
               className="rounded-md border border-accent-warm/40 bg-accent-warm/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-accent-warm transition hover:bg-accent-warm/20 disabled:cursor-not-allowed disabled:opacity-40"
@@ -307,6 +312,7 @@ function Repl({
               03 · collapse
             </button>
             <button
+              type="button"
               onClick={onRunAll}
               disabled={!compileResult.ok || !engine || engine.phase !== "idle"}
               className="ml-auto rounded-md border border-line bg-bg px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-dim transition hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
@@ -314,6 +320,7 @@ function Repl({
               ▶ run all
             </button>
             <button
+              type="button"
               onClick={onReset}
               disabled={!engine}
               className="rounded-md border border-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-dim transition hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
@@ -324,10 +331,7 @@ function Repl({
         </div>
 
         {/* Compiled state */}
-        <OutputPanel
-          title="World State"
-          subtitle={engine ? `t = ${engine.world.timestamp}` : "—"}
-        >
+        <OutputPanel title="World State" subtitle={engine ? `t = ${engine.world.timestamp}` : "—"}>
           {compileResult.ok ? (
             <JsonView value={stateToView(compileResult.compiled.initialState)} />
           ) : (
@@ -338,10 +342,7 @@ function Repl({
         </OutputPanel>
 
         {/* Compiled actions */}
-        <OutputPanel
-          title="Actions"
-          subtitle={engine ? `${engine.actions.length}` : "—"}
-        >
+        <OutputPanel title="Actions" subtitle={engine ? `${engine.actions.length}` : "—"}>
           {engine ? (
             <div className="space-y-1.5">
               {engine.actions.map((a) => (
@@ -373,21 +374,21 @@ function Repl({
         </OutputPanel>
 
         {/* Branches */}
-        <OutputPanel
-          title="Branches"
-          subtitle={engine ? `${engine.branches.length}` : "—"}
-        >
+        <OutputPanel title="Branches" subtitle={engine ? `${engine.branches.length}` : "—"}>
           {engine && engine.branches.length > 0 ? (
             <div className="space-y-1.5">
               {engine.branches.map((b) => (
-                <div key={b.id} className="flex items-baseline justify-between font-mono text-[11px]">
+                <div
+                  key={b.id}
+                  className="flex items-baseline justify-between font-mono text-[11px]"
+                >
                   <span
                     className={
                       b.status === "winner"
                         ? "text-accent-warm"
                         : b.status === "pruned"
-                        ? "text-ink-faint"
-                        : "text-ink"
+                          ? "text-ink-faint"
+                          : "text-ink"
                     }
                   >
                     {b.status === "winner" && "✓ "}
@@ -428,9 +429,7 @@ function OutputPanel({
         <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
           {title}
         </div>
-        {subtitle && (
-          <div className="font-mono text-[10px] text-ink-faint">{subtitle}</div>
-        )}
+        {subtitle && <div className="font-mono text-[10px] text-ink-faint">{subtitle}</div>}
       </div>
       <div className="max-h-[180px] overflow-y-auto">{children}</div>
     </div>
@@ -552,9 +551,21 @@ function tokenizeForHighlight(source: string): HLToken[] {
         i++;
       }
       const keywords = new Set([
-        "state", "action", "score", "run", "fork", "evaluate",
-        "collapse", "with", "if", "return", "clamp", "risk", "reward",
-        "true", "false",
+        "state",
+        "action",
+        "score",
+        "run",
+        "fork",
+        "evaluate",
+        "collapse",
+        "with",
+        "if",
+        "return",
+        "clamp",
+        "risk",
+        "reward",
+        "true",
+        "false",
       ]);
       tokens.push({
         type: keywords.has(s) ? "keyword" : "ident",
@@ -650,17 +661,12 @@ function SyntaxReference() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {examples.map((ex) => (
-          <div
-            key={ex.title}
-            className="rounded-xl border border-line bg-bg-soft p-5"
-          >
+          <div key={ex.title} className="rounded-xl border border-line bg-bg-soft p-5">
             <div className="flex items-baseline gap-3">
               <code className="font-mono text-sm text-chronos">{ex.title}</code>
               <div className="h-px flex-1 bg-line" />
             </div>
-            <p className="mt-2 text-[12px] leading-[1.6] text-ink-dim">
-              {ex.desc}
-            </p>
+            <p className="mt-2 text-[12px] leading-[1.6] text-ink-dim">{ex.desc}</p>
             <pre className="mt-3 overflow-x-auto rounded-md bg-bg p-3 font-mono text-[11px] leading-[1.6]">
               <code>
                 <Highlight source={ex.code} />

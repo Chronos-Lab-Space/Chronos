@@ -16,10 +16,7 @@ export function TimelinePage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const history = useMemo(
-    () => (home ? deriveDecisionHistory(home) : []),
-    [home]
-  );
+  const history = useMemo(() => (home ? deriveDecisionHistory(home) : []), [home]);
 
   const latest = home?.recentSimulations[0] ?? null;
   const futures = useMemo((): FutureRecord[] => {
@@ -182,24 +179,16 @@ export function TimelinePage() {
   );
 }
 
-function HistoryRow({
-  label,
-  at,
-  kind,
-}: {
-  label: string;
-  at: string;
-  kind: string;
-}) {
+function HistoryRow({ label, at, kind }: { label: string; at: string; kind: string }) {
   return (
     <div className="flex flex-wrap items-start justify-between gap-2">
       <div>
-        <div className="font-mono text-[10px] uppercase text-ink-faint">{kind.replace(/_/g, " ")}</div>
+        <div className="font-mono text-[10px] uppercase text-ink-faint">
+          {kind.replace(/_/g, " ")}
+        </div>
         <div className="mt-1 text-[15px] text-ink">{label}</div>
       </div>
-      <div className="font-mono text-[10px] uppercase text-ink-faint">
-        {formatRelativeTime(at)}
-      </div>
+      <div className="font-mono text-[10px] uppercase text-ink-faint">{formatRelativeTime(at)}</div>
     </div>
   );
 }

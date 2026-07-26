@@ -1,9 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import {
-  confidencePercent,
-  formatCreatedAt,
-} from "../../../domain/workspace/seed";
+import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
 import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
 import { groupSimulationsByHistory } from "../../../domain/workspace/simulationHistory";
@@ -55,7 +52,8 @@ export function SimulationsPage() {
           </div>
           <h1 className="mt-2 font-serif text-3xl text-ink">Simulations</h1>
           <p className="mt-2 max-w-xl text-sm text-ink-dim">
-            Generate multiple futures, compare trade-offs, get a decision report — then save the path.
+            Generate multiple futures, compare trade-offs, get a decision report — then save the
+            path.
           </p>
         </div>
         {!isNew && (
@@ -95,7 +93,10 @@ export function SimulationsPage() {
             {knowledgePreview.length === 0 ? (
               <div className="rounded-lg border border-chronos/25 bg-chronos/5 p-3 text-sm text-ink-dim">
                 No knowledge yet.{" "}
-                <Link to="/workspace/knowledge" className="text-chronos underline-offset-2 hover:underline">
+                <Link
+                  to="/workspace/knowledge"
+                  className="text-chronos underline-offset-2 hover:underline"
+                >
                   Add one source
                 </Link>{" "}
                 for better ranking — you can still run without it.
@@ -230,18 +231,13 @@ function SimulationHistoryList({
 }
 
 export function SimulationDetailPage() {
-  const {
-    home,
-    rerunSimulation,
-    chooseBestPath,
-    recordOutcomeFollowed,
-    recordOutcomeResult,
-  } = useWorkspace();
+  const { home, rerunSimulation, chooseBestPath, recordOutcomeFollowed, recordOutcomeResult } =
+    useWorkspace();
   const { simulationId } = useParams();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const sim = home?.recentSimulations.find((s) => s.id === simulationId);
-  const futures = simulationId ? home?.futuresBySimulation[simulationId] ?? [] : [];
+  const futures = simulationId ? (home?.futuresBySimulation[simulationId] ?? []) : [];
   const [rerunning, setRerunning] = useState(false);
   const [selectedFutureId, setSelectedFutureId] = useState<string | null>(null);
 
@@ -446,7 +442,9 @@ function StatusPill({ status }: { status: string }) {
           ? "bg-red-500/15 text-red-400"
           : "bg-bg text-ink-dim";
   return (
-    <span className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] ${tone}`}>
+    <span
+      className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.14em] ${tone}`}
+    >
       {status}
     </span>
   );

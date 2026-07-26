@@ -4,12 +4,13 @@ export function Metrics() {
   return (
     <section className="relative py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <ScrollReveal stagger variant="fade" className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-2 lg:grid-cols-4">
+        <ScrollReveal
+          stagger
+          variant="fade"
+          className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line md:grid-cols-2 lg:grid-cols-4"
+        >
           {metrics.map((m) => (
-            <div
-              key={m.label}
-              className="group relative bg-bg p-8 transition hover:bg-bg-soft"
-            >
+            <div key={m.label} className="group relative bg-bg p-8 transition hover:bg-bg-soft">
               <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
                 {m.label}
               </div>
@@ -17,9 +18,7 @@ export function Metrics() {
                 <div className="font-serif text-6xl leading-none tracking-tight text-ink md:text-7xl">
                   {m.value}
                 </div>
-                {m.unit && (
-                  <div className="font-mono text-sm text-ink-dim">{m.unit}</div>
-                )}
+                {m.unit && <div className="font-mono text-sm text-ink-dim">{m.unit}</div>}
               </div>
               <div className="mt-4 flex items-center gap-2 text-[12px] text-ink-dim">
                 <span className={m.delta.startsWith("+") ? "text-emerald-400" : "text-chronos"}>

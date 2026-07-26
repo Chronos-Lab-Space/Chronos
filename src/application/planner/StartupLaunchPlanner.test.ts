@@ -21,8 +21,10 @@ describe("StartupLaunchPlanner", () => {
     expect(new Scheduler().next(graph, new Set()).map((task) => task.id)).toEqual([
       "research-competitors",
     ]);
-    expect(new Scheduler().next(graph, new Set(["research-competitors", "estimate-market"])).map((task) => task.id)).toEqual([
-      "build-roadmap",
-    ]);
+    expect(
+      new Scheduler()
+        .next(graph, new Set(["research-competitors", "estimate-market"]))
+        .map((task) => task.id)
+    ).toEqual(["build-roadmap"]);
   });
 });

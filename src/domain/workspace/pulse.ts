@@ -242,10 +242,7 @@ function buildRecommendation(
 }
 
 /** Human relative time for pulse “Last Updated”. */
-export function formatRelativeTime(
-  iso: string | null,
-  nowMs: number = Date.now()
-): string {
+export function formatRelativeTime(iso: string | null, nowMs: number = Date.now()): string {
   if (!iso) return "—";
   const then = Date.parse(iso);
   if (Number.isNaN(then)) return "—";

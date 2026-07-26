@@ -4,13 +4,7 @@ import type { WorkspaceHome } from "./types";
  * MVP phase gates — each step must be usable before the next.
  * Keeps Chronos focused on simulated futures, not a full Workspace OS.
  */
-export type MvpGateId =
-  | "workspace"
-  | "persist"
-  | "context"
-  | "simulate"
-  | "timeline"
-  | "memory";
+export type MvpGateId = "workspace" | "persist" | "context" | "simulate" | "timeline" | "memory";
 
 export type MvpGate = {
   id: MvpGateId;
@@ -24,13 +18,10 @@ export type MvpGate = {
 
 export function evaluateMvpGates(home: WorkspaceHome | null): MvpGate[] {
   const hasWorkspace = Boolean(home?.workspace && home.goal);
-  const hasContext =
-    Boolean(home && (home.knowledge.length > 0 || home.notes.length > 0));
+  const hasContext = Boolean(home && (home.knowledge.length > 0 || home.notes.length > 0));
   const hasSimulation = Boolean(home && home.recentSimulations.length > 0);
   const latestId = home?.recentSimulations[0]?.id;
-  const hasFutures = Boolean(
-    latestId && (home?.futuresBySimulation[latestId]?.length ?? 0) > 0
-  );
+  const hasFutures = Boolean(latestId && (home?.futuresBySimulation[latestId]?.length ?? 0) > 0);
   const hasHistory = Boolean(home && home.recentSimulations.length >= 2);
 
   return [

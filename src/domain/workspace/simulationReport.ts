@@ -84,9 +84,7 @@ export function resolveKnowledgeUsed(
   return snapshotKnowledgeUsed(home.knowledge, home.notes);
 }
 
-export function deriveTradeoffs(
-  futures: readonly FutureRecord[]
-): TradeoffRow[] {
+export function deriveTradeoffs(futures: readonly FutureRecord[]): TradeoffRow[] {
   if (futures.length === 0) return [];
   const best = futures[0];
   return futures.map((f) => {
@@ -128,8 +126,7 @@ export function buildSimulationDetail(
     ? (simulation.result.risks as string[]).filter(Boolean)
     : [];
   const recommendation =
-    (typeof simulation.result.recommendation === "string" &&
-      simulation.result.recommendation) ||
+    (typeof simulation.result.recommendation === "string" && simulation.result.recommendation) ||
     (typeof simulation.result.thesis === "string" && simulation.result.thesis) ||
     "—";
   const constraints = Array.isArray(simulation.result.constraints)
@@ -155,10 +152,7 @@ export function buildSimulationDetail(
 }
 
 export function exportSimulationMarkdown(detail: SimulationDetail): string {
-  const conf =
-    detail.confidence != null
-      ? `${Math.round(detail.confidence * 100)}%`
-      : "—";
+  const conf = detail.confidence != null ? `${Math.round(detail.confidence * 100)}%` : "—";
   const lines = [
     `# Simulation: ${detail.simulation.title}`,
     ``,
@@ -188,9 +182,7 @@ export function exportSimulationMarkdown(detail: SimulationDetail): string {
       : ["- (none recorded)"]),
     ``,
     `## Constraints`,
-    ...(detail.constraints.length
-      ? detail.constraints.map((c) => `- ${c}`)
-      : ["- —"]),
+    ...(detail.constraints.length ? detail.constraints.map((c) => `- ${c}`) : ["- —"]),
   ].filter((line): line is string => line != null);
   return lines.join("\n");
 }
@@ -214,11 +206,7 @@ export function exportSimulationJson(detail: SimulationDetail): string {
 }
 
 /** Browser download helper (no-op in non-DOM environments). */
-export function downloadTextFile(
-  filename: string,
-  content: string,
-  mime = "text/plain"
-): void {
+export function downloadTextFile(filename: string, content: string, mime = "text/plain"): void {
   if (typeof document === "undefined") return;
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);

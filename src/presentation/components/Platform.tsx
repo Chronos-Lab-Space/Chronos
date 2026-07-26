@@ -53,18 +53,13 @@ export function Platform() {
                   },
                 ].map((p, i) => (
                   <div key={p.name} className="flex items-start gap-4">
-                    <div
-                      className="mt-1 h-2 w-2 rounded-full"
-                      style={{ background: p.color }}
-                    />
+                    <div className="mt-1 h-2 w-2 rounded-full" style={{ background: p.color }} />
                     <div className="flex-1">
                       <div className="flex items-baseline gap-3">
                         <code className="font-mono text-sm" style={{ color: p.color }}>
                           {p.name}
                         </code>
-                        <span className="font-mono text-[10px] text-ink-faint">
-                          0{i + 1}
-                        </span>
+                        <span className="font-mono text-[10px] text-ink-faint">0{i + 1}</span>
                       </div>
                       <p className="mt-1 text-[13px] text-ink-dim">{p.desc}</p>
                     </div>
@@ -126,19 +121,58 @@ function FlowDiagram() {
 
       {/* State input */}
       <g>
-        <rect x="20" y="170" width="80" height="60" rx="4" stroke="#c6f0ff" strokeWidth="1" fill="none" opacity="0.6" />
-        <text x="60" y="195" fill="#c6f0ff" fontSize="11" fontFamily="JetBrains Mono" textAnchor="middle">
+        <rect
+          x="20"
+          y="170"
+          width="80"
+          height="60"
+          rx="4"
+          stroke="#c6f0ff"
+          strokeWidth="1"
+          fill="none"
+          opacity="0.6"
+        />
+        <text
+          x="60"
+          y="195"
+          fill="#c6f0ff"
+          fontSize="11"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           STATE
         </text>
-        <text x="60" y="210" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle">
+        <text
+          x="60"
+          y="210"
+          fill="#4a5168"
+          fontSize="9"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           snapshot
         </text>
       </g>
 
       {/* Fork */}
       <g>
-        <circle cx="180" cy="200" r="30" stroke="#c6f0ff" strokeWidth="1" fill="none" opacity="0.6" />
-        <text x="180" y="205" fill="#c6f0ff" fontSize="12" fontFamily="JetBrains Mono" textAnchor="middle">
+        <circle
+          cx="180"
+          cy="200"
+          r="30"
+          stroke="#c6f0ff"
+          strokeWidth="1"
+          fill="none"
+          opacity="0.6"
+        />
+        <text
+          x="180"
+          y="205"
+          fill="#c6f0ff"
+          fontSize="12"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           fork
         </text>
         <path d="M100 200 L150 200" stroke="url(#flow-cyan)" strokeWidth="1" fill="none" />
@@ -156,8 +190,25 @@ function FlowDiagram() {
               fill="none"
               opacity={0.7 - i * 0.15}
             />
-            <rect x="280" y={y - 15} width="60" height="30" rx="3" stroke="#c6f0ff" strokeWidth="0.6" fill="none" opacity={0.5 - i * 0.1} />
-            <text x="310" y={y + 4} fill="#4a5168" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">
+            <rect
+              x="280"
+              y={y - 15}
+              width="60"
+              height="30"
+              rx="3"
+              stroke="#c6f0ff"
+              strokeWidth="0.6"
+              fill="none"
+              opacity={0.5 - i * 0.1}
+            />
+            <text
+              x="310"
+              y={y + 4}
+              fill="#4a5168"
+              fontSize="8"
+              fontFamily="JetBrains Mono"
+              textAnchor="middle"
+            >
               branch_{i}
             </text>
           </g>
@@ -166,8 +217,23 @@ function FlowDiagram() {
 
       {/* Evaluate */}
       <g>
-        <circle cx="410" cy="200" r="30" stroke="#b79bff" strokeWidth="1" fill="none" opacity="0.6" />
-        <text x="410" y="205" fill="#b79bff" fontSize="10" fontFamily="JetBrains Mono" textAnchor="middle">
+        <circle
+          cx="410"
+          cy="200"
+          r="30"
+          stroke="#b79bff"
+          strokeWidth="1"
+          fill="none"
+          opacity="0.6"
+        />
+        <text
+          x="410"
+          y="205"
+          fill="#b79bff"
+          fontSize="10"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           evaluate
         </text>
         {[140, 200, 260].map((y, i) => (
@@ -184,8 +250,23 @@ function FlowDiagram() {
 
       {/* Collapse */}
       <g>
-        <circle cx="510" cy="200" r="30" stroke="#ffd7a3" strokeWidth="1" fill="none" opacity="0.6" />
-        <text x="510" y="205" fill="#ffd7a3" fontSize="10" fontFamily="JetBrains Mono" textAnchor="middle">
+        <circle
+          cx="510"
+          cy="200"
+          r="30"
+          stroke="#ffd7a3"
+          strokeWidth="1"
+          fill="none"
+          opacity="0.6"
+        />
+        <text
+          x="510"
+          y="205"
+          fill="#ffd7a3"
+          fontSize="10"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           collapse
         </text>
         <path d="M440 200 L480 200" stroke="url(#flow-warm)" strokeWidth="1" fill="none" />
@@ -194,11 +275,35 @@ function FlowDiagram() {
 
       {/* Commit output */}
       <g>
-        <rect x="560" y="170" width="80" height="60" rx="4" stroke="#ffd7a3" strokeWidth="1" fill="none" opacity="0.6" />
-        <text x="600" y="195" fill="#ffd7a3" fontSize="10" fontFamily="JetBrains Mono" textAnchor="middle">
+        <rect
+          x="560"
+          y="170"
+          width="80"
+          height="60"
+          rx="4"
+          stroke="#ffd7a3"
+          strokeWidth="1"
+          fill="none"
+          opacity="0.6"
+        />
+        <text
+          x="600"
+          y="195"
+          fill="#ffd7a3"
+          fontSize="10"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           COMMIT
         </text>
-        <text x="600" y="210" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle">
+        <text
+          x="600"
+          y="210"
+          fill="#4a5168"
+          fontSize="9"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           best path
         </text>
         <path d="M540 200 L560 200" stroke="url(#flow-warm)" strokeWidth="1" fill="none" />
@@ -206,8 +311,26 @@ function FlowDiagram() {
 
       {/* Archive */}
       <g>
-        <rect x="280" y="320" width="260" height="50" rx="4" stroke="#8a93a6" strokeWidth="0.6" fill="none" opacity="0.3" strokeDasharray="2 3" />
-        <text x="410" y="345" fill="#4a5168" fontSize="10" fontFamily="JetBrains Mono" textAnchor="middle">
+        <rect
+          x="280"
+          y="320"
+          width="260"
+          height="50"
+          rx="4"
+          stroke="#8a93a6"
+          strokeWidth="0.6"
+          fill="none"
+          opacity="0.3"
+          strokeDasharray="2 3"
+        />
+        <text
+          x="410"
+          y="345"
+          fill="#4a5168"
+          fontSize="10"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           ARCHIVE · all branches replayable
         </text>
         {[140, 200, 260].map((y, i) => (
@@ -223,16 +346,44 @@ function FlowDiagram() {
       </g>
 
       {/* Labels */}
-      <text x="60" y="250" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle">
+      <text
+        x="60"
+        y="250"
+        fill="#4a5168"
+        fontSize="9"
+        fontFamily="JetBrains Mono"
+        textAnchor="middle"
+      >
         t = 0.0ms
       </text>
-      <text x="180" y="250" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle">
+      <text
+        x="180"
+        y="250"
+        fill="#4a5168"
+        fontSize="9"
+        fontFamily="JetBrains Mono"
+        textAnchor="middle"
+      >
         t = 0.3ms
       </text>
-      <text x="410" y="250" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle">
+      <text
+        x="410"
+        y="250"
+        fill="#4a5168"
+        fontSize="9"
+        fontFamily="JetBrains Mono"
+        textAnchor="middle"
+      >
         t = 1.4ms
       </text>
-      <text x="510" y="250" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle">
+      <text
+        x="510"
+        y="250"
+        fill="#4a5168"
+        fontSize="9"
+        fontFamily="JetBrains Mono"
+        textAnchor="middle"
+      >
         t = 2.1ms
       </text>
     </svg>

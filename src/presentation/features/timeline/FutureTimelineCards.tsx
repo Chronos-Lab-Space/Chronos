@@ -66,7 +66,7 @@ export function FutureTimelineCards({
   const selectedIndex = selected ? futures.findIndex((f) => f.id === selected.id) : -1;
   const isBest = selectedIndex === 0;
   const isChosen = Boolean(selected && chosenFutureId === selected.id);
-  const selectedHook = selected ? hooks.get(selected.id) ?? null : null;
+  const selectedHook = selected ? (hooks.get(selected.id) ?? null) : null;
 
   if (futures.length === 0) {
     return (
@@ -119,7 +119,9 @@ export function FutureTimelineCards({
               type="button"
               onClick={() => setSelected(future.id)}
               className={`rounded-2xl border px-4 py-3 text-left transition ${
-                active ? "border-chronos/50 bg-chronos/10" : "border-line bg-bg hover:border-chronos/30"
+                active
+                  ? "border-chronos/50 bg-chronos/10"
+                  : "border-line bg-bg hover:border-chronos/30"
               }`}
             >
               <div className="flex items-center justify-between gap-2">
@@ -154,7 +156,9 @@ export function FutureTimelineCards({
               {isChosen ? " · your choice" : ""}
             </div>
             {selectedHook && (
-              <span className={`font-mono text-[10px] uppercase tracking-[0.12em] ${HOOK_TONE[selectedHook]}`}>
+              <span
+                className={`font-mono text-[10px] uppercase tracking-[0.12em] ${HOOK_TONE[selectedHook]}`}
+              >
                 {selectedHook}
               </span>
             )}
@@ -206,8 +210,8 @@ export function FutureTimelineCards({
           )}
           {isChosen && (
             <p className="mt-3 text-sm text-ink-dim">
-              This decision is now in persistent memory — reopen, compare versions, and log
-              outcomes anytime from{" "}
+              This decision is now in persistent memory — reopen, compare versions, and log outcomes
+              anytime from{" "}
               <Link to="/workspace/memory" className="text-chronos hover:underline">
                 Memory
               </Link>

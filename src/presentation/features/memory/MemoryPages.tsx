@@ -1,14 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import {
-  compareSimulations,
-  groupByLineage,
-  versionLabel,
-} from "../../../domain/workspace/memory";
+import { compareSimulations, groupByLineage, versionLabel } from "../../../domain/workspace/memory";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
-import {
-  listDecisionHistory,
-} from "../../../domain/workspace/workspaceMemory";
+import { listDecisionHistory } from "../../../domain/workspace/workspaceMemory";
 import { learningMemoryStore } from "../../../infrastructure/memory/LearningMemoryStore";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 
@@ -18,25 +12,14 @@ import { useWorkspace } from "../workspace/WorkspaceContext";
  */
 export function MemoryPage() {
   const { home } = useWorkspace();
-  const lineages = useMemo(
-    () => (home ? groupByLineage(home.recentSimulations) : []),
-    [home]
-  );
-  const decisions = useMemo(
-    () => (home ? listDecisionHistory(home) : []),
-    [home]
-  );
-  const learning = useMemo(
-    () => (home ? learningMemoryStore.list(home.workspace.id) : []),
-    [home]
-  );
+  const lineages = useMemo(() => (home ? groupByLineage(home.recentSimulations) : []), [home]);
+  const decisions = useMemo(() => (home ? listDecisionHistory(home) : []), [home]);
+  const learning = useMemo(() => (home ? learningMemoryStore.list(home.workspace.id) : []), [home]);
 
   if (!home) return null;
 
   const previousGoals = home.goalHistory ?? [];
-  const learningFromKnowledge = home.knowledge.filter(
-    (k) => k.metadata?.source === "learning"
-  );
+  const learningFromKnowledge = home.knowledge.filter((k) => k.metadata?.source === "learning");
 
   return (
     <div className="space-y-12">
@@ -46,13 +29,12 @@ export function MemoryPage() {
         </div>
         <h1 className="mt-2 font-serif text-3xl text-ink">History</h1>
         <p className="mt-2 max-w-xl text-sm text-ink-dim">
-          Chronos keeps durable memory across sessions: goals, simulations, decisions,
-          knowledge, outcomes, and learned preferences from ranked futures.
+          Chronos keeps durable memory across sessions: goals, simulations, decisions, knowledge,
+          outcomes, and learned preferences from ranked futures.
         </p>
         <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-          {home.workspace.name} · {home.recentSimulations.length} runs ·{" "}
-          {decisions.length} decisions · {learning.length} learned ·{" "}
-          {home.knowledge.length} knowledge
+          {home.workspace.name} · {home.recentSimulations.length} runs · {decisions.length}{" "}
+          decisions · {learning.length} learned · {home.knowledge.length} knowledge
         </div>
       </div>
 
@@ -63,8 +45,8 @@ export function MemoryPage() {
         </div>
         {learning.length === 0 && learningFromKnowledge.length === 0 ? (
           <p className="mt-4 text-sm text-ink-dim">
-            Run a simulation and rank futures — Chronos stores outcomes and preferences
-            for the next plan.
+            Run a simulation and rank futures — Chronos stores outcomes and preferences for the next
+            plan.
           </p>
         ) : (
           <ul className="mt-4 space-y-3">
@@ -121,7 +103,10 @@ export function MemoryPage() {
             </li>
           )}
           {previousGoals.map((g) => (
-            <li key={`${g.id}-${g.created_at}`} className="rounded-2xl border border-line px-4 py-3">
+            <li
+              key={`${g.id}-${g.created_at}`}
+              className="rounded-2xl border border-line px-4 py-3"
+            >
               <div className="font-mono text-[10px] uppercase text-ink-faint">Previous</div>
               <div className="mt-1 text-[15px] text-ink">{g.title}</div>
               <div className="mt-1 font-mono text-[11px] text-ink-faint">
@@ -180,9 +165,7 @@ export function MemoryPage() {
                         Outcome pending
                       </span>
                     )}
-                    {d.outcomeResult && (
-                      <span className="text-ink-dim">{d.outcomeResult}</span>
-                    )}
+                    {d.outcomeResult && <span className="text-ink-dim">{d.outcomeResult}</span>}
                   </div>
                 </Link>
               </li>
@@ -197,10 +180,7 @@ export function MemoryPage() {
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Stored knowledge
           </div>
-          <Link
-            to="/workspace/knowledge"
-            className="font-mono text-[10px] uppercase text-chronos"
-          >
+          <Link to="/workspace/knowledge" className="font-mono text-[10px] uppercase text-chronos">
             Library →
           </Link>
         </div>
@@ -374,16 +354,8 @@ export function ComparePage() {
 
       {comparison && (
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <CompareSide
-            label="Left"
-            sim={comparison.left}
-            best={comparison.bestFutureLeft}
-          />
-          <CompareSide
-            label="Right"
-            sim={comparison.right}
-            best={comparison.bestFutureRight}
-          />
+          <CompareSide label="Left" sim={comparison.left} best={comparison.bestFutureLeft} />
+          <CompareSide label="Right" sim={comparison.right} best={comparison.bestFutureRight} />
           <div className="sm:col-span-2 rounded-2xl border border-line px-4 py-4 text-sm text-ink-dim">
             Confidence delta:{" "}
             <span className="font-mono text-chronos">
@@ -395,8 +367,7 @@ export function ComparePage() {
             Best path changed:{" "}
             <span className="text-ink">{comparison.bestFutureChanged ? "Yes" : "No"}</span>
             {" · "}
-            Same lineage:{" "}
-            <span className="text-ink">{comparison.sameLineage ? "Yes" : "No"}</span>
+            Same lineage: <span className="text-ink">{comparison.sameLineage ? "Yes" : "No"}</span>
           </div>
         </div>
       )}

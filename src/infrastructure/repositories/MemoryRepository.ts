@@ -12,7 +12,7 @@ export class MemoryRepository<T extends RepositoryRecord> implements Repository<
   private readonly records = new Map<string, T>();
 
   constructor(seed: T[] = []) {
-    seed.forEach((record) => this.records.set(record.id, record));
+    for (const record of seed) this.records.set(record.id, record);
   }
 
   async get(id: string): Promise<T | null> {

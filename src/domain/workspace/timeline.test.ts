@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  deriveFutureHooks,
-  deriveNextSteps,
-  futureCardLabel,
-  futureHookFor,
-} from "./timeline";
+import { deriveFutureHooks, deriveNextSteps, futureCardLabel, futureHookFor } from "./timeline";
 import type { FutureRecord } from "./types";
 
 const future = (overrides: Partial<FutureRecord> = {}): FutureRecord => ({

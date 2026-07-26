@@ -59,10 +59,7 @@ export function deriveDecisionHistory(home: WorkspaceHome): DecisionHistoryEvent
     events.push({
       id: `knowledge-${first.id}`,
       kind: "knowledge_added",
-      label:
-        count === 1
-          ? "Knowledge added"
-          : `Knowledge added (${count} sources)`,
+      label: count === 1 ? "Knowledge added" : `Knowledge added (${count} sources)`,
       at: first.at,
       href: "/workspace/knowledge",
     });
@@ -161,8 +158,7 @@ function recommendationLabel(sim: SimulationRecord): string {
 
 function decisionAcceptedLabel(sim: SimulationRecord): string {
   const name =
-    (typeof sim.result.chosen_future_name === "string" && sim.result.chosen_future_name) ||
-    null;
+    (typeof sim.result.chosen_future_name === "string" && sim.result.chosen_future_name) || null;
   return name ? `Decision accepted · ${name}` : "Decision accepted";
 }
 

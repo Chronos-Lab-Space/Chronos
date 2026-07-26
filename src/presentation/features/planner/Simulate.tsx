@@ -57,7 +57,9 @@ export function Simulate() {
     const timers = graph.tasks.map((_, i) =>
       window.setTimeout(() => setActiveTaskIdx(i), 200 + i * Math.floor(2200 / Math.max(n, 1)))
     );
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    return () => {
+      for (const t of timers) window.clearTimeout(t);
+    };
   }, [stage, graph.tasks]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -75,9 +77,7 @@ export function Simulate() {
     setError("");
     setResult(null);
 
-    const simulationPromise = publicStartupSimulator.run(
-      createPublicStartupRequest(ideaText)
-    );
+    const simulationPromise = publicStartupSimulator.run(createPublicStartupRequest(ideaText));
 
     const duration = 2800;
     const start = Date.now();
@@ -86,7 +86,7 @@ export function Simulate() {
       const elapsed = Date.now() - start;
       const p = Math.min(elapsed / duration, 1);
       // Ease-out so collapse feels deliberate
-      const eased = 1 - Math.pow(1 - p, 1.6);
+      const eased = 1 - (1 - p) ** 1.6;
       setProgress(eased);
       // Animate toward real sample budget (honest MC draws, not marketing 1000)
       setBranchCounter(Math.floor(eased * 64));
@@ -101,9 +101,7 @@ export function Simulate() {
         else if (eased < 0.45) status = "planned";
         else if (eased > 0.65 && Math.random() < 0.55) status = "pruned";
         else if (eased > 0.85) status = "ranked";
-        setBranchLog((prev) =>
-          [...prev, `branch_${id} · score ${score} · ${status}`].slice(-10)
-        );
+        setBranchLog((prev) => [...prev, `branch_${id} · score ${score} · ${status}`].slice(-10));
       }
 
       if (p < 1) {
@@ -359,9 +357,7 @@ function SimulatingPanel({
             execution log
           </div>
           <div className="min-h-[140px] space-y-1 font-mono text-[11px]">
-            {log.length === 0 && (
-              <div className="text-ink-faint">Waiting for first branch…</div>
-            )}
+            {log.length === 0 && <div className="text-ink-faint">Waiting for first branch…</div>}
             {log.map((entry, i) => (
               <div key={`${entry}-${i}`} className="flex items-start gap-2 text-ink-dim">
                 <span
@@ -418,8 +414,8 @@ function SimulatingPanel({
           })}
         </div>
         <p className="mt-5 text-[12px] leading-[1.6] text-ink-faint">
-          Tasks resolve capabilities in dependency order while futures are forked
-          and scored in parallel.
+          Tasks resolve capabilities in dependency order while futures are forked and scored in
+          parallel.
         </p>
       </div>
     </div>
@@ -463,7 +459,6 @@ function ResultsPanel({
             ? ` over ${result.totalPaths.toLocaleString()} strategy archetype${result.totalPaths === 1 ? "" : "s"}`
             : ""}
           .
-
         </p>
       </div>
 
@@ -506,9 +501,7 @@ function ResultsPanel({
               {formatCurrency(result.bestPath.arr)}
             </div>
             <div className="mt-2 font-mono text-[11px] text-ink-dim">
-              <span className="text-accent-2">
-                {formatPercent(result.bestPath.probability)}
-              </span>
+              <span className="text-accent-2">{formatPercent(result.bestPath.probability)}</span>
               <span className="text-ink-faint"> · probability of success</span>
             </div>
           </div>
@@ -543,9 +536,7 @@ function ResultsPanel({
             <div
               key={path.id}
               className={`rounded-xl border p-4 transition ${
-                isBest
-                  ? "border-chronos/40 bg-chronos/10"
-                  : "border-line bg-bg/50"
+                isBest ? "border-chronos/40 bg-chronos/10" : "border-line bg-bg/50"
               }`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -637,9 +628,7 @@ function ResultsPanel({
           </ul>
           <div className="mt-4 border-t border-line pt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
             Burn ~{formatCurrency(result.bestPath.burn)}/mo · LTV/CAC{" "}
-            {result.bestPath.cac > 0
-              ? (result.bestPath.ltv / result.bestPath.cac).toFixed(1)
-              : "—"}
+            {result.bestPath.cac > 0 ? (result.bestPath.ltv / result.bestPath.cac).toFixed(1) : "—"}
             x
           </div>
         </div>
@@ -757,7 +746,9 @@ function AlternativeCard({ path }: { path: Path }) {
           <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
             Probability
           </div>
-          <div className="mt-0.5 font-serif text-lg text-ink">{formatPercent(path.probability)}</div>
+          <div className="mt-0.5 font-serif text-lg text-ink">
+            {formatPercent(path.probability)}
+          </div>
         </div>
       </div>
       <div className="mt-3 font-mono text-[10px] text-ink-faint">

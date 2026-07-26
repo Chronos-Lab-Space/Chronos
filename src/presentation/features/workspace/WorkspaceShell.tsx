@@ -9,7 +9,7 @@ import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
 
-/** Desktop sidebar — matches public/image.png */
+/** Desktop sidebar — matches docs/images/workspace-desktop-mock.png */
 const navItems: NavItem[] = [
   { to: "/workspace", label: "Current Decision", short: "Home", end: true, icon: "⌂" },
   { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
@@ -19,15 +19,13 @@ const navItems: NavItem[] = [
   { to: "/workspace/settings", label: "Settings", short: "Set", icon: "⚙" },
 ];
 
-/** Mobile tab bar — matches public/mobile.png: Home · Sims · + · Timeline · More */
+/** Mobile tab bar — matches docs/images/workspace-mobile-mock.png: Home · Sims · + · Timeline · More */
 const mobilePrimary = [
   { to: "/workspace", label: "Home", end: true, icon: "⌂" },
   { to: "/workspace/simulations", label: "Simulations", icon: "⬡" },
 ] as const;
 
-const mobileSecondary = [
-  { to: "/workspace/timeline", label: "Timeline", icon: "▤" },
-] as const;
+const mobileSecondary = [{ to: "/workspace/timeline", label: "Timeline", icon: "▤" }] as const;
 
 const moreMenuItems: NavItem[] = [
   { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
@@ -54,8 +52,7 @@ function WorkspaceShellInner() {
   const initials = (ownerId ?? "You").slice(0, 2).toUpperCase();
   const routeKey = location.pathname;
   const showContextRail =
-    ready &&
-    (location.pathname === "/workspace" || location.pathname === "/workspace/");
+    ready && (location.pathname === "/workspace" || location.pathname === "/workspace/");
   const handleSignOut = async () => {
     await authService.signOut();
     navigate("/login", { replace: true });
@@ -98,6 +95,7 @@ function WorkspaceShellInner() {
           </div>
 
           {ready && (
+            // biome-ignore lint/a11y/useSemanticElements: form role="search" is the established landmark pattern; a <search> wrapper adds an extra element for no gain
             <form
               onSubmit={handleSearch}
               className="mx-auto hidden min-w-0 flex-1 max-w-xl md:block"
@@ -253,10 +251,11 @@ function WorkspaceShellInner() {
         {showContextRail && home ? <WorkspaceContextRail home={home} /> : null}
       </div>
 
-      {/* Mobile tab bar — public/mobile.png */}
+      {/* Mobile tab bar — docs/images/workspace-mobile-mock.png */}
       {ready && (
         <>
           {moreOpen && (
+            // biome-ignore lint/a11y/noStaticElementInteractions: backdrop click-to-dismiss; the More toggle and drawer buttons stay keyboard-reachable
             <div
               className="fixed inset-0 z-40 bg-black/50 lg:hidden"
               role="presentation"
@@ -275,9 +274,7 @@ function WorkspaceShellInner() {
                 </div>
                 <div className="mb-3 rounded-xl border border-line bg-bg-soft/20 px-3 py-2.5">
                   <div className="font-chronos-wordmark text-lg text-ink">Chronos Lab</div>
-                  <div className="text-xs text-ink-dim">
-                    {home?.workspace.name ?? "Workspace"}
-                  </div>
+                  <div className="text-xs text-ink-dim">{home?.workspace.name ?? "Workspace"}</div>
                 </div>
                 {moreMenuItems.map((item) => (
                   <NavLink
@@ -327,9 +324,7 @@ function WorkspaceShellInner() {
                   to={item.to}
                   end={"end" in item ? item.end : false}
                   aria-label={item.label}
-                  className={({ isActive }) =>
-                    `workspace-mobile-tab ${isActive ? "active" : ""}`
-                  }
+                  className={({ isActive }) => `workspace-mobile-tab ${isActive ? "active" : ""}`}
                 >
                   <span className="workspace-mobile-tab-icon" aria-hidden>
                     {item.icon}
@@ -351,9 +346,7 @@ function WorkspaceShellInner() {
                   key={item.to}
                   to={item.to}
                   aria-label={item.label}
-                  className={({ isActive }) =>
-                    `workspace-mobile-tab ${isActive ? "active" : ""}`
-                  }
+                  className={({ isActive }) => `workspace-mobile-tab ${isActive ? "active" : ""}`}
                 >
                   <span className="workspace-mobile-tab-icon" aria-hidden>
                     {item.icon}

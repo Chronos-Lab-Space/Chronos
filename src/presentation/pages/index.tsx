@@ -36,15 +36,69 @@ export function HomePage() {
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[
-            { to: "/core", num: "01", label: "Core", desc: "The working engine, three agents, and the Chronos language — all in one place.", color: "#E2DDDA" },
-            { to: "/simulate", num: "02", label: "Simulate", desc: "Public demo: branch → simulate → collapse an idea into a best path with ranked alternatives.", color: "#60899B" },
-            { to: "/platform", num: "03", label: "Platform", desc: "The architecture and primitives behind temporal decision systems.", color: "#CDCAB2" },
-            { to: "/journey", num: "04", label: "Journey", desc: "How Chronos thinks about plan, simulate, evaluate, and decide.", color: "#E2DDDA" },
-            { to: "/runtime", num: "05", label: "Runtime", desc: "The four-phase lifecycle of a simulation run.", color: "#60899B" },
-            { to: "/developers", num: "06", label: "Developers", desc: "Docs and platform notes — public API & SDKs on the roadmap.", color: "#CDCAB2" },
-            { to: "/metrics", num: "07", label: "Metrics", desc: "Measured, not marketed. The numbers behind the runtime.", color: "#E2DDDA" },
-            { to: "/roadmap", num: "08", label: "Roadmap", desc: "Built in phases. What's live, what's in beta, what's coming.", color: "#60899B" },
-            { to: "/intelligence", num: "09", label: "Intelligence", desc: "The world model that compounds over time into an unfair advantage.", color: "#CDCAB2" },
+            {
+              to: "/core",
+              num: "01",
+              label: "Core",
+              desc: "The working engine, three agents, and the Chronos language — all in one place.",
+              color: "#E2DDDA",
+            },
+            {
+              to: "/simulate",
+              num: "02",
+              label: "Simulate",
+              desc: "Public demo: branch → simulate → collapse an idea into a best path with ranked alternatives.",
+              color: "#60899B",
+            },
+            {
+              to: "/platform",
+              num: "03",
+              label: "Platform",
+              desc: "The architecture and primitives behind temporal decision systems.",
+              color: "#CDCAB2",
+            },
+            {
+              to: "/journey",
+              num: "04",
+              label: "Journey",
+              desc: "How Chronos thinks about plan, simulate, evaluate, and decide.",
+              color: "#E2DDDA",
+            },
+            {
+              to: "/runtime",
+              num: "05",
+              label: "Runtime",
+              desc: "The four-phase lifecycle of a simulation run.",
+              color: "#60899B",
+            },
+            {
+              to: "/developers",
+              num: "06",
+              label: "Developers",
+              desc: "Docs and platform notes — public API & SDKs on the roadmap.",
+              color: "#CDCAB2",
+            },
+            {
+              to: "/metrics",
+              num: "07",
+              label: "Metrics",
+              desc: "Measured, not marketed. The numbers behind the runtime.",
+              color: "#E2DDDA",
+            },
+            {
+              to: "/roadmap",
+              num: "08",
+              label: "Roadmap",
+              desc: "Built in phases. What's live, what's in beta, what's coming.",
+              color: "#60899B",
+            },
+            {
+              to: "/intelligence",
+              num: "09",
+              label: "Intelligence",
+              desc: "The world model that compounds over time into an unfair advantage.",
+              color: "#CDCAB2",
+            },
           ].map((item) => (
             <Link
               key={item.to}
@@ -52,11 +106,26 @@ export function HomePage() {
               className="card-hover group relative overflow-hidden rounded-2xl border border-line bg-bg-soft p-8"
             >
               <div className="flex items-start justify-between">
-                <span className="font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: item.color }}>
+                <span
+                  className="font-mono text-[11px] uppercase tracking-[0.25em]"
+                  style={{ color: item.color }}
+                >
                   {item.num}
                 </span>
-                <svg width="14" height="14" viewBox="0 0 14 14" className="text-ink-faint transition group-hover:translate-x-0.5 group-hover:text-ink">
-                  <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  className="text-ink-faint transition group-hover:translate-x-0.5 group-hover:text-ink"
+                >
+                  <path
+                    d="M2 7h10M8 3l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
               <h3 className="mt-6 font-serif text-3xl leading-tight">{item.label}</h3>
@@ -95,22 +164,61 @@ export function CorePage() {
           {/* Dashboard features */}
           <div className="mb-12 grid grid-cols-2 gap-3 md:grid-cols-4">
             <DashFeature
-              icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>}
+              icon={
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 4h12M2 8h8M2 12h10"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              }
               title="View simulations"
               desc="Browse every branch the engine forked."
             />
             <DashFeature
-              icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 2v5h5M2 2a6 6 0 1 1 0 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+              icon={
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 2v5h5M2 2a6 6 0 1 1 0 10"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
               title="Replay runs"
               desc="Step through a past run branch-by-branch."
             />
             <DashFeature
-              icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l4-4 3 3 5-5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+              icon={
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M2 8l4-4 3 3 5-5"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
               title="Compare branches"
               desc="Side-by-side scores, risks, and state deltas."
             />
             <DashFeature
-              icon={<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" /><path d="M8 5v3l2 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" /></svg>}
+              icon={
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.2" />
+                  <path
+                    d="M8 5v3l2 2"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              }
               title="Inspect outcomes"
               desc="Drill into the winning branch's final state."
             />
@@ -139,25 +247,85 @@ export function CorePage() {
           <div className="mt-16 grid grid-cols-1 gap-8 border-t border-line pt-16 lg:grid-cols-12 lg:gap-12">
             <div className="lg:col-span-5">
               <div className="mb-4 flex items-center gap-3">
-                <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">/ chronos language</span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">
+                  / chronos language
+                </span>
                 <div className="h-px w-10 bg-line" />
               </div>
               <h2 className="font-serif text-4xl leading-[1] tracking-tight md:text-5xl">
-                Describe a future.<br />
+                Describe a future.
+                <br />
                 <span className="italic text-ink-dim">Chronos plans the work.</span>
               </h2>
               <p className="mt-6 max-w-md text-[14px] leading-[1.75] text-ink-dim">
-                Chronos Language is the authoring layer for task-oriented temporal reasoning. Declare an objective, constraints, and evaluation rules; the Planner creates the task graph and resolves capabilities automatically.
+                Chronos Language is the authoring layer for task-oriented temporal reasoning.
+                Declare an objective, constraints, and evaluation rules; the Planner creates the
+                task graph and resolves capabilities automatically.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link to="/docs#platform" className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[12px] text-ink-dim transition hover:border-line-strong hover:text-ink">Language reference →</Link>
-                <button type="button" onClick={openSignUpModal} className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[12px] text-ink-dim transition hover:border-line-strong hover:text-ink">Join public beta →</button>
+                <Link
+                  to="/docs#platform"
+                  className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[12px] text-ink-dim transition hover:border-line-strong hover:text-ink"
+                >
+                  Language reference →
+                </Link>
+                <button
+                  type="button"
+                  onClick={openSignUpModal}
+                  className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[12px] text-ink-dim transition hover:border-line-strong hover:text-ink"
+                >
+                  Join public beta →
+                </button>
               </div>
             </div>
             <div className="overflow-hidden rounded-2xl border border-line bg-bg-soft lg:col-span-7">
-              <div className="flex items-center justify-between border-b border-line px-5 py-3"><div className="flex gap-1.5"><span className="h-2 w-2 rounded-full bg-ink-faint/40" /><span className="h-2 w-2 rounded-full bg-ink-faint/40" /><span className="h-2 w-2 rounded-full bg-ink-faint/40" /></div><span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">launch.chronos</span></div>
-              <pre className="overflow-x-auto p-6 font-mono text-[12px] leading-[1.8]"><code><span className="text-chronos">objective</span><span className="text-ink"> </span><span className="text-accent-warm">"Launch startup"</span><span className="text-ink"> {"{"}{"\n"}  workspace: </span><span className="text-accent-warm">"acme"</span><span className="text-ink">{"\n"}  constraints: [</span><span className="text-accent-warm">"18 month runway"</span><span className="text-ink">]{"\n"}</span><span className="text-ink">{"}"}{"\n\n"}</span><span className="text-chronos">plan</span><span className="text-ink"> {"{"}{"\n"}  research.competitors{"\n"}  market.estimate{"\n"}  roadmap.build{"\n"}  adoption.predict{"\n"}  financial.simulate{"\n"}  risk.analyze{"\n"}</span><span className="text-ink">{"}"}{"\n\n"}</span><span className="text-chronos">rank</span><span className="text-ink"> timelines </span><span className="text-accent-warm">by expected_value</span></code></pre>
-              <div className="border-t border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">objective → task graph → capabilities → ranked timeline</div>
+              <div className="flex items-center justify-between border-b border-line px-5 py-3">
+                <div className="flex gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-ink-faint/40" />
+                  <span className="h-2 w-2 rounded-full bg-ink-faint/40" />
+                  <span className="h-2 w-2 rounded-full bg-ink-faint/40" />
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+                  launch.chronos
+                </span>
+              </div>
+              <pre className="overflow-x-auto p-6 font-mono text-[12px] leading-[1.8]">
+                <code>
+                  <span className="text-chronos">objective</span>
+                  <span className="text-ink"> </span>
+                  <span className="text-accent-warm">"Launch startup"</span>
+                  <span className="text-ink">
+                    {" "}
+                    {"{"}
+                    {"\n"} workspace:{" "}
+                  </span>
+                  <span className="text-accent-warm">"acme"</span>
+                  <span className="text-ink">{"\n"} constraints: [</span>
+                  <span className="text-accent-warm">"18 month runway"</span>
+                  <span className="text-ink">]{"\n"}</span>
+                  <span className="text-ink">
+                    {"}"}
+                    {"\n\n"}
+                  </span>
+                  <span className="text-chronos">plan</span>
+                  <span className="text-ink">
+                    {" "}
+                    {"{"}
+                    {"\n"} research.competitors{"\n"} market.estimate{"\n"} roadmap.build{"\n"}{" "}
+                    adoption.predict{"\n"} financial.simulate{"\n"} risk.analyze{"\n"}
+                  </span>
+                  <span className="text-ink">
+                    {"}"}
+                    {"\n\n"}
+                  </span>
+                  <span className="text-chronos">rank</span>
+                  <span className="text-ink"> timelines </span>
+                  <span className="text-accent-warm">by expected_value</span>
+                </code>
+              </pre>
+              <div className="border-t border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+                objective → task graph → capabilities → ranked timeline
+              </div>
             </div>
           </div>
 
@@ -175,8 +343,8 @@ export function CorePage() {
               <span className="text-ink-faint">.</span>
             </h2>
             <p className="mx-auto mt-4 max-w-md text-[14px] leading-[1.7] text-ink-dim">
-              Create a free account and open a Decision Workspace for agent and
-              human temporal decisions.
+              Create a free account and open a Decision Workspace for agent and human temporal
+              decisions.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <button
@@ -185,8 +353,20 @@ export function CorePage() {
                 className="group inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-medium text-bg transition hover:bg-chronos"
               >
                 Join public beta
-                <svg width="14" height="14" viewBox="0 0 14 14" className="transition group-hover:translate-x-0.5">
-                  <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  className="transition group-hover:translate-x-0.5"
+                >
+                  <path
+                    d="M2 7h10M8 3l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </button>
               <Link
@@ -228,7 +408,13 @@ export function PlatformPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ platform"
-        title={<>The Temporal<br /><span className="italic text-ink-dim">Compute Platform.</span></>}
+        title={
+          <>
+            The Temporal
+            <br />
+            <span className="italic text-ink-dim">Compute Platform.</span>
+          </>
+        }
         subtitle="Build, author, run, inspect, and scale autonomous decisions through one temporal compute platform — from SDK and API to Agent Runtime and Simulation Cloud."
       />
       <Platform />
@@ -242,7 +428,13 @@ export function PrimitivesPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ primitives"
-        title={<>A new grammar<br /><span className="italic text-ink-dim">for computation.</span></>}
+        title={
+          <>
+            A new grammar
+            <br />
+            <span className="italic text-ink-dim">for computation.</span>
+          </>
+        }
         subtitle="Six primitives. One runtime. Everything your agents need to reason across time."
       />
       <Features />
@@ -256,7 +448,13 @@ export function JourneyPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ user journey"
-        title={<>Five steps from<br /><span className="italic text-ink-dim">zero to temporal.</span></>}
+        title={
+          <>
+            Five steps from
+            <br />
+            <span className="italic text-ink-dim">zero to temporal.</span>
+          </>
+        }
         subtitle="The entire workflow fits in a single function. Here's what each step does — and how long it takes."
       />
       <Journey />
@@ -270,7 +468,13 @@ export function RuntimePage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ runtime"
-        title={<>From fork<br /><span className="italic text-ink-dim">to collapse, in 2ms.</span></>}
+        title={
+          <>
+            From fork
+            <br />
+            <span className="italic text-ink-dim">to collapse, in 2ms.</span>
+          </>
+        }
         subtitle="Four phases. No round-trips. The entire temporal lifecycle runs inside a single kernel invocation."
       />
       <Timeline />
@@ -284,14 +488,21 @@ export function DevelopersPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ developers"
-        title={<>Everything you need.<br /><span className="italic text-ink-dim">Nothing you don't.</span></>}
+        title={
+          <>
+            Everything you need.
+            <br />
+            <span className="italic text-ink-dim">Nothing you don't.</span>
+          </>
+        }
         subtitle="Four tools. One platform. Ship temporal compute in your language, your workflow, your stack."
       />
       <Utilities />
       <div className="border-t border-line">
         <div className="mx-auto max-w-7xl px-6 py-16 lg:px-10">
           <h2 className="font-serif text-5xl leading-[1] tracking-tight md:text-6xl">
-            Three verbs.<br />
+            Three verbs.
+            <br />
             <span className="italic text-ink-dim">Infinite futures.</span>
           </h2>
         </div>
@@ -307,7 +518,11 @@ export function MetricsPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ by the numbers"
-        title={<>Measured. <span className="italic text-ink-dim">Not marketed.</span></>}
+        title={
+          <>
+            Measured. <span className="italic text-ink-dim">Not marketed.</span>
+          </>
+        }
         subtitle="The numbers behind the runtime. Every metric measured on live production clusters."
       />
       <Metrics />
@@ -321,7 +536,11 @@ export function RoadmapPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ roadmap"
-        title={<>Built in <span className="italic text-ink-dim">phases.</span></>}
+        title={
+          <>
+            Built in <span className="italic text-ink-dim">phases.</span>
+          </>
+        }
         subtitle="We ship in tight, focused phases. Every phase is a complete, usable platform."
       />
       <Roadmap />
@@ -335,7 +554,13 @@ export function IntelligencePage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ intelligence"
-        title={<>The world model<br /><span className="italic text-ink-dim">that compounds.</span></>}
+        title={
+          <>
+            The world model
+            <br />
+            <span className="italic text-ink-dim">that compounds.</span>
+          </>
+        }
         subtitle="Every decision space Chronos prunes teaches it something about how the world works. Over time, it learns patterns no individual customer could see."
       />
       <Intelligence />
@@ -349,7 +574,13 @@ export function ShiftPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ the shift"
-        title={<>From chatbot<br /><span className="italic text-ink-dim">to strategist.</span></>}
+        title={
+          <>
+            From chatbot
+            <br />
+            <span className="italic text-ink-dim">to strategist.</span>
+          </>
+        }
         subtitle="Chronos introduces temporal computation — computing over possible futures before acting."
       />
       <Shift />
@@ -363,7 +594,13 @@ export function AccessPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ access · cohort 04"
-        title={<>The future is already here.<br /><span className="gradient-text italic">Ship it first.</span></>}
+        title={
+          <>
+            The future is already here.
+            <br />
+            <span className="gradient-text italic">Ship it first.</span>
+          </>
+        }
       />
       <CTA />
     </>
@@ -380,7 +617,13 @@ export function AboutPage() {
       <PageHeader
         breadcrumb={[{ label: "About" }]}
         eyebrow="/ chronos lab"
-        title={<>We're building<br /><span className="italic text-ink-dim">temporal compute.</span></>}
+        title={
+          <>
+            We're building
+            <br />
+            <span className="italic text-ink-dim">temporal compute.</span>
+          </>
+        }
         subtitle="Chronos Lab builds the infrastructure for autonomous systems to reason across time. We believe the next generation of AI needs to simulate consequences before acting — not react to them after."
       />
       <InfoBody>
@@ -406,18 +649,28 @@ export function AboutPage() {
         {/* Principles */}
         <div className="mt-16 grid grid-cols-1 gap-3 md:grid-cols-3">
           {[
-            { k: "01", t: "Branch freely", b: "Generate multiple futures for one objective instead of a single answer." },
-            { k: "02", t: "Commit with confidence", b: "Rank paths with confidence, risk, and transparent “recommended because” reasons." },
-            { k: "03", t: "Archive everything", b: "Save paths and outcomes in workspace memory so decisions compound over time." },
+            {
+              k: "01",
+              t: "Branch freely",
+              b: "Generate multiple futures for one objective instead of a single answer.",
+            },
+            {
+              k: "02",
+              t: "Commit with confidence",
+              b: "Rank paths with confidence, risk, and transparent “recommended because” reasons.",
+            },
+            {
+              k: "03",
+              t: "Archive everything",
+              b: "Save paths and outcomes in workspace memory so decisions compound over time.",
+            },
           ].map((p) => (
             <div key={p.k} className="rounded-xl border border-line bg-bg-soft p-5">
               <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">
                 {p.k}
               </div>
               <div className="mt-2 font-serif text-lg text-ink">{p.t}</div>
-              <div className="mt-1 text-[12px] leading-[1.6] text-ink-dim">
-                {p.b}
-              </div>
+              <div className="mt-1 text-[12px] leading-[1.6] text-ink-dim">{p.b}</div>
             </div>
           ))}
         </div>
@@ -432,7 +685,11 @@ export function ContactPage() {
       <PageHeader
         breadcrumb={[{ label: "Contact" }]}
         eyebrow="/ get in touch"
-        title={<>Let's talk<span className="text-ink-faint">.</span></>}
+        title={
+          <>
+            Let's talk<span className="text-ink-faint">.</span>
+          </>
+        }
         subtitle="We read every message. Reach us on X or join the Telegram group."
       />
       <InfoBody>
@@ -471,18 +728,55 @@ export function PrivacyPage() {
       <PageHeader
         breadcrumb={[{ label: "Privacy" }]}
         eyebrow="/ legal"
-        title={<>Privacy policy<span className="text-ink-faint">.</span></>}
+        title={
+          <>
+            Privacy policy<span className="text-ink-faint">.</span>
+          </>
+        }
         subtitle="Last updated: January 2026. This policy describes what we collect, how we use it, and the choices you have."
       />
       <LegalBody>
-        <p><strong>1. Who we are.</strong> Chronos Lab AG is the data controller for the information you provide when using our platform.</p>
-        <p><strong>2. What we collect.</strong> We collect account information (email, name), telemetry about your use of the runtime (branch counts, latency metrics, error rates), and any data you submit as world state to the engine. We do not collect the content of your branches beyond what is necessary to execute and score them.</p>
-        <p><strong>3. How we use it.</strong> To operate the service, to improve the world model that powers evaluation, and to communicate with you about your account. We do not sell your data. We do not train the world model on any individual customer's data without explicit opt-in.</p>
-        <p><strong>4. Retention.</strong> Branch archives are retained for as long as your account is active, or for 90 days after deletion. Telemetry is retained for 24 months. You may request deletion at any time.</p>
-        <p><strong>5. Your rights.</strong> Under applicable data protection law, you have the right to access, correct, delete, and port your data. Submit a request through our <Link to="/contact" className="text-chronos">contact channels</Link>.</p>
-        <p><strong>6. Cookies.</strong> We use a single first-party cookie to maintain your session. No advertising cookies. No third-party tracking.</p>
-        <p><strong>7. International transfers.</strong> Data is processed in the region selected for your workspace. Appropriate contractual safeguards apply to transfers where required.</p>
-        <p><strong>8. Changes.</strong> We will notify you of material changes by email at least 30 days in advance.</p>
+        <p>
+          <strong>1. Who we are.</strong> Chronos Lab AG is the data controller for the information
+          you provide when using our platform.
+        </p>
+        <p>
+          <strong>2. What we collect.</strong> We collect account information (email, name),
+          telemetry about your use of the runtime (branch counts, latency metrics, error rates), and
+          any data you submit as world state to the engine. We do not collect the content of your
+          branches beyond what is necessary to execute and score them.
+        </p>
+        <p>
+          <strong>3. How we use it.</strong> To operate the service, to improve the world model that
+          powers evaluation, and to communicate with you about your account. We do not sell your
+          data. We do not train the world model on any individual customer's data without explicit
+          opt-in.
+        </p>
+        <p>
+          <strong>4. Retention.</strong> Branch archives are retained for as long as your account is
+          active, or for 90 days after deletion. Telemetry is retained for 24 months. You may
+          request deletion at any time.
+        </p>
+        <p>
+          <strong>5. Your rights.</strong> Under applicable data protection law, you have the right
+          to access, correct, delete, and port your data. Submit a request through our{" "}
+          <Link to="/contact" className="text-chronos">
+            contact channels
+          </Link>
+          .
+        </p>
+        <p>
+          <strong>6. Cookies.</strong> We use a single first-party cookie to maintain your session.
+          No advertising cookies. No third-party tracking.
+        </p>
+        <p>
+          <strong>7. International transfers.</strong> Data is processed in the region selected for
+          your workspace. Appropriate contractual safeguards apply to transfers where required.
+        </p>
+        <p>
+          <strong>8. Changes.</strong> We will notify you of material changes by email at least 30
+          days in advance.
+        </p>
       </LegalBody>
     </>
   );
@@ -494,19 +788,58 @@ export function TermsPage() {
       <PageHeader
         breadcrumb={[{ label: "Terms" }]}
         eyebrow="/ legal"
-        title={<>Terms of service<span className="text-ink-faint">.</span></>}
+        title={
+          <>
+            Terms of service<span className="text-ink-faint">.</span>
+          </>
+        }
         subtitle="Last updated: January 2026. These terms govern your use of the Chronos platform."
       />
       <LegalBody>
-        <p><strong>1. Acceptance.</strong> By using Chronos, you agree to these terms. If you do not agree, do not use the service.</p>
-        <p><strong>2. Accounts.</strong> You are responsible for the security of your account and for all activity under it. You must be at least 18 years old and have authority to enter into these terms.</p>
-        <p><strong>3. Acceptable use.</strong> You may not use Chronos to: violate any law, infringe third-party rights, build weapons, or generate harmful content. We reserve the right to suspend accounts that violate these terms.</p>
-        <p><strong>4. Your data.</strong> You retain all rights to the data you submit. We process it only to operate the service and improve the world model (subject to your privacy settings).</p>
-        <p><strong>5. Service levels.</strong> We target 99.99% monthly uptime for the runtime. Credits are issued for downtime beyond this threshold. See our <Link to="/security" className="text-chronos">security page</Link> for details.</p>
-        <p><strong>6. Fees.</strong> Pricing is set per your plan. Usage beyond your plan's limits is billed at published rates. We will notify you before any price increase takes effect.</p>
-        <p><strong>7. Termination.</strong> Either party may terminate with 30 days' written notice. On termination, you may export your data for 90 days.</p>
-        <p><strong>8. Liability.</strong> To the maximum extent permitted by law, our liability is limited to the fees you paid in the 12 months preceding the claim. We are not liable for indirect, incidental, or consequential damages.</p>
-        <p><strong>9. Governing law.</strong> The governing law and dispute process for paid services are specified in the applicable service agreement.</p>
+        <p>
+          <strong>1. Acceptance.</strong> By using Chronos, you agree to these terms. If you do not
+          agree, do not use the service.
+        </p>
+        <p>
+          <strong>2. Accounts.</strong> You are responsible for the security of your account and for
+          all activity under it. You must be at least 18 years old and have authority to enter into
+          these terms.
+        </p>
+        <p>
+          <strong>3. Acceptable use.</strong> You may not use Chronos to: violate any law, infringe
+          third-party rights, build weapons, or generate harmful content. We reserve the right to
+          suspend accounts that violate these terms.
+        </p>
+        <p>
+          <strong>4. Your data.</strong> You retain all rights to the data you submit. We process it
+          only to operate the service and improve the world model (subject to your privacy
+          settings).
+        </p>
+        <p>
+          <strong>5. Service levels.</strong> We target 99.99% monthly uptime for the runtime.
+          Credits are issued for downtime beyond this threshold. See our{" "}
+          <Link to="/security" className="text-chronos">
+            security page
+          </Link>{" "}
+          for details.
+        </p>
+        <p>
+          <strong>6. Fees.</strong> Pricing is set per your plan. Usage beyond your plan's limits is
+          billed at published rates. We will notify you before any price increase takes effect.
+        </p>
+        <p>
+          <strong>7. Termination.</strong> Either party may terminate with 30 days' written notice.
+          On termination, you may export your data for 90 days.
+        </p>
+        <p>
+          <strong>8. Liability.</strong> To the maximum extent permitted by law, our liability is
+          limited to the fees you paid in the 12 months preceding the claim. We are not liable for
+          indirect, incidental, or consequential damages.
+        </p>
+        <p>
+          <strong>9. Governing law.</strong> The governing law and dispute process for paid services
+          are specified in the applicable service agreement.
+        </p>
       </LegalBody>
     </>
   );
@@ -518,13 +851,21 @@ export function SecurityPage() {
       <PageHeader
         breadcrumb={[{ label: "Security" }]}
         eyebrow="/ trust"
-        title={<>Built to be<br /><span className="italic text-ink-dim">trusted.</span></>}
+        title={
+          <>
+            Built to be
+            <br />
+            <span className="italic text-ink-dim">trusted.</span>
+          </>
+        }
         subtitle="Temporal compute is infrastructure. The data flowing through it is often the most sensitive in your stack. We take that seriously."
       />
       <InfoBody>
         <div className="space-y-10">
           <div>
-            <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">Certifications</div>
+            <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">
+              Certifications
+            </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <CertCard label="SOC 2" value="Type II · annual" />
               <CertCard label="ISO 27001" value="certified" />
@@ -558,9 +899,15 @@ export function SecurityPage() {
           />
 
           <div className="rounded-xl border border-chronos/30 bg-chronos/5 p-6">
-            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">Report a security issue</div>
+            <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">
+              Report a security issue
+            </div>
             <p className="mt-2 text-[14px] leading-[1.65] text-ink-dim">
-              Start a private conversation through <Link to="/contact" className="text-chronos underline-offset-4 hover:underline">our contact channels</Link>. Include a description, reproduction steps, and the impact you believe it has.
+              Start a private conversation through{" "}
+              <Link to="/contact" className="text-chronos underline-offset-4 hover:underline">
+                our contact channels
+              </Link>
+              . Include a description, reproduction steps, and the impact you believe it has.
             </p>
           </div>
         </div>
@@ -588,29 +935,17 @@ function DashFeature({
         {icon}
       </div>
       <div>
-        <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink">
-          {title}
-        </div>
+        <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink">{title}</div>
         <div className="mt-0.5 text-[11px] leading-[1.5] text-ink-dim">{desc}</div>
       </div>
     </div>
   );
 }
 
-function Pillar({
-  n,
-  title,
-  body,
-}: {
-  n: string;
-  title: string;
-  body: string;
-}) {
+function Pillar({ n, title, body }: { n: string; title: string; body: string }) {
   return (
     <div className="rounded-xl border border-line bg-bg-soft p-6">
-      <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">
-        {n}
-      </div>
+      <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-chronos">{n}</div>
       <div className="mt-3 font-serif text-2xl text-ink">{title}</div>
       <p className="mt-2 text-[13px] leading-[1.65] text-ink-dim">{body}</p>
     </div>
@@ -679,9 +1014,7 @@ function ContactCard({
     </div>
   );
   if (href) {
-    const props = external
-      ? { href, target: "_blank", rel: "noopener noreferrer" }
-      : { href };
+    const props = external ? { href, target: "_blank", rel: "noopener noreferrer" } : { href };
     return (
       <a {...props} className="block h-full">
         {inner}

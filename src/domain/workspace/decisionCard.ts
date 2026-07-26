@@ -51,8 +51,7 @@ function simHref(id: string, hash?: string): string {
  * Primary CTA always navigates — never mutates path selection.
  */
 export function deriveDecisionCard(home: WorkspaceHome): DecisionCardModel {
-  const decisionTitle =
-    home.goal?.title?.trim() || home.workspace.name || "Current decision";
+  const decisionTitle = home.goal?.title?.trim() || home.workspace.name || "Current decision";
   const latest = latestSimulation(home);
   const completed = latestCompleted(home);
 
@@ -129,11 +128,7 @@ export function deriveDecisionCard(home: WorkspaceHome): DecisionCardModel {
 
   const recommendation = report.recommended !== "—" ? report.recommended : null;
   const confidence = report.confidence > 0 ? report.confidence : completed.confidence;
-  const reason =
-    report.recommendedBecause[0] ??
-    report.why[0] ??
-    report.recommendedSummary ??
-    null;
+  const reason = report.recommendedBecause[0] ?? report.why[0] ?? report.recommendedSummary ?? null;
 
   const base = {
     decisionTitle,

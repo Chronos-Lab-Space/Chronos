@@ -1,7 +1,4 @@
-import type {
-  CachedSimulation,
-  SimulationCache,
-} from "../../domain/chronos/simulation-cache";
+import type { CachedSimulation, SimulationCache } from "../../domain/chronos/simulation-cache";
 
 /** Session-local cache for browser demos and offline development. */
 export class MemorySimulationCache<T> implements SimulationCache<T> {

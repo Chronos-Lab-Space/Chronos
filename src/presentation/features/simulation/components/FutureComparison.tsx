@@ -70,7 +70,7 @@ export function FutureComparison({
                 <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink">
                   Future {letter}
                   {isBest || isChosen ? (
-                    <span className="ml-1.5 text-chronos" aria-label="recommended">
+                    <span className="ml-1.5 text-chronos" role="img" aria-label="recommended">
                       ★
                     </span>
                   ) : null}

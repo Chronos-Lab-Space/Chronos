@@ -66,7 +66,10 @@ export function LoginPage() {
     setOauthLoading(provider);
     showMessage("");
     try {
-      trackProductEvent("session_start", { oauth: provider, intent: intentStart ? "start" : "login" });
+      trackProductEvent("session_start", {
+        oauth: provider,
+        intent: intentStart ? "start" : "login",
+      });
       const redirectTo = `${window.location.origin}/auth/callback`;
       const { error } = await authService.signInWithOAuth(provider, redirectTo);
       if (error) {
@@ -224,11 +227,7 @@ export function LoginPage() {
               disabled={loading || onCooldown}
               className="w-full rounded-full bg-ink px-4 py-2.5 font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
             >
-              {loading
-                ? "Sending..."
-                : onCooldown
-                  ? `Wait ${cooldownSeconds}s`
-                  : "Send magic link"}
+              {loading ? "Sending..." : onCooldown ? `Wait ${cooldownSeconds}s` : "Send magic link"}
             </button>
           </form>
         ) : (

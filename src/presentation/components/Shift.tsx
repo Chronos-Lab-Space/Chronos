@@ -16,9 +16,9 @@ export function Shift() {
             <span className="italic text-ink-dim">to strategist.</span>
           </h2>
           <p className="mt-8 text-[18px] leading-[1.75] text-ink-dim">
-            Today's agents react. They take an input, generate an output, and
-            hope it's right. But real intelligence doesn't work that way. Real
-            intelligence simulates consequences before acting.
+            Today's agents react. They take an input, generate an output, and hope it's right. But
+            real intelligence doesn't work that way. Real intelligence simulates consequences before
+            acting.
           </p>
         </div>
 
@@ -68,9 +68,7 @@ export function Shift() {
                     style={{ background: sim.color }}
                   />
                   <div className="flex-1">
-                    <div className="text-[14px] leading-[1.5] text-ink">
-                      {sim.q}
-                    </div>
+                    <div className="text-[14px] leading-[1.5] text-ink">{sim.q}</div>
                     <div
                       className="mt-1 font-mono text-[11px] uppercase tracking-[0.2em]"
                       style={{ color: sim.color }}
@@ -96,12 +94,12 @@ export function Shift() {
         {/* Human parallel */}
         <div className="mt-24 border-l-2 border-chronos/40 pl-8">
           <p className="text-[20px] leading-[1.6] text-ink md:text-[24px]">
-            This is closer to how humans operate. We mentally simulate
-            consequences. We imagine futures. We choose the best one.
+            This is closer to how humans operate. We mentally simulate consequences. We imagine
+            futures. We choose the best one.
           </p>
           <p className="mt-6 text-[16px] leading-[1.7] text-ink-dim">
-            Chronos gives autonomous systems the same capability — but at the
-            speed of compute, not the speed of thought.
+            Chronos gives autonomous systems the same capability — but at the speed of compute, not
+            the speed of thought.
           </p>
         </div>
 
@@ -114,8 +112,8 @@ export function Shift() {
             <div className="h-px w-10 bg-line" />
           </div>
           <p className="font-serif text-3xl leading-[1.3] text-ink md:text-4xl">
-            Chronos is a future simulation engine — the infrastructure that
-            every autonomous system eventually needs before taking action.
+            Chronos is a future simulation engine — the infrastructure that every autonomous system
+            eventually needs before taking action.
           </p>
         </div>
       </div>
@@ -165,12 +163,7 @@ function RobotSimulation() {
         </defs>
 
         {/* Branch 1: top-right (winner) */}
-        <path
-          d="M300 300 Q 380 220, 460 140"
-          stroke="url(#sim-warm)"
-          strokeWidth="2"
-          fill="none"
-        />
+        <path d="M300 300 Q 380 220, 460 140" stroke="url(#sim-warm)" strokeWidth="2" fill="none" />
         <circle cx="460" cy="140" r="6" fill="#ffd7a3" />
         <circle cx="460" cy="140" r="12" fill="#ffd7a3" opacity="0.2" />
         <text x="470" y="135" fill="#ffd7a3" fontSize="11" fontFamily="JetBrains Mono">
@@ -227,8 +220,23 @@ function RobotSimulation() {
 
         {/* Winner indicator */}
         <g opacity="0.6">
-          <line x1="460" y1="140" x2="520" y2="80" stroke="#ffd7a3" strokeWidth="1" strokeDasharray="2 3" />
-          <text x="525" y="75" fill="#ffd7a3" fontSize="9" fontFamily="JetBrains Mono" style={{ letterSpacing: 1 }}>
+          <line
+            x1="460"
+            y1="140"
+            x2="520"
+            y2="80"
+            stroke="#ffd7a3"
+            strokeWidth="1"
+            strokeDasharray="2 3"
+          />
+          <text
+            x="525"
+            y="75"
+            fill="#ffd7a3"
+            fontSize="9"
+            fontFamily="JetBrains Mono"
+            style={{ letterSpacing: 1 }}
+          >
             SELECTED
           </text>
         </g>

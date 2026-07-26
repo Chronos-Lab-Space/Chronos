@@ -85,11 +85,7 @@ export class AccountBootstrapService {
     let home = await workspaceService.load(userId);
     if (!home) {
       const name = `${displayNameFromUser(user)}'s Workspace`;
-      home = await workspaceService.createWorkspace(
-        userId,
-        name,
-        "Personal Decision Workspace"
-      );
+      home = await workspaceService.createWorkspace(userId, name, "Personal Decision Workspace");
       workspaceBootstrapped = true;
       trackProductEvent("workspace_created", {
         source: "bootstrap",
