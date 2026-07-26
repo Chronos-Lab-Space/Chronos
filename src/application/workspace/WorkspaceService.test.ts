@@ -1,7 +1,41 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { runtime } from "../../core/runtime";
+import { eventBus, runtime } from "../../core/runtime";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
 import { WorkspaceService } from "./WorkspaceService";
+
+describe("decision ranking consistency", () => {
+  const ownerId = "user-rank-1";
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("publishes DecisionRanked in the same order the product persists", async () => {
+    const service = new WorkspaceService({ local: new LocalWorkspaceStore(), remote: null });
+    await service.createWorkspace(ownerId, "Rank Lab", "");
+
+    let published: { id: string; rank?: number }[] = [];
+    const unsubscribe = eventBus.subscribe("DecisionRanked", (event) => {
+      const payload = event.payload as { futures?: { id: string; rank?: number }[] };
+      published = payload.futures ?? [];
+    });
+    try {
+      const home = await service.runSimulation(
+        ownerId,
+        "Grow our B2B SaaS revenue with a small team",
+        []
+      );
+      const simId = home.recentSimulations[0].id;
+      const persisted = home.futuresBySimulation[simId] ?? [];
+
+      // What the learning layer records must be what the user sees.
+      expect(published.map((f) => f.id)).toEqual(persisted.map((f) => f.id));
+      expect(published.map((f) => f.rank)).toEqual(persisted.map((_, i) => i + 1));
+    } finally {
+      unsubscribe();
+    }
+  });
+});
 
 describe("simulation failure recovery", () => {
   const ownerId = "user-fail-1";
