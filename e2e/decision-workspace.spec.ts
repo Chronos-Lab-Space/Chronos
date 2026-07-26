@@ -98,6 +98,13 @@ test.describe("Decision Workspace (authenticated)", () => {
     // --- Decision pipeline + report contract ---
     await expect(page.getByTestId("decision-pipeline")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId("decision-report")).toBeVisible();
+
+    // --- Future graph: branches render and are clickable ---
+    await expect(page.getByTestId("future-graph")).toBeVisible();
+    const graphNodes = page.getByTestId("future-graph-node");
+    expect(await graphNodes.count()).toBeGreaterThan(0);
+    await graphNodes.last().click();
+    await expect(page.getByTestId("future-graph")).toBeVisible();
     await expect(page.getByText(/^recommendation$/i).first()).toBeVisible();
     await expect(page.getByTestId("decision-evidence")).toBeVisible();
     await expect(page.getByTestId("expected-value")).toBeVisible();

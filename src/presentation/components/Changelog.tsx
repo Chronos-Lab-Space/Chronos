@@ -12,6 +12,30 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.4.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "The future graph",
+    summary:
+      "Chronos' signature visualization lands on the simulation report: NOW forks into ranked futures, each branch ending in its risk node. The engine's pick carries the accent, the chosen path is marked, and clicking a branch selects that future across the whole page — comparison, timeline cards, and save.",
+    highlights: [
+      {
+        label: "Future graph",
+        detail:
+          "Branching SVG on every completed run · rank-ordered top to bottom · recommended branch accented · CHOSEN marker · risk % terminals",
+      },
+      {
+        label: "One selection",
+        detail: "Graph, comparison, and timeline cards share the same selected future",
+      },
+      {
+        label: "Pure layout",
+        detail:
+          "layoutFutureGraph(futures) in the domain layer — geometry unit-tested, scales with branch count",
+      },
+    ],
+  },
+  {
     version: "5.3.0",
     date: "2026-07-26",
     tag: "minor",
