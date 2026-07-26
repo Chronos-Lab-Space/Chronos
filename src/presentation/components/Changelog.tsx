@@ -12,6 +12,36 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.2.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "Decision Brief · sign-in polish",
+    summary:
+      "New decision-centric workspace surface: the Decision Brief reads one decision as an editorial page — six-state lifecycle band (Draft → Simulating → Evaluating → Collapsed → Observed → Learned), recommendation, honest confidence stats, evidence, and ranked futures, all derived from real workspace data. Sign-in loading is leaner and phones finally see the whole wordmark.",
+    highlights: [
+      {
+        label: "Decision Brief",
+        detail:
+          "/workspace/decision · deriveDecisionBrief(home) · lifecycle band from sim status, chosen path, and outcome fields · empty states instead of invented numbers",
+      },
+      {
+        label: "Lifecycle band",
+        detail:
+          "Draft → Simulating → Evaluating → Collapsed → Observed → Learned, with real dates from the run, the chosen path, and the logged outcome",
+      },
+      {
+        label: "Sign-in loading",
+        detail:
+          "Dead fullScreen/orbit variants removed · double bootstrap on fast sign-ins fixed (one ensureAccount, one session_start, one navigate) · regression-tested",
+      },
+      {
+        label: "Mobile art",
+        detail:
+          "Portrait crop of the loading art via <picture> — the full Chronos LAB wordmark survives phones down to 344px covers",
+      },
+    ],
+  },
+  {
     version: "5.1.0",
     date: "2026-07-25",
     tag: "minor",
