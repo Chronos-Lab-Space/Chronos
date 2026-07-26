@@ -1,6 +1,6 @@
 # Spec: Anthropic provider behind AIPort, via a Supabase Edge Function key proxy
 
-**Status:** Draft for approval — not implemented
+**Status:** Implemented in 5.6.0, dormant. The function and adapter are in the tree; `VITE_AI_PROVIDER` is unset, so the product path is unchanged. Steps 2–4 of the rollout below are still outstanding and need the key.
 **Scope:** One new Edge Function (`ai-generate`), one new adapter (`AnthropicAIProvider`), one usage/quota table, env + secret wiring.
 **Out of scope:** Changing simulation scoring, futures, ranking, or confidence. Streaming. Embeddings. Agent loops. Replacing Ollama or Noop.
 
@@ -206,7 +206,7 @@ const text = message.content
 
 Returning `text: ""` rather than an error status is deliberate: `maybeEnrichRecommendation` already treats empty text as "keep the deterministic prose," so a refusal degrades to exactly the current product behavior.
 
-**Server-side fallbacks** (optional, recommended): opt in with `fallbacks: 'default'` plus the `server-side-fallback-2026-07-01` beta header, so a capacity blip on Opus 5 serves from a sibling model instead of failing. Because the output is cosmetic prose, model substitution has no correctness cost here.
+**Server-side fallbacks: not in v1.** Opting in (`fallbacks: 'default'` plus the `server-side-fallback-2026-07-01` beta header) would move the call onto `client.beta.messages.create` and pair a beta header with a scalar form that 400s if mismatched with the array form. The payoff is rescuing a refused prose rewrite — which already degrades to the deterministic recommendation at no cost to the user. Not worth a beta surface that cannot be exercised in CI. Revisit if refusals show up in the ledger.
 
 ### Prompt caching — measure before adding it
 
@@ -295,18 +295,21 @@ with `anthropic` added to the `providers` record. The `defaultProviderId` fallba
 
 ```text
 SPEC-ai-proxy.md                                     # this document
-supabase/functions/ai-generate/index.ts              # new
-supabase/functions/ai-generate/deno.json             # npm: specifier pinning
+supabase/functions/ai-generate/index.ts              # new — npm: specifiers pinned inline,
+                                                     #   so no deno.json to drift out of sync
 supabase/config.toml                                 # [functions.ai-generate]
-supabase/migrations/<ts>_ai_usage.sql                # table + RLS + index
-supabase/tests/rls_invariants.sql                    # extend: ai_usage has RLS, no write policy
+supabase/migrations/20260726190000_ai_usage.sql      # table + RLS + indexes + grants
+supabase/tests/rls_invariants.sql                    # extend: ai_usage has no API-role write path
 src/infrastructure/ai/AnthropicAIProvider.ts         # new
 src/infrastructure/ai/AnthropicAIProvider.test.ts    # new (mocked fetch)
-src/infrastructure/ai/createAIPort.ts                # + "anthropic"
+src/infrastructure/ai/createAIPort.test.ts           # new — registration + fallback-to-noop
+src/infrastructure/ai/createAIPort.ts                # + "anthropic", proxy URL, token getter
 src/infrastructure/ai/index.ts                       # re-export
 src/vite-env.d.ts                                    # VITE_AI_PROXY_URL
 .env.example                                         # document the client var + the secret list
 ```
+
+**Neither gate covers the Edge Function.** `tsconfig.json` includes only `src` and `vite.config.ts`; Biome's `files.includes` covers `src/**`, `e2e/**`, `scripts/**` and root files. `supabase/functions/**` falls outside both, so `tsc --noEmit` and `biome ci .` say nothing about it. Deno type-checks it at `supabase functions deploy`, which is the real gate — run a local `supabase functions serve` before deploying rather than trusting a green CI badge.
 
 ---
 

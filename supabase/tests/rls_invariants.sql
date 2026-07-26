@@ -300,6 +300,44 @@ begin
   end if;
 end $$;
 
+-- ai_usage is the quota ledger for the ai-generate Edge Function. Its
+-- only writer is that function's admin client, which bypasses RLS. If an
+-- API role ever gains a write path, a signed-in user can forge rows and
+-- erase their own cap — so the absence of one is an invariant, not a
+-- detail of how the table happened to be created.
+do $$
+declare
+  offenders text;
+begin
+  select string_agg(
+    format('%s: %s', grantee, privilege_type), '; '
+    order by grantee, privilege_type
+  )
+  into offenders
+  from information_schema.role_table_grants
+  where table_schema = 'public'
+    and table_name = 'ai_usage'
+    and grantee in ('anon', 'authenticated')
+    and privilege_type <> 'SELECT';
+
+  if offenders is not null then
+    raise exception
+      'ai_usage is append-only via service_role, but an API role holds — %', offenders;
+  end if;
+
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'ai_usage' and cmd <> 'SELECT'
+  ) then
+    raise exception
+      'ai_usage has a non-SELECT policy — users could forge usage rows and bypass the quota';
+  end if;
+
+  if has_table_privilege('anon', 'public.ai_usage', 'SELECT') then
+    raise exception 'anon can read ai_usage';
+  end if;
+end $$;
+
 -- ------------------------------------------------------------
 -- 7. Every workspace product table is actually reachable
 -- ------------------------------------------------------------

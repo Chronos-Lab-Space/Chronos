@@ -12,6 +12,35 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.6.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "Hosted AI behind a key proxy",
+    summary:
+      "Chronos can now polish a recommendation with a hosted model instead of only a local one. Because the app is a static bundle, an API key placed in it would be published, so the key lives as a server-side secret and the browser only ever sends its own session token. The provider is off by default: unset, simulations behave exactly as before, and every score, future, and confidence value stays deterministic.",
+    highlights: [
+      {
+        label: "Key stays server-side",
+        detail:
+          "A new Supabase Edge Function holds the Anthropic key · the browser sends its Supabase session, never a vendor key",
+      },
+      {
+        label: "Metered by design",
+        detail:
+          "Per-user rate limit, per-user monthly cap, and a global kill switch are checked before any paid call · every call is logged to a ledger you can read",
+      },
+      {
+        label: "Fails open",
+        detail:
+          "No session, a refusal, a timeout, or a spent quota all fall back to the deterministic recommendation rather than an error",
+      },
+      {
+        label: "Opt-in",
+        detail: "Prose only, and only when explicitly enabled · scores and futures never change",
+      },
+    ],
+  },
+  {
     version: "5.5.0",
     date: "2026-07-26",
     tag: "minor",

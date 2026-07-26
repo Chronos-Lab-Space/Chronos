@@ -390,6 +390,14 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Anthropic key proxy — see SPEC-ai-proxy.md.
+# Uses auth: 'user', so verify_jwt stays at its default (true): callers
+# already send a Supabase session JWT and the platform check agrees with
+# the handler's. Do not set verify_jwt = false here — that would turn a
+# metered, per-user endpoint into an open one.
+[functions.ai-generate]
+enabled = true
+
 [analytics]
 enabled = true
 port = 54327

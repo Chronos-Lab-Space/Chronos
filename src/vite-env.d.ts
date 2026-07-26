@@ -14,12 +14,19 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_DSN?: string;
 
   /**
-   * Platform AI provider: noop (default) | ollama
+   * Platform AI provider: noop (default) | ollama | anthropic
    * Keep unset/noop for deterministic public beta sims.
    */
   readonly VITE_AI_PROVIDER?: string;
   readonly VITE_OLLAMA_URL?: string;
   readonly VITE_OLLAMA_MODEL?: string;
+  /**
+   * `anthropic` only — the ai-generate Edge Function that holds the API
+   * key server-side. Defaults to `${VITE_SUPABASE_URL}/functions/v1/ai-generate`.
+   * There is no VITE_ANTHROPIC_API_KEY and there must never be one: every
+   * VITE_ value is inlined into the public bundle.
+   */
+  readonly VITE_AI_PROXY_URL?: string;
   /**
    * Polish recommendation text after deterministic sim (default on).
    * Set false to keep deterministic prose only. Scores/futures never change.
