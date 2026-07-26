@@ -610,10 +610,22 @@ function evalExpression(expr: Expression, env: Env): any {
   }
 }
 
+// Path segments that would walk or write the prototype chain. `key in obj`
+// traverses prototypes, so "__proto__" reaches Object.prototype and a
+// user-editable REPL program could pollute every object on the page.
+const FORBIDDEN_PATH_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
+function assertSafePathKey(key: string): void {
+  if (FORBIDDEN_PATH_KEYS.has(key)) {
+    throw new ChronosError(`reserved identifier in path: '${key}'`, 0, 0);
+  }
+}
+
 function execStatements(stmts: Statement[], env: Env): any {
   for (const stmt of stmts) {
     if (stmt.kind === "assign") {
       const value = evalExpression(stmt.value, env);
+      for (const key of stmt.path) assertSafePathKey(key);
       let obj = env;
       for (let i = 0; i < stmt.path.length - 1; i++) {
         const key = stmt.path[i];
@@ -787,6 +799,7 @@ export function compile(source: string): CompileResult {
         // Apply mutations
         for (const m of a.body.mutations) {
           const value = evalExpression(m.value, env);
+          for (const key of m.path) assertSafePathKey(key);
           let obj = env;
           for (let i = 0; i < m.path.length - 1; i++) {
             if (!(m.path[i] in obj)) obj[m.path[i]] = {};
