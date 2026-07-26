@@ -1,6 +1,6 @@
 /** Simulation engine invariants — beta-readiness guarantees (ranking, bounds, determinism, constraint disqualification, adversarial input). */
 import { describe, expect, it } from "vitest";
-import { SimulationEngine } from "./SimulationEngine";
+import { SimulationEngine, extractDecisionSignals } from "./SimulationEngine";
 
 const UUID = "11111111-1111-4111-8111-111111111111";
 const WS = "22222222-2222-4222-8222-222222222222";
@@ -152,6 +152,35 @@ describe("beta sanity: SimulationEngine invariants", () => {
     // The floor must not nuke the whole catalog — capital-efficient paths survive.
     expect(out.futures.filter((f) => f.score > 0).length).toBeGreaterThanOrEqual(1);
     expect(out.best.score).toBeGreaterThan(0);
+  });
+
+  it("does not read an interrogative objective as a raise preference", () => {
+    // "Should we raise…?" is a question, not a stated intent.
+    const question = extractDecisionSignals("Should we raise funding before launch?", [], [], []);
+    expect(question.raisePreferred).toBe(false);
+
+    // A declarative statement still counts.
+    const declared = extractDecisionSignals("We will raise a seed round next quarter", [], [], []);
+    expect(declared.raisePreferred).toBe(true);
+
+    // An explicit soft constraint still counts even with a question objective.
+    const constrained = extractDecisionSignals(
+      "How should we grow?",
+      [],
+      [],
+      [{ id: "c", text: "prefer to raise a round", kind: "soft" }]
+    );
+    expect(constrained.raisePreferred).toBe(true);
+  });
+
+  it("does not inflate small dollar MRR because 'k' appears elsewhere", () => {
+    // "$500 MRR and 80k in the bank" — the 80k must not scale the $500 MRR.
+    const s = extractDecisionSignals("At $500 MRR with 80k in the bank", [], [], []);
+    expect(s.mrr).toBe(500);
+
+    // Genuine "40k MRR" still normalizes to 40000.
+    const k = extractDecisionSignals("Currently at 40k MRR", [], [], []);
+    expect(k.mrr).toBe(40000);
   });
 
   it("fails cleanly on empty objective and survives adversarial input", () => {
