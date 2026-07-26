@@ -47,6 +47,14 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  /* Both surfaces pin a sticky header (public nav 4rem, workspace 3.5rem).
+     Without scroll padding, anything scrolled into view — anchor jumps,
+     keyboard focus, automated clicks — lands underneath it and the
+     translucent header intercepts pointer events. */
+  scroll-padding-top: 5rem;
+}
+
 body {
   overflow-x: hidden;
 }
