@@ -96,7 +96,11 @@ function categorize(idea: string): { category: string; label: string } {
   for (const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)) {
     let score = 0;
     for (const kw of kws) {
-      if (lower.includes(kw)) score += 1;
+      // Whole-word match only: substring matching mis-categorized ideas
+      // ("email" contains "ai", "capital" contains "api", "through"
+      // contains "hr") and picked the wrong economics catalog.
+      const re = new RegExp(`\\b${kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      if (re.test(lower)) score += 1;
     }
     if (score > best.score) {
       best = { category: cat, label: catLabel(cat), score };

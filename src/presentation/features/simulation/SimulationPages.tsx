@@ -9,6 +9,7 @@ import { useWorkspace } from "../workspace/WorkspaceContext";
 import { DecisionPipelineStrip } from "./components/DecisionPipelineStrip";
 import { DecisionReportCard } from "./components/DecisionReportCard";
 import { FutureComparison } from "./components/FutureComparison";
+import { FutureGraph } from "./FutureGraph";
 import { OutcomeTracking } from "./components/OutcomeTracking";
 
 export function SimulationsPage() {
@@ -402,6 +403,17 @@ export function SimulationDetailPage() {
               onResult={(note) => recordOutcomeResult(sim.id, note)}
             />
           }
+        />
+      )}
+
+      {/* Future graph — signature branching visualization */}
+      {sim.status === "completed" && futures.length > 0 && (
+        <FutureGraph
+          futures={futures}
+          bestName={sim.result.best_future?.trim() || null}
+          chosenFutureId={chosenId ?? null}
+          selectedId={activeFutureId}
+          onSelect={setSelectedFutureId}
         />
       )}
 

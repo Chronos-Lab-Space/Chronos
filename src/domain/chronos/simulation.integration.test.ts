@@ -59,3 +59,19 @@ describe("Chronos simulation integration", () => {
     expect(simulate(idea, { sampleBudget: 16 })).toEqual(small);
   });
 });
+
+describe("idea categorization (word boundaries)", () => {
+  it("matches keywords as whole words, not substrings", () => {
+    // "email" contains "ai", "capital" contains "api", "through" contains "hr",
+    // "device" contains "dev" — none of these are AI/dev-tools or HR signals.
+    expect(simulate("Email newsletters for local restaurants").category).not.toBe("ai-dev-tools");
+    expect(simulate("Raise growth capital for our B2B SaaS").category).toBe("b2b-saas");
+    expect(simulate("Sell smart home devices to consumers").category).not.toBe("ai-dev-tools");
+  });
+
+  it("still matches genuine keyword words", () => {
+    expect(simulate("AI copilot for developers").category).toBe("ai-dev-tools");
+    expect(simulate("Patient scheduling for medical clinics").category).toBe("health");
+    expect(simulate("HR onboarding for enterprise sales teams").category).toBe("b2b-saas");
+  });
+});

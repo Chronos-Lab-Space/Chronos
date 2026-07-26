@@ -1,5 +1,6 @@
 import {
   evaluateFutures,
+  evaluateFuturesInGivenOrder,
   type EvaluableFuture,
   type FutureEvaluationResult,
 } from "../../domain/workspace/futureEvaluation";
@@ -64,7 +65,12 @@ export class EvaluationAgent implements Agent {
     const hardRiskCeiling =
       typeof task.input.hardRiskCeiling === "number" ? task.input.hardRiskCeiling : undefined;
 
-    const result: FutureEvaluationResult = evaluateFutures(futures, { hardRiskCeiling });
+    // preserveOrder: the caller's ranking is authoritative (e.g. the
+    // simulation engine's collapse) — annotate with EV, do not re-rank.
+    const result: FutureEvaluationResult =
+      task.input.preserveOrder === true
+        ? evaluateFuturesInGivenOrder(futures, { hardRiskCeiling })
+        : evaluateFutures(futures, { hardRiskCeiling });
 
     return {
       ok: true,

@@ -84,11 +84,54 @@ export async function prepareUploadFiles(files: FileList | File[]): Promise<Prep
 }
 
 /**
+ * Scheme/host allowlist for user-supplied imports. The browser's CORS
+ * already limits what a cross-origin response can reveal, but this keeps
+ * the importer honest if it ever moves behind a server-side proxy, and
+ * blocks pointless requests to internal ranges outright.
+ */
+function urlImportBlockReason(candidate: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    return "Not a valid URL";
+  }
+  if (parsed.protocol !== "https:") {
+    return "Only https:// URLs can be imported";
+  }
+  const host = parsed.hostname.toLowerCase();
+  const isPrivateIPv4 =
+    /^127\.|^10\.|^192\.168\.|^169\.254\.|^0\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+  if (
+    host === "localhost" ||
+    host.endsWith(".local") ||
+    host === "[::1]" ||
+    host === "::1" ||
+    isPrivateIPv4
+  ) {
+    return "Internal and private hosts are blocked";
+  }
+  return null;
+}
+
+/**
  * Extract web content for preview before committing to the library.
  */
 export async function extractWebContent(rawUrl: string): Promise<UrlExtractionResult> {
   const url = rawUrl.trim();
   if (!url) throw new Error("URL is required.");
+
+  const blockReason = urlImportBlockReason(url);
+  if (blockReason) {
+    return {
+      url,
+      title: url,
+      content: `Not imported: ${blockReason.toLowerCase()}.`,
+      ok: false,
+      warning: blockReason,
+    };
+  }
 
   if (isGithubRepoUrl(url) || /raw\.githubusercontent\.com/i.test(url)) {
     const prepared = await prepareGithubReadme(url);

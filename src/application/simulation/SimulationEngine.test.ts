@@ -169,7 +169,9 @@ describe("SimulationEngine", () => {
       simulationId: "sim-hard",
       workspaceId: "w1",
       goal,
-      objective: "Growth path with capital options",
+      // B2B SaaS catalog includes "Top-down enterprise" — a genuinely
+      // raise-heavy path that the hard constraint must disqualify.
+      objective: "Growth path for our B2B SaaS with capital options",
       knowledge,
       notes: [],
       constraints: [{ id: "c1", text: "no raise before launch", kind: "hard" }],
@@ -181,9 +183,15 @@ describe("SimulationEngine", () => {
     expect(out.best.name.toLowerCase()).not.toMatch(
       /capitalized scale|raise series|top-down enterprise/
     );
-    // At least one path should be marked infeasible when catalog includes raise paths
+    // At least one raise path is actually disqualified — and never the whole catalog:
+    // bootstrap-friendly paths must survive the constraint that favors them.
     const infeasible = out.futures.filter((f) => f.score === 0 || /infeasible/i.test(f.summary));
-    expect(out.disqualifiedCount + infeasible.length).toBeGreaterThanOrEqual(0);
+    expect(infeasible.length).toBeGreaterThanOrEqual(1);
+    const eligible = out.futures.filter((f) => f.score > 0);
+    expect(eligible.length).toBeGreaterThanOrEqual(2);
+    for (const f of eligible) {
+      expect(f.name.toLowerCase()).not.toMatch(/capitalized scale|top-down enterprise/);
+    }
   });
 
   it("is deterministic for the same inputs", () => {
