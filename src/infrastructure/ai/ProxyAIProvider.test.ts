@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AICapabilityError, AIProviderError } from "../../domain/ai/errors";
-import { AnthropicAIProvider } from "./AnthropicAIProvider";
+import { ProxyAIProvider } from "./ProxyAIProvider";
 
 const PROXY = "https://project.supabase.co/functions/v1/ai-generate";
 
@@ -12,7 +12,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 function providerWith(fetchImpl: unknown, token: string | null = "session-token") {
-  return new AnthropicAIProvider({
+  return new ProxyAIProvider({
     proxyUrl: PROXY,
     getAccessToken: async () => token,
     fetchImpl: fetchImpl as typeof fetch,
@@ -29,7 +29,7 @@ function headersOf(fetchImpl: ReturnType<typeof vi.fn>): Record<string, string> 
   return call[1].headers as Record<string, string>;
 }
 
-describe("AnthropicAIProvider", () => {
+describe("ProxyAIProvider", () => {
   it("maps the proxy response and sends the session token", async () => {
     const fetchImpl = vi.fn(async () =>
       jsonResponse({
@@ -44,7 +44,7 @@ describe("AnthropicAIProvider", () => {
 
     expect(r.text).toBe("Ship the staged beta.");
     expect(r.model).toBe("claude-opus-5");
-    expect(r.provider).toBe("anthropic");
+    expect(r.provider).toBe("proxy");
     expect(r.usage).toEqual({ promptTokens: 356, completionTokens: 118 });
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
@@ -83,7 +83,7 @@ describe("AnthropicAIProvider", () => {
 
   it("throws when no proxy URL is configured", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ text: "no" }));
-    const ai = new AnthropicAIProvider({
+    const ai = new ProxyAIProvider({
       getAccessToken: async () => "t",
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
@@ -100,7 +100,7 @@ describe("AnthropicAIProvider", () => {
 
     await expect(ai.generate({ prompt: "x" })).rejects.toMatchObject({
       name: "AIProviderError",
-      provider: "anthropic",
+      provider: "proxy",
       status: 429,
     });
     await expect(providerWith(fetchImpl).generate({ prompt: "x" })).rejects.toThrow(
@@ -126,7 +126,7 @@ describe("AnthropicAIProvider", () => {
 
     await expect(ai.generate({ prompt: "x" })).rejects.toMatchObject({
       name: "AIProviderError",
-      provider: "anthropic",
+      provider: "proxy",
     });
   });
 

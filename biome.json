@@ -6,7 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["src/**", "e2e/**", "scripts/**", "*.ts", "*.json", "index.html"]
+    "includes": [
+      "src/**",
+      "e2e/**",
+      "scripts/**",
+      "supabase/functions/_shared/**",
+      "*.ts",
+      "*.json",
+      "index.html"
+    ]
   },
   "formatter": {
     "enabled": true,

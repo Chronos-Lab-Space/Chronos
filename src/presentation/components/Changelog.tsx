@@ -12,6 +12,31 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.7.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "Open-weights models, same proxy",
+    summary:
+      "The hosted provider added a second upstream: any OpenAI-compatible endpoint, which covers essentially every open-weights host and anything self-hosted. Several are free, so running Chronos with a hosted model no longer implies a per-call bill. Picking one is two secrets, not a code change, and the browser still cannot see or influence which model answers.",
+    highlights: [
+      {
+        label: "One wire format",
+        detail:
+          "Groq, Together, OpenRouter, Cerebras, Hugging Face, or your own vLLM / llama.cpp / Ollama server — set a base URL and a model",
+      },
+      {
+        label: "Reasoning traces stripped",
+        detail:
+          "Open reasoning models emit their scratchpad inline; it is removed rather than shown as the recommendation",
+      },
+      {
+        label: "Honest naming",
+        detail:
+          'The provider is now "proxy" rather than "anthropic", since the browser cannot know which vendor answers · the old value still works',
+      },
+    ],
+  },
+  {
     version: "5.6.0",
     date: "2026-07-26",
     tag: "minor",

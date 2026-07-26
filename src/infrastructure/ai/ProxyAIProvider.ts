@@ -9,7 +9,7 @@ import type {
   ReasonRequest,
 } from "../../domain/ai/types";
 
-export type AnthropicAIProviderOptions = {
+export type ProxyAIProviderOptions = {
   /** Proxy endpoint. Defaults to `${VITE_SUPABASE_URL}/functions/v1/ai-generate`. */
   proxyUrl?: string;
   /**
@@ -34,22 +34,26 @@ type ProxyError = {
 };
 
 /**
- * Hosted Anthropic via the `ai-generate` Supabase Edge Function.
+ * Hosted generation via the `ai-generate` Supabase Edge Function.
  *
- * The API key is a Supabase secret held server-side — this adapter only
- * ever carries the user's own session JWT. There is deliberately no key
- * option here: a browser-held Anthropic key would ship in the bundle.
+ * Which model actually answers — an open-weights model on Groq, Together,
+ * OpenRouter or a self-hosted server, or Anthropic — is decided by the
+ * function's secrets. The browser deliberately cannot tell and cannot
+ * choose: that is what keeps the key, the model, and the bill out of a
+ * bundle anyone can read.
  *
- * Opt in with VITE_AI_PROVIDER=anthropic. Model choice lives in the
- * function's secrets, not here, so the bundle cannot pin an expensive one.
+ * There is likewise no key option on this adapter. A browser-held
+ * provider key would ship in `dist/` on the first build.
+ *
+ * Opt in with VITE_AI_PROVIDER=proxy.
  */
-export class AnthropicAIProvider implements AIPort {
-  readonly id = "anthropic";
+export class ProxyAIProvider implements AIPort {
+  readonly id = "proxy";
   private readonly proxyUrl: string;
   private readonly getAccessToken: () => Promise<string | null>;
   private readonly fetchImpl: typeof fetch;
 
-  constructor(options: AnthropicAIProviderOptions = {}) {
+  constructor(options: ProxyAIProviderOptions = {}) {
     this.proxyUrl = (options.proxyUrl ?? "").replace(/\/$/, "");
     this.getAccessToken = options.getAccessToken ?? (async () => null);
     this.fetchImpl = options.fetchImpl ?? fetch.bind(globalThis);

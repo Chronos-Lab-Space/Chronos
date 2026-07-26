@@ -7,7 +7,12 @@ export default defineConfig({
     environment: "jsdom",
     globals: false,
     setupFiles: ["./src/test/setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"],
+    // supabase/functions/_shared holds the runtime-agnostic parts of the
+    // Edge Function (upstream request shaping and response parsing). The
+    // function itself is Deno-only and unreachable from here, but that
+    // logic is the part most likely to break against a new provider, so
+    // it is kept dependency-free and tested with everything else.
+    include: ["src/**/*.test.{ts,tsx}", "supabase/functions/_shared/**/*.test.ts"],
     coverage: {
       reporter: ["text", "html", "lcov"],
       include: [

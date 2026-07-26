@@ -13,16 +13,22 @@ describe("createAIPortFromEnv", () => {
     expect(activeId(createAIPortFromEnv())).toBe("noop");
   });
 
-  it("resolves the anthropic adapter when selected", () => {
-    const port = createAIPortFromEnv({ provider: "anthropic" });
-    expect(activeId(port)).toBe("anthropic");
-    expect((port as ProviderRouter).resolve("anthropic").id).toBe("anthropic");
+  it("resolves the proxy adapter when selected", () => {
+    const port = createAIPortFromEnv({ provider: "proxy" });
+    expect(activeId(port)).toBe("proxy");
+    expect((port as ProviderRouter).resolve("proxy").id).toBe("proxy");
+  });
+
+  it('still accepts the legacy "anthropic" value', () => {
+    // The proxy gained a second upstream, so the browser no longer knows
+    // which vendor answers. Existing configs must not break for it.
+    expect(activeId(createAIPortFromEnv({ provider: "anthropic" }))).toBe("proxy");
   });
 
   it("falls back to noop on an unknown provider rather than throwing", () => {
     // A typo in VITE_AI_PROVIDER must degrade to deterministic prose,
     // not break every simulation.
-    const port = createAIPortFromEnv({ provider: "anthropicc" as AIProviderId });
+    const port = createAIPortFromEnv({ provider: "grok" as AIProviderId });
     expect(activeId(port)).toBe("noop");
   });
 
@@ -38,7 +44,7 @@ describe("createAIPortFromEnv", () => {
     vi.stubGlobal("fetch", fetchSpy);
     try {
       const port = createAIPortFromEnv({
-        provider: "anthropic",
+        provider: "proxy",
         proxyUrl: "https://example.supabase.co/functions/v1/ai-generate",
         getAccessToken: async () => "token",
       });

@@ -1,10 +1,19 @@
 import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
-import { AnthropicAIProvider } from "./AnthropicAIProvider";
 import { OllamaAIProvider } from "./OllamaAIProvider";
+import { ProxyAIProvider } from "./ProxyAIProvider";
 import { ProviderRouter } from "./ProviderRouter";
 
-export type AIProviderId = "noop" | "ollama" | "anthropic";
+export type AIProviderId = "noop" | "ollama" | "proxy" | "anthropic";
+
+/**
+ * `anthropic` predates the proxy gaining a second upstream. The browser
+ * cannot tell which model answers — that is a server secret — so the
+ * honest id is `proxy`. The old value keeps working.
+ */
+function canonicalProviderId(raw: string): string {
+  return raw === "anthropic" ? "proxy" : raw;
+}
 
 function envString(key: string): string | undefined {
   // Browser (Vite)
@@ -36,7 +45,7 @@ export function isAISimEnrichEnabled(): boolean {
 
 /**
  * Endpoint of the `ai-generate` Supabase Edge Function, which holds the
- * Anthropic key server-side. Derived from the project URL unless
+ * provider key server-side. Derived from the project URL unless
  * VITE_AI_PROXY_URL overrides it. Empty when Supabase is unconfigured —
  * the adapter then throws and the engine keeps deterministic prose.
  */
@@ -64,10 +73,10 @@ async function currentAccessToken(): Promise<string | null> {
  * Build AIPort from env.
  * Default: noop (deterministic, offline-safe for public beta sims).
  *
- * VITE_AI_PROVIDER=noop|ollama|anthropic
+ * VITE_AI_PROVIDER=noop|ollama|proxy   ("anthropic" is accepted for "proxy")
  * VITE_OLLAMA_URL / OLLAMA_HOST
  * VITE_OLLAMA_MODEL
- * VITE_AI_PROXY_URL (anthropic; defaults to the project's ai-generate function)
+ * VITE_AI_PROXY_URL (proxy; defaults to the project's ai-generate function)
  */
 export function createAIPortFromEnv(
   override?: Partial<{
@@ -78,12 +87,14 @@ export function createAIPortFromEnv(
     getAccessToken: () => Promise<string | null>;
   }>
 ): AIPort {
-  const providerId = (
-    override?.provider ??
-    envString("VITE_AI_PROVIDER") ??
-    envString("AI_PROVIDER") ??
-    "noop"
-  ).toLowerCase() as AIProviderId;
+  const providerId = canonicalProviderId(
+    (
+      override?.provider ??
+      envString("VITE_AI_PROVIDER") ??
+      envString("AI_PROVIDER") ??
+      "noop"
+    ).toLowerCase()
+  );
 
   const noop = new NoopAIProvider();
   const ollama = new OllamaAIProvider({
@@ -95,7 +106,7 @@ export function createAIPortFromEnv(
     defaultModel: override?.ollamaModel ?? envString("VITE_OLLAMA_MODEL") ?? "llama3.2:1b",
   });
 
-  const anthropic = new AnthropicAIProvider({
+  const proxy = new ProxyAIProvider({
     proxyUrl: resolveProxyUrl(override?.proxyUrl),
     getAccessToken: override?.getAccessToken ?? currentAccessToken,
   });
@@ -103,7 +114,7 @@ export function createAIPortFromEnv(
   const providers: Record<string, AIPort> = {
     noop,
     ollama,
-    anthropic,
+    proxy,
   };
 
   const defaultProviderId = providerId in providers ? providerId : "noop";

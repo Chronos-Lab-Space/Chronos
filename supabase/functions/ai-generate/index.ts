@@ -1,9 +1,20 @@
 // ============================================================
-// ai-generate — Anthropic key proxy for the Chronos SPA
+// ai-generate — model key proxy for the Chronos SPA
 //
 // Chronos ships as a static bundle on GitHub Pages, so every VITE_* value
-// is public. The Anthropic key therefore lives here, as a Supabase secret
+// is public. Any provider key therefore lives here, as a Supabase secret
 // read from Deno.env, and the browser only ever holds its own session JWT.
+//
+// Two upstreams, chosen by secret, same request and response shape:
+//
+//   AI_UPSTREAM=openai     any OpenAI-compatible /chat/completions host —
+//                          Groq, Together, OpenRouter, Cerebras, Hugging
+//                          Face, or self-hosted vLLM / llama.cpp / Ollama.
+//                          Open weights, and free on several of them.
+//   AI_UPSTREAM=anthropic  the Anthropic Messages API.
+//
+// Unset, the upstream is inferred from whichever keys are present. The
+// browser cannot see or influence the choice.
 //
 // The one caller today is SimulationEngine.maybeEnrichRecommendation —
 // a 2-4 sentence rewrite of prose that was already computed
@@ -15,9 +26,14 @@
 
 import Anthropic from "npm:@anthropic-ai/sdk@^0.115.0";
 import { withSupabase } from "npm:@supabase/server@1.4.0";
+import {
+  buildChatCompletionBody,
+  chatCompletionsUrl,
+  parseChatCompletion,
+} from "../_shared/openaiCompatible.ts";
 
-/** Model default. Override with the ANTHROPIC_MODEL secret, not from the client. */
-const DEFAULT_MODEL = "claude-opus-5";
+/** Anthropic default. Override with ANTHROPIC_MODEL — never from the client. */
+const DEFAULT_ANTHROPIC_MODEL = "claude-opus-5";
 
 /** Upstream timeout. The SDK takes milliseconds. */
 const UPSTREAM_TIMEOUT_MS = 30_000;
@@ -104,6 +120,143 @@ function startOfMonthISO(now: Date): string {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
 
+// ---- Upstream selection -----------------------------------------
+
+type Upstream =
+  | { kind: "anthropic"; apiKey: string; model: string }
+  | { kind: "openai"; apiKey: string; baseUrl: string; model: string };
+
+/**
+ * Decide which upstream to call from secrets alone. Returns a message
+ * string when the function is deployed without a usable configuration —
+ * that surfaces as a 503, which the client turns into a fail-open.
+ *
+ * An explicit AI_UPSTREAM wins so that having both key sets present
+ * (say, while comparing them) is not resolved by accident.
+ */
+function resolveUpstream(): Upstream | string {
+  const explicit = (Deno.env.get("AI_UPSTREAM") ?? "").trim().toLowerCase();
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  const openaiKey = Deno.env.get("AI_API_KEY");
+  const baseUrl = Deno.env.get("AI_BASE_URL");
+
+  const wantsOpenai = explicit === "openai" || (!explicit && !!baseUrl && !!openaiKey);
+  const wantsAnthropic = explicit === "anthropic" || (!explicit && !!anthropicKey);
+
+  if (explicit && explicit !== "openai" && explicit !== "anthropic") {
+    return `AI_UPSTREAM must be "openai" or "anthropic", got "${explicit}".`;
+  }
+
+  if (wantsOpenai) {
+    if (!baseUrl) return "AI_BASE_URL is not set.";
+    if (!openaiKey) return "AI_API_KEY is not set.";
+    // No default model: every host names its models differently, and
+    // guessing one produces a 404 from inside a proxy, which is a
+    // miserable thing to debug.
+    const model = Deno.env.get("AI_MODEL");
+    if (!model) return "AI_MODEL is not set.";
+    return { kind: "openai", apiKey: openaiKey, baseUrl, model };
+  }
+
+  if (wantsAnthropic) {
+    if (!anthropicKey) return "ANTHROPIC_API_KEY is not set.";
+    return {
+      kind: "anthropic",
+      apiKey: anthropicKey,
+      model: Deno.env.get("ANTHROPIC_MODEL") ?? DEFAULT_ANTHROPIC_MODEL,
+    };
+  }
+
+  return "No AI provider is configured.";
+}
+
+type UpstreamResult = {
+  text: string;
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  stopReason: string | null;
+};
+
+async function callAnthropic(
+  upstream: Extract<Upstream, { kind: "anthropic" }>,
+  args: { system: string; prompt: string; maxTokens: number }
+): Promise<UpstreamResult> {
+  const client = new Anthropic({ apiKey: upstream.apiKey });
+  const message = await client.messages.create(
+    {
+      model: upstream.model,
+      max_tokens: args.maxTokens,
+      system: args.system,
+      messages: [{ role: "user", content: args.prompt }],
+      // The cost lever that applies here: rewriting settled prose is not
+      // a reasoning task, and `low` is strong on Opus 5.
+      output_config: { effort: "low" },
+      // Thinking is ON by default on Opus 5 and would share this
+      // request's max_tokens with the answer. `disabled` is accepted only
+      // at effort `high` or lower, so `low` qualifies.
+      thinking: { type: "disabled" },
+      // No temperature / top_p / top_k — removed on Opus 5, 400 if sent.
+      // No stream — max_tokens is three orders below where it matters.
+    },
+    { timeout: UPSTREAM_TIMEOUT_MS }
+  );
+
+  // Refusals are read before the content blocks, and yield empty text so
+  // the engine keeps its deterministic recommendation.
+  const text =
+    message.stop_reason === "refusal"
+      ? ""
+      : message.content
+          .map((block) => (block.type === "text" ? block.text : ""))
+          .join("")
+          .trim();
+
+  return {
+    text,
+    model: message.model ?? upstream.model,
+    promptTokens: message.usage?.input_tokens ?? 0,
+    completionTokens: message.usage?.output_tokens ?? 0,
+    stopReason: message.stop_reason ?? null,
+  };
+}
+
+async function callOpenAICompatible(
+  upstream: Extract<Upstream, { kind: "openai" }>,
+  args: { system: string; prompt: string; maxTokens: number }
+): Promise<UpstreamResult> {
+  const res = await fetch(chatCompletionsUrl(upstream.baseUrl), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${upstream.apiKey}`,
+    },
+    body: JSON.stringify(
+      buildChatCompletionBody({
+        model: upstream.model,
+        system: args.system,
+        prompt: args.prompt,
+        maxTokens: args.maxTokens,
+      })
+    ),
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${detail.slice(0, 200)}`);
+  }
+
+  const parsed = parseChatCompletion(await res.json(), upstream.model);
+  return {
+    text: parsed.text,
+    model: parsed.model,
+    promptTokens: parsed.promptTokens,
+    completionTokens: parsed.completionTokens,
+    stopReason: parsed.finishReason,
+  };
+}
+
 export default {
   fetch: withSupabase({ auth: "user" }, async (req: Request, ctx) => {
     /**
@@ -135,12 +288,12 @@ export default {
       return fail(405, "invalid_body", "Use POST.");
     }
 
-    const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!apiKey) {
-      // Deployed without a key: behave like a disabled feature, not a
-      // crash. The client maps this to an AIProviderError and the engine
-      // keeps its deterministic recommendation.
-      return fail(503, "service_disabled", "AI provider is not configured.");
+    const upstream = resolveUpstream();
+    if (typeof upstream === "string") {
+      // Deployed without a usable configuration: behave like a disabled
+      // feature, not a crash. The client maps this to an AIProviderError
+      // and the engine keeps its deterministic recommendation.
+      return fail(503, "service_disabled", upstream);
     }
 
     const userId = ctx.userClaims?.id;
@@ -207,70 +360,50 @@ export default {
     }
 
     // ---- Upstream ---------------------------------------------------
-    const model = Deno.env.get("ANTHROPIC_MODEL") ?? DEFAULT_MODEL;
-    const anthropic = new Anthropic({ apiKey });
     const system = parsed.system ? `${SERVER_PREAMBLE}\n\n${parsed.system}` : SERVER_PREAMBLE;
+    const args = { system, prompt: parsed.prompt, maxTokens: parsed.maxTokens };
 
-    const message = await anthropic.messages
-      .create(
-        {
-          model,
-          max_tokens: parsed.maxTokens,
-          system,
-          messages: [{ role: "user", content: parsed.prompt }],
-          // The cost lever that applies here: rewriting settled prose is
-          // not a reasoning task, and `low` is strong on Opus 5.
-          output_config: { effort: "low" },
-          // Thinking is ON by default on Opus 5 and would share this
-          // request's max_tokens with the answer. `disabled` is accepted
-          // only at effort `high` or lower, so `low` qualifies.
-          thinking: { type: "disabled" },
-          // No temperature / top_p / top_k — removed on Opus 5, 400 if sent.
-          // No stream — max_tokens is three orders below where it matters.
-        },
-        { timeout: UPSTREAM_TIMEOUT_MS }
-      )
-      .catch((err: unknown) => (err instanceof Error ? err : new Error(String(err))));
+    const result = await (upstream.kind === "anthropic"
+      ? callAnthropic(upstream, args)
+      : callOpenAICompatible(upstream, args)
+    ).catch((err: unknown) => (err instanceof Error ? err : new Error(String(err))));
 
-    if (message instanceof Error) {
+    if (result instanceof Error) {
       await recordUsage({
         userId,
-        model,
+        model: upstream.model,
         inputTokens: 0,
         outputTokens: 0,
         stopReason: "error",
         ok: false,
       });
-      return fail(502, "upstream_failed", `Anthropic request failed: ${message.message.slice(0, 200)}`);
+      return fail(
+        502,
+        "upstream_failed",
+        `${upstream.kind} request failed: ${result.message.slice(0, 200)}`
+      );
     }
-
-    const usage = {
-      promptTokens: message.usage?.input_tokens ?? 0,
-      completionTokens: message.usage?.output_tokens ?? 0,
-    };
 
     await recordUsage({
       userId,
-      model: message.model ?? model,
-      inputTokens: usage.promptTokens,
-      outputTokens: usage.completionTokens,
-      stopReason: message.stop_reason ?? null,
+      model: result.model,
+      inputTokens: result.promptTokens,
+      outputTokens: result.completionTokens,
+      stopReason: result.stopReason,
       ok: true,
     });
 
-    // Refusals are read before the content blocks. Returning empty text
-    // with a 200 is deliberate: maybeEnrichRecommendation already treats
-    // empty text as "keep the deterministic prose", so a refusal degrades
-    // to exactly today's product behaviour instead of surfacing an error.
-    if (message.stop_reason === "refusal") {
-      return Response.json({ text: "", model: message.model, usage });
-    }
-
-    const text = message.content
-      .map((block) => (block.type === "text" ? block.text : ""))
-      .join("")
-      .trim();
-
-    return Response.json({ text, model: message.model, usage });
+    // Empty text is a valid outcome — a refusal, or a reasoning model that
+    // spent its whole budget thinking. maybeEnrichRecommendation already
+    // treats it as "keep the deterministic prose", so it degrades to
+    // exactly today's product behaviour instead of surfacing an error.
+    return Response.json({
+      text: result.text,
+      model: result.model,
+      usage: {
+        promptTokens: result.promptTokens,
+        completionTokens: result.completionTokens,
+      },
+    });
   }),
 };
