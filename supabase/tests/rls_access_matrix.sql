@@ -100,6 +100,7 @@ declare
   outsider_id uuid := '44444444-4444-4444-8444-444444444444';
   newcomer_id uuid := '55555555-5555-4555-8555-555555555555';
   ws          text := 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  save_payload jsonb;
   note        text := 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
   read_note   text;
 begin
@@ -173,6 +174,41 @@ begin
   perform pg_temp.expect('outsider inserts note',
     pg_temp.can(outsider_id,
       format('insert into public.notes (workspace_id, title) values (%L, %L)', ws, 'nope')), false);
+
+  -- save_workspace_home must not be a way around any of the above.
+  -- It is SECURITY INVOKER, so the same policies apply inside it; if it
+  -- were ever switched to DEFINER these three checks are what would fail.
+  -- Each payload carries a brand-new note, so a caller who lacks editor
+  -- rights is rejected even if the workspace upsert itself were a no-op.
+  save_payload := jsonb_build_object(
+    'workspace', jsonb_build_object(
+      'id', ws, 'owner_id', owner_id, 'name', 'saved via rpc',
+      'description', '', 'created_at', now()
+    ),
+    'notes', jsonb_build_array(jsonb_build_object(
+      'id', gen_random_uuid(), 'workspace_id', ws, 'title', 'rpc note',
+      'content', '', 'created_at', now()
+    ))
+  );
+
+  perform pg_temp.expect('owner saves via rpc',
+    pg_temp.can(owner_id,
+      format('select public.save_workspace_home(%L::jsonb)', save_payload)), true);
+  perform pg_temp.expect('VIEWER saves via rpc',
+    pg_temp.can(viewer_id,
+      format('select public.save_workspace_home(%L::jsonb)', save_payload)), false);
+  perform pg_temp.expect('outsider saves via rpc',
+    pg_temp.can(outsider_id,
+      format('select public.save_workspace_home(%L::jsonb)', save_payload)), false);
+
+  -- Known limitation, asserted so it cannot change unnoticed: a non-owner
+  -- member also cannot save, because the snapshot always upserts the
+  -- workspace row and workspaces_update is owner-only. This predates the
+  -- RPC — the previous client-side save() had the same constraint. If
+  -- members are ever meant to save, this expectation flips to true.
+  perform pg_temp.expect('member saves via rpc (owner-only workspace row)',
+    pg_temp.can(member_id,
+      format('select public.save_workspace_home(%L::jsonb)', save_payload)), false);
 end $$;
 
 select 'rls_access_matrix: all checks passed' as result;

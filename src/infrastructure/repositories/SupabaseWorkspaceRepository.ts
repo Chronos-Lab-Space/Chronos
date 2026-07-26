@@ -129,139 +129,27 @@ export class SupabaseWorkspaceRepository {
     };
   }
 
+  /**
+   * Persist the whole workspace snapshot in one atomic call.
+   *
+   * Previously this issued seven-plus separate upserts. Each was its own
+   * transaction over PostgREST, so a failure part-way through left the
+   * cloud copy half-written — and WorkspaceService.persist() swallows the
+   * throw, so the divergence was silent. One RPC is one transaction, so
+   * the save is now all-or-nothing.
+   *
+   * save_workspace_home is SECURITY INVOKER, so every statement inside it
+   * is still subject to this user's RLS policies. It is not a privileged
+   * back door.
+   *
+   * Semantics are unchanged: upsert only, never delete. Removals still go
+   * through deleteKnowledge / deleteNote.
+   */
   async save(home: WorkspaceHome): Promise<void> {
-    const w = home.workspace;
-
-    const { error: wsError } = await this.client.from("workspaces").upsert({
-      id: w.id,
-      owner_id: w.owner_id,
-      name: w.name,
-      description: w.description ?? "",
-      created_at: w.created_at,
+    const { error } = await this.client.rpc("save_workspace_home", {
+      payload: buildSavePayload(home),
     });
-    if (wsError) throw wsError;
-
-    if (home.goal) {
-      // Ensure only this goal is active for the workspace
-      await this.client
-        .from("goals")
-        .update({ status: "paused" })
-        .eq("workspace_id", w.id)
-        .eq("status", "active")
-        .neq("id", home.goal.id);
-
-      const g = home.goal;
-      const { error: goalError } = await this.client.from("goals").upsert({
-        id: g.id,
-        workspace_id: g.workspace_id,
-        title: g.title,
-        description: g.description ?? "",
-        status: g.status,
-        priority: g.priority ?? 0,
-        created_at: g.created_at,
-      });
-      if (goalError) throw goalError;
-    }
-
-    if (home.knowledge.length > 0) {
-      const { error } = await this.client.from("knowledge").upsert(
-        home.knowledge.map((k) => ({
-          id: k.id,
-          workspace_id: k.workspace_id,
-          type: k.type,
-          title: k.title,
-          content: k.content ?? "",
-          metadata: k.metadata ?? {},
-          created_at: k.created_at,
-        }))
-      );
-      if (error) throw error;
-    }
-
-    if (home.notes.length > 0) {
-      const { error } = await this.client.from("notes").upsert(
-        home.notes.map((n) => ({
-          id: n.id,
-          workspace_id: n.workspace_id,
-          title: n.title,
-          content: n.content ?? "",
-          created_at: n.created_at,
-        }))
-      );
-      if (error) throw error;
-    }
-
-    if (home.recentSimulations.length > 0) {
-      // Parent simulations before children so parent_simulation_id FKs succeed.
-      const orderedSims = orderSimulationsForUpsert(home.recentSimulations);
-      const { error } = await this.client.from("simulations").upsert(
-        orderedSims.map((s) => ({
-          id: s.id,
-          workspace_id: s.workspace_id,
-          goal_id: s.goal_id,
-          title: s.title,
-          status: s.status,
-          confidence: s.confidence,
-          result: s.result ?? {},
-          created_at: s.created_at,
-          version: s.version ?? 1,
-          lineage_id: s.lineage_id ?? s.id,
-          parent_simulation_id: s.parent_simulation_id,
-        }))
-      );
-      if (error) throw error;
-    }
-
-    // Futures + timeline: upsert by id (safer than delete-all under concurrent tabs).
-    // One batched call each across every simulation rather than a pair per
-    // simulation — both rows carry simulation_id, so there was never anything
-    // per-simulation about the write itself, and looping cost two round-trips
-    // per simulation (~100 on a 50-simulation workspace, on every save).
-    const allFutures = home.recentSimulations.flatMap(
-      (sim) => home.futuresBySimulation[sim.id] ?? []
-    );
-
-    if (allFutures.length > 0) {
-      const { error } = await this.client.from("futures").upsert(
-        allFutures.map((f) => ({
-          id: f.id,
-          simulation_id: f.simulation_id,
-          name: f.name,
-          score: f.score,
-          risk: f.risk,
-          confidence: f.confidence,
-          summary: f.summary ?? "",
-        })),
-        { onConflict: "id" }
-      );
-      if (error) throw error;
-    }
-
-    const allNodes = home.recentSimulations.flatMap(
-      (sim) => home.timelineBySimulation[sim.id] ?? []
-    );
-
-    if (allNodes.length > 0) {
-      // Parents before children by depth so self-FK inserts stay valid.
-      // Sorting the combined array is still correct: parent_id never crosses
-      // simulations and a parent always sits at a lower depth than its child,
-      // so ordering globally by depth still places every parent ahead of its
-      // children. Interleaving rows from other simulations between them is
-      // harmless.
-      const ordered = orderTimelineNodesForUpsert(allNodes);
-      const { error } = await this.client.from("timeline_nodes").upsert(
-        ordered.map((n) => ({
-          id: n.id,
-          simulation_id: n.simulation_id,
-          parent_id: n.parent_id,
-          title: n.title,
-          depth: n.depth,
-          score: n.score,
-        })),
-        { onConflict: "id" }
-      );
-      if (error) throw error;
-    }
+    if (error) throw error;
   }
 
   async deleteKnowledge(knowledgeId: string): Promise<void> {
@@ -317,6 +205,97 @@ export function orderTimelineNodesForUpsert(
   nodes: readonly TimelineNodeRecord[]
 ): TimelineNodeRecord[] {
   return [...nodes].sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
+}
+
+/**
+ * Flatten a WorkspaceHome into the single JSONB argument that
+ * save_workspace_home expects.
+ *
+ * Only the columns the function actually reads are included, so the
+ * request stays as small as the data allows — simulation `result` blobs
+ * dominate the payload otherwise.
+ *
+ * Children are emitted in FK-safe order. Strictly this is belt and
+ * braces: referential integrity is enforced by AFTER ROW triggers that
+ * fire at the end of the statement, so a single multi-row insert accepts
+ * parents and children in any order. Ordering keeps the payload
+ * deterministic, which makes it diffable in logs and stable to assert on.
+ */
+export function buildSavePayload(home: WorkspaceHome): Record<string, unknown> {
+  const w = home.workspace;
+  const sims = orderSimulationsForUpsert(home.recentSimulations);
+
+  const futures = home.recentSimulations.flatMap((sim) => home.futuresBySimulation[sim.id] ?? []);
+  const timelineNodes = orderTimelineNodesForUpsert(
+    home.recentSimulations.flatMap((sim) => home.timelineBySimulation[sim.id] ?? [])
+  );
+
+  return {
+    workspace: {
+      id: w.id,
+      owner_id: w.owner_id,
+      name: w.name,
+      description: w.description ?? "",
+      created_at: w.created_at,
+    },
+    goal: home.goal
+      ? {
+          id: home.goal.id,
+          workspace_id: home.goal.workspace_id,
+          title: home.goal.title,
+          description: home.goal.description ?? "",
+          status: home.goal.status,
+          priority: home.goal.priority ?? 0,
+          created_at: home.goal.created_at,
+        }
+      : null,
+    knowledge: home.knowledge.map((k) => ({
+      id: k.id,
+      workspace_id: k.workspace_id,
+      type: k.type,
+      title: k.title,
+      content: k.content ?? "",
+      metadata: k.metadata ?? {},
+      created_at: k.created_at,
+    })),
+    notes: home.notes.map((n) => ({
+      id: n.id,
+      workspace_id: n.workspace_id,
+      title: n.title,
+      content: n.content ?? "",
+      created_at: n.created_at,
+    })),
+    simulations: sims.map((s) => ({
+      id: s.id,
+      workspace_id: s.workspace_id,
+      goal_id: s.goal_id,
+      title: s.title,
+      status: s.status,
+      confidence: s.confidence,
+      result: s.result ?? {},
+      created_at: s.created_at,
+      version: s.version ?? 1,
+      lineage_id: s.lineage_id ?? s.id,
+      parent_simulation_id: s.parent_simulation_id,
+    })),
+    futures: futures.map((f) => ({
+      id: f.id,
+      simulation_id: f.simulation_id,
+      name: f.name,
+      score: f.score,
+      risk: f.risk,
+      confidence: f.confidence,
+      summary: f.summary ?? "",
+    })),
+    timeline_nodes: timelineNodes.map((n) => ({
+      id: n.id,
+      simulation_id: n.simulation_id,
+      parent_id: n.parent_id,
+      title: n.title,
+      depth: n.depth,
+      score: n.score,
+    })),
+  };
 }
 
 function mapWorkspace(row: Record<string, unknown>): WorkspaceRecord {
