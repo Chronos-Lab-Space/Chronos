@@ -2,10 +2,7 @@ import { StartupLaunchPlanner } from "../planner/StartupLaunchPlanner";
 import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import { simulate, type Path } from "../../domain/chronos/startup-sim";
-import {
-  createAIPortFromEnv,
-  isAISimEnrichEnabled,
-} from "../../infrastructure/ai";
+import { createAIPortFromEnv, isAISimEnrichEnabled } from "../../infrastructure/ai";
 import type {
   FutureRecord,
   GoalRecord,
@@ -73,8 +70,7 @@ export type DecisionSignals = {
 };
 
 /** Postgres `uuid` columns reject demo path ids like `0x8d21`. */
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function newUuid(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -255,10 +251,42 @@ function objectiveFocus(objective: string): string {
 function significantTokens(text: string): string[] {
   // Exclude policy/finance verbs so path *names* never flip isRaiseHeavyPath falsely.
   const stop = new Set([
-    "the", "a", "an", "and", "or", "to", "of", "for", "in", "on", "we", "our", "should",
-    "can", "will", "with", "from", "this", "that", "into", "about", "before", "after",
-    "raise", "raising", "funding", "fund", "seed", "series", "venture", "dilution",
-    "bootstrap", "capital", "invest", "investor", "round",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "to",
+    "of",
+    "for",
+    "in",
+    "on",
+    "we",
+    "our",
+    "should",
+    "can",
+    "will",
+    "with",
+    "from",
+    "this",
+    "that",
+    "into",
+    "about",
+    "before",
+    "after",
+    "raise",
+    "raising",
+    "funding",
+    "fund",
+    "seed",
+    "series",
+    "venture",
+    "dilution",
+    "bootstrap",
+    "capital",
+    "invest",
+    "investor",
+    "round",
   ]);
   return text
     .toLowerCase()
@@ -276,8 +304,7 @@ function contextualizePath(path: Path, objective: string, seed: number): Path {
   const nameSuffix = hook ? ` · ${hook}` : "";
   // Keep names readable; avoid stacking suffixes on re-contextualize
   const baseName = path.name.split(" · ")[0] ?? path.name;
-  const name =
-    baseName.length + nameSuffix.length <= 56 ? `${baseName}${nameSuffix}` : baseName;
+  const name = baseName.length + nameSuffix.length <= 56 ? `${baseName}${nameSuffix}` : baseName;
 
   const economic =
     path.arr > 0
@@ -321,9 +348,7 @@ function nextActionsFor(best: FutureRecord, signals: DecisionSignals, objective:
 
 /** Parse learning soft constraints like Prefer "A" over "B". */
 function parsePreferOver(text: string): { prefer: string; avoid: string } | null {
-  const m = text.match(
-    /prefer paths resembling ["“]?([^"”]+)["”]?\s+over\s+["“]?([^"”]+)["”]?/i
-  );
+  const m = text.match(/prefer paths resembling ["“]?([^"”]+)["”]?\s+over\s+["“]?([^"”]+)["”]?/i);
   if (!m) return null;
   return { prefer: m[1].trim().toLowerCase(), avoid: m[2].trim().toLowerCase() };
 }
@@ -398,10 +423,7 @@ export class SimulationEngine {
         recommendation: text,
       };
     } catch (err) {
-      console.warn(
-        "[chronos] AI sim enrich failed; keeping deterministic recommendation.",
-        err
-      );
+      console.warn("[chronos] AI sim enrich failed; keeping deterministic recommendation.", err);
       return output;
     }
   }
@@ -477,7 +499,13 @@ export class SimulationEngine {
         );
       }
       const runnerUp = rankedEligible[1] ?? null;
-      const risks = this.collectRisks(best, raw.bestPath, input.constraints, signals, ineligible.length);
+      const risks = this.collectRisks(
+        best,
+        raw.bestPath,
+        input.constraints,
+        signals,
+        ineligible.length
+      );
       const recommendation = this.buildRecommendation(
         best,
         runnerUp,
@@ -486,7 +514,12 @@ export class SimulationEngine {
         signals,
         objective
       );
-      const timeline = this.buildTimeline(input.simulationId, objective, futures, plannerTaskTitles);
+      const timeline = this.buildTimeline(
+        input.simulationId,
+        objective,
+        futures,
+        plannerTaskTitles
+      );
       this.setTask(tasks, "collapse", "completed");
 
       return {
@@ -581,7 +614,10 @@ export class SimulationEngine {
     signals: DecisionSignals
   ): string {
     const goal = input.goal?.title ?? objective;
-    const knowledge = input.knowledge.map((k) => k.title).slice(0, 12).join("; ");
+    const knowledge = input.knowledge
+      .map((k) => k.title)
+      .slice(0, 12)
+      .join("; ");
     const constraints = input.constraints.map((c) => `${c.kind}:${c.text}`).join("; ");
     const signalLine = [
       signals.runwayMonths != null ? `runway=${signals.runwayMonths}mo` : "",
@@ -698,7 +734,8 @@ export class SimulationEngine {
       pool.push({
         id: `var-${seed.toString(16)}-hold`,
         name: "Conservative hold",
-        thesis: "Preserve optionality; delay irreversible commitments until signal quality improves.",
+        thesis:
+          "Preserve optionality; delay irreversible commitments until signal quality improves.",
         milestones: best.milestones,
         arr: best.arr * 0.65,
         probability: Math.max(0.08, best.probability * 0.9),
@@ -717,7 +754,12 @@ export class SimulationEngine {
       const key = p.name.toLowerCase();
       if (seen.has(key)) continue;
       // Drop raise-heavy variants when raise is forbidden before evaluation ranks them
-      if (signals.raiseForbidden && isRaiseHeavyPath(p) && !isConservativePath(p) && !/bootstrap/i.test(p.name)) {
+      if (
+        signals.raiseForbidden &&
+        isRaiseHeavyPath(p) &&
+        !isConservativePath(p) &&
+        !/bootstrap/i.test(p.name)
+      ) {
         // still include so evaluation can mark infeasible and explain — keep 1 raise path for transparency
         if ([...seen].some((s) => /raise|fund|capitalized|series|top-down/i.test(s))) continue;
       }
@@ -739,10 +781,7 @@ export class SimulationEngine {
     for (const c of constraints.filter((x) => x.kind === "hard")) {
       const ct = c.text.toLowerCase();
 
-      if (
-        /(no\s+raise|bootstrap|no\s+funding|no\s+seed)/i.test(ct) &&
-        isRaiseHeavyPath(path)
-      ) {
+      if (/(no\s+raise|bootstrap|no\s+funding|no\s+seed)/i.test(ct) && isRaiseHeavyPath(path)) {
         violations.push(`Hard constraint violated: ${c.text}`);
       }
 
@@ -757,7 +796,7 @@ export class SimulationEngine {
             signals.mrr != null && signals.mrr > 0
               ? // rough cash proxy: treat mrr*runway as buffer; high burn paths need more
                 (signals.runwayMonths ?? 12) * (signals.mrr / path.burn)
-              : signals.runwayMonths ?? 12;
+              : (signals.runwayMonths ?? 12);
           if (impliedRunway < 10 || path.burn > 100000) {
             violations.push(`Hard constraint violated: ${c.text} (path burn too high)`);
           }
@@ -771,12 +810,18 @@ export class SimulationEngine {
         isAggressivePath(path) &&
         !/(compliance|trust|hipaa|soc)/i.test(text)
       ) {
-        violations.push(`Hard constraint violated: ${c.text} (aggressive path skips compliance sequencing)`);
+        violations.push(
+          `Hard constraint violated: ${c.text} (aggressive path skips compliance sequencing)`
+        );
       }
     }
 
     // Signal-level hard policy even without explicit constraint text
-    if (signals.raiseForbidden && isRaiseHeavyPath(path) && !/bootstrap|wedge|bottom-up|conserv/i.test(text)) {
+    if (
+      signals.raiseForbidden &&
+      isRaiseHeavyPath(path) &&
+      !/bootstrap|wedge|bottom-up|conserv/i.test(text)
+    ) {
       if (!violations.some((v) => /raise|fund/i.test(v))) {
         violations.push("Hard policy: raise/funding path incompatible with bootstrap constraints");
       }
@@ -819,7 +864,11 @@ export class SimulationEngine {
     const speed = clamp01(1 - (path.monthsToPmf - 3) / 18);
 
     let score =
-      probability * 0.4 + arrFactor * 0.25 + unitEcon * 0.15 + speed * 0.1 + (1 - burnPressure) * 0.1;
+      probability * 0.4 +
+      arrFactor * 0.25 +
+      unitEcon * 0.15 +
+      speed * 0.1 +
+      (1 - burnPressure) * 0.1;
     let risk = clamp01(1 - probability + burnPressure * 0.25);
     let conf = clamp01(probability + unitEcon * 0.15);
 
@@ -832,7 +881,10 @@ export class SimulationEngine {
       // Deep runway: optionality paths are fine but don't dominate growth
       score = clamp01(score - 0.03);
     }
-    if (signals.bootstrapPreferred && (isConservativePath(path) || /bootstrap|wedge|bottom-up/i.test(name))) {
+    if (
+      signals.bootstrapPreferred &&
+      (isConservativePath(path) || /bootstrap|wedge|bottom-up/i.test(name))
+    ) {
       score = clamp01(score + 0.08);
       conf = clamp01(conf + 0.05);
     }
@@ -969,7 +1021,9 @@ export class SimulationEngine {
         `On “${focus}”: choose ${best.name} (${confPct}% confidence). ` +
         `${best.summary} ` +
         `Next: ${next}.${edgeBit}${policyBit}${riskNote}`
-      ).replace(/\s+/g, " ").trim();
+      )
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     return (

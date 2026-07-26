@@ -62,8 +62,7 @@ export const scenarios: Scenario[] = [
   {
     id: "self-driving",
     name: "Self-Driving",
-    description:
-      "An autonomous vehicle must decide whether to change lanes on a busy highway.",
+    description: "An autonomous vehicle must decide whether to change lanes on a busy highway.",
     initialState: {
       robot: { x: 200, y: 300, armAngle: 0, gripOpen: true },
       object: { x: 400, y: 300, stable: true, grasped: false },

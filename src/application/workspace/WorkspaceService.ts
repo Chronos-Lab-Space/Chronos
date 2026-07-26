@@ -1,7 +1,4 @@
-import type {
-  SimulationConstraint,
-  SimulationEngineOutput,
-} from "../simulation/SimulationEngine";
+import type { SimulationConstraint, SimulationEngineOutput } from "../simulation/SimulationEngine";
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
 import { registerProductEventSubscribers } from "../runtime/productEventSubscribers";
@@ -192,11 +189,7 @@ export class WorkspaceService {
     return home;
   }
 
-  async createWorkspace(
-    ownerId: string,
-    name: string,
-    description = ""
-  ): Promise<WorkspaceHome> {
+  async createWorkspace(ownerId: string, name: string, description = ""): Promise<WorkspaceHome> {
     const trimmed = name.trim();
     if (!trimmed) throw new Error("Workspace name is required.");
 
@@ -233,12 +226,7 @@ export class WorkspaceService {
     if (!trimmed) throw new Error("Goal title is required.");
     const desc = description.trim();
 
-    const goalHistory = archiveGoalIfChanged(
-      home.goal,
-      trimmed,
-      desc,
-      home.goalHistory ?? []
-    );
+    const goalHistory = archiveGoalIfChanged(home.goal, trimmed, desc, home.goalHistory ?? []);
 
     // New objective identity when title changes; keep id when refining same goal.
     const titleChanged = Boolean(home.goal && home.goal.title !== trimmed);
@@ -298,15 +286,13 @@ export class WorkspaceService {
     const existing = home.knowledge.find((k) => k.id === knowledgeId);
     if (!existing) throw new Error("Knowledge item not found.");
 
-    const title =
-      patch.title !== undefined ? patch.title.trim() : existing.title;
+    const title = patch.title !== undefined ? patch.title.trim() : existing.title;
     if (!title) throw new Error("Knowledge title is required.");
 
     const updated: KnowledgeRecord = {
       ...existing,
       title,
-      content:
-        patch.content !== undefined ? patch.content.trim() : existing.content,
+      content: patch.content !== undefined ? patch.content.trim() : existing.content,
       metadata: patch.metadata !== undefined ? patch.metadata : existing.metadata,
       type: patch.type ?? existing.type,
     };

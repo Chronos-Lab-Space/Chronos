@@ -130,7 +130,7 @@ export class TaskGraph {
       visited.add(id);
     };
 
-    this.tasks.forEach((task) => visit(task.id));
+    for (const task of this.tasks) visit(task.id);
   }
 }
 
@@ -169,8 +169,10 @@ export class CapabilityRegistration {
   }
 
   supportsTask(task: Task): boolean {
-    return this.supports(task.kind) &&
-      (this.capabilityKeys.length === 0 || this.capabilityKeys.includes(task.capability));
+    return (
+      this.supports(task.kind) &&
+      (this.capabilityKeys.length === 0 || this.capabilityKeys.includes(task.capability))
+    );
   }
 }
 
@@ -247,7 +249,9 @@ export type RankedTimeline = {
 export class TimelineRanking {
   static rank(entries: readonly Omit<RankedTimeline, "rank">[]): RankedTimeline[] {
     return [...entries]
-      .sort((left, right) => right.score - left.score || left.timelineId.localeCompare(right.timelineId))
+      .sort(
+        (left, right) => right.score - left.score || left.timelineId.localeCompare(right.timelineId)
+      )
       .map((entry, index) => ({ ...entry, rank: index + 1 }));
   }
 }

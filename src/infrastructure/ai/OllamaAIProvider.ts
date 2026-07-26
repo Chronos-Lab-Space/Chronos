@@ -47,10 +47,7 @@ export class OllamaAIProvider implements AIPort {
       };
     }
 
-    const data = await this.postJson<{ response?: string; model?: string }>(
-      "/api/generate",
-      body
-    );
+    const data = await this.postJson<{ response?: string; model?: string }>("/api/generate", body);
     return {
       text: typeof data.response === "string" ? data.response : "",
       model: typeof data.model === "string" ? data.model : model,

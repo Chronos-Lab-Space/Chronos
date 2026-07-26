@@ -62,21 +62,27 @@ export function HomeLiveDemo() {
     const taskCount = graph.tasks.length;
     for (let i = 0; i < taskCount; i++) {
       taskTimers.push(
-        window.setTimeout(() => {
-          setActiveTask(i);
-          setPipelineStep(Math.min(3, Math.floor((i / Math.max(taskCount - 1, 1)) * 3)));
-          setFuturesSeen(Math.floor(((i + 1) / taskCount) * 52) + 4);
-        }, 180 + i * 220)
+        window.setTimeout(
+          () => {
+            setActiveTask(i);
+            setPipelineStep(Math.min(3, Math.floor((i / Math.max(taskCount - 1, 1)) * 3)));
+            setFuturesSeen(Math.floor(((i + 1) / taskCount) * 52) + 4);
+          },
+          180 + i * 220
+        )
       );
     }
 
-    const rankTimer = window.setTimeout(() => {
-      setPipelineStep(3);
-      setFuturesSeen(64);
-    }, 180 + taskCount * 220 + 200);
+    const rankTimer = window.setTimeout(
+      () => {
+        setPipelineStep(3);
+        setFuturesSeen(64);
+      },
+      180 + taskCount * 220 + 200
+    );
 
     return () => {
-      taskTimers.forEach((t) => window.clearTimeout(t));
+      for (const t of taskTimers) window.clearTimeout(t);
       window.clearTimeout(rankTimer);
     };
   }, [status, graph.tasks.length]);
@@ -138,8 +144,8 @@ export function HomeLiveDemo() {
             </h2>
           </div>
           <p className="max-w-sm text-[14px] leading-[1.7] text-ink-dim">
-            Not a single chatbot answer. Chronos builds a task graph, simulates
-            timelines, ranks trade-offs, and recommends the strongest path.
+            Not a single chatbot answer. Chronos builds a task graph, simulates timelines, ranks
+            trade-offs, and recommends the strongest path.
           </p>
         </div>
 
@@ -148,8 +154,7 @@ export function HomeLiveDemo() {
           <div className="grid min-w-[32rem] grid-cols-5 gap-1.5 sm:min-w-0">
             {PIPELINE.map((step, i) => {
               const active = status === "planning" && pipelineStep === i;
-              const done =
-                status === "complete" || (status === "planning" && pipelineStep > i);
+              const done = status === "complete" || (status === "planning" && pipelineStep > i);
               return (
                 <div
                   key={step.id}
@@ -246,8 +251,7 @@ export function HomeLiveDemo() {
                 {graph.tasks.map((task, index) => {
                   const isActive = status === "planning" && activeTask === index;
                   const isDone =
-                    status === "complete" ||
-                    (status === "planning" && activeTask > index);
+                    status === "complete" || (status === "planning" && activeTask > index);
                   return (
                     <div key={task.id}>
                       <div className="flex items-center gap-4">
@@ -352,8 +356,8 @@ function DemoEmpty({ onTry }: { onTry: () => void }) {
         ∴
       </div>
       <p className="mt-4 max-w-xs text-[13px] leading-[1.65] text-ink-dim">
-        Chronos will generate futures, score trade-offs, and surface the best path
-        after the plan runs.
+        Chronos will generate futures, score trade-offs, and surface the best path after the plan
+        runs.
       </p>
       <button
         type="button"
@@ -367,7 +371,13 @@ function DemoEmpty({ onTry }: { onTry: () => void }) {
 }
 
 function DemoPlanning({ futures, step }: { futures: number; step: number }) {
-  const labels = ["Building task graph…", "Forking futures…", "Scoring outcomes…", "Ranking paths…", "Selecting best path…"];
+  const labels = [
+    "Building task graph…",
+    "Forking futures…",
+    "Scoring outcomes…",
+    "Ranking paths…",
+    "Selecting best path…",
+  ];
   return (
     <div className="flex min-h-72 flex-col justify-center">
       <div className="flex items-center gap-3">
@@ -376,9 +386,7 @@ function DemoPlanning({ futures, step }: { futures: number; step: number }) {
           <div className="font-mono text-[10px] uppercase tracking-[0.23em] text-chronos">
             {labels[Math.min(step, labels.length - 1)]}
           </div>
-          <div className="mt-1 text-[12px] text-ink-faint">
-            Exploring futures · ranking paths…
-          </div>
+          <div className="mt-1 text-[12px] text-ink-faint">Exploring futures · ranking paths…</div>
         </div>
       </div>
       <div className="mt-6 h-1 overflow-hidden rounded-full bg-line">
@@ -388,17 +396,19 @@ function DemoPlanning({ futures, step }: { futures: number; step: number }) {
         />
       </div>
       <div className="mt-6 space-y-2">
-        {["branch_0x4a · score 0.91 · kept", "branch_0x2c · score 0.44 · pruned", "branch_0x7f · score 0.78 · evaluating"].map(
-          (line, i) => (
-            <div
-              key={line}
-              className="font-mono text-[10px] text-ink-faint"
-              style={{ opacity: 0.35 + (i === step % 3 ? 0.55 : 0.15) }}
-            >
-              → {line}
-            </div>
-          )
-        )}
+        {[
+          "branch_0x4a · score 0.91 · kept",
+          "branch_0x2c · score 0.44 · pruned",
+          "branch_0x7f · score 0.78 · evaluating",
+        ].map((line, i) => (
+          <div
+            key={line}
+            className="font-mono text-[10px] text-ink-faint"
+            style={{ opacity: 0.35 + (i === step % 3 ? 0.55 : 0.15) }}
+          >
+            → {line}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -470,7 +480,9 @@ function DemoResult({ result }: { result: SimulationResult }) {
           <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
             Top risk
           </div>
-          <div className="mt-1 text-[12px] leading-[1.5] text-ink-dim">{result.bestPath.risks[0]}</div>
+          <div className="mt-1 text-[12px] leading-[1.5] text-ink-dim">
+            {result.bestPath.risks[0]}
+          </div>
         </div>
       )}
     </div>

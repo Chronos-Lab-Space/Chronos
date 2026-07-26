@@ -3,25 +3,15 @@ import { confidencePercent, formatCreatedAt } from "../../../../domain/workspace
 import type { SimulationRecord } from "../../../../domain/workspace/types";
 
 /** Supporting list — low visual weight. */
-export function RecentSimulations({
-  simulations,
-}: {
-  simulations: readonly SimulationRecord[];
-}) {
+export function RecentSimulations({ simulations }: { simulations: readonly SimulationRecord[] }) {
   const items = simulations.slice(0, 5);
   return (
-    <section
-      data-testid="recent-simulations"
-      className="rounded-2xl border border-line p-5 sm:p-6"
-    >
+    <section data-testid="recent-simulations" className="rounded-2xl border border-line p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
           Recent simulations
         </div>
-        <Link
-          to="/workspace/simulations"
-          className="font-mono text-[10px] uppercase text-chronos"
-        >
+        <Link to="/workspace/simulations" className="font-mono text-[10px] uppercase text-chronos">
           All →
         </Link>
       </div>

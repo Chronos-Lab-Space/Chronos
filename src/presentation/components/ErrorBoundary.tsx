@@ -46,8 +46,8 @@ export class ErrorBoundary extends Component<Props, State> {
           </div>
           <h1 className="mt-3 font-serif text-2xl text-ink">Chronos hit an error</h1>
           <p className="mt-3 text-sm text-ink-dim">
-            The failure was logged. You can try again or return home. If it keeps
-            happening, contact support with what you were doing.
+            The failure was logged. You can try again or return home. If it keeps happening, contact
+            support with what you were doing.
           </p>
           {import.meta.env.DEV && this.state.error?.message ? (
             <pre className="mt-4 max-h-32 overflow-auto rounded-lg border border-line bg-bg p-3 text-left font-mono text-[11px] text-red-400">

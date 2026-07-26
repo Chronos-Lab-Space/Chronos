@@ -124,8 +124,7 @@ export function deriveExpectedValue(input: {
       id: "confidence",
       label: "Execution confidence",
       value: `${Math.round(chosen.confidence * 100)}%`,
-      level:
-        chosen.confidence >= 0.75 ? "High" : chosen.confidence >= 0.55 ? "Medium" : "Low",
+      level: chosen.confidence >= 0.75 ? "High" : chosen.confidence >= 0.55 ? "Medium" : "Low",
     });
   } else if (typeof simulation.confidence === "number") {
     rows.push({
@@ -133,11 +132,7 @@ export function deriveExpectedValue(input: {
       label: "Execution confidence",
       value: `${Math.round(simulation.confidence * 100)}%`,
       level:
-        simulation.confidence >= 0.75
-          ? "High"
-          : simulation.confidence >= 0.55
-            ? "Medium"
-            : "Low",
+        simulation.confidence >= 0.75 ? "High" : simulation.confidence >= 0.55 ? "Medium" : "Low",
     });
   }
 

@@ -162,5 +162,3 @@ describe("WorkspaceService success metric", () => {
     expect(resumed?.recentSimulations[0].result.outcome_result).toMatch(/Shipped late/);
   });
 });
-
-

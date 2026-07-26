@@ -51,8 +51,7 @@ const forge = new Agent({
       {
         id: "ship-as-is",
         name: "Ship as-is",
-        description:
-          "Merge the feature branch now. Fast to production, bugs deferred.",
+        description: "Merge the feature branch now. Fast to production, bugs deferred.",
         apply: (s) => ({
           robot: { ...s.robot, y: 0, gripOpen: false }, // deadline met
           object: { ...s.object, grasped: true }, // feature shipped
@@ -64,8 +63,7 @@ const forge = new Agent({
       {
         id: "refactor-first",
         name: "Refactor first",
-        description:
-          "Pay down the debt. Slower, but the codebase survives the next feature.",
+        description: "Pay down the debt. Slower, but the codebase survives the next feature.",
         apply: (s) => ({
           robot: { ...s.robot, y: 5, armAngle: 80 }, // 2 days late, quality up
           object: { ...s.object, x: 0, y: 2, stable: true }, // refactor done, fewer bugs, coverage stable
@@ -87,8 +85,7 @@ const forge = new Agent({
       {
         id: "defer",
         name: "Defer to next sprint",
-        description:
-          "Kick the decision. Safe for the codebase, costs stakeholder trust.",
+        description: "Kick the decision. Safe for the codebase, costs stakeholder trust.",
         apply: (s) => ({
           robot: { ...s.robot, y: 7, armAngle: 30 }, // 4 more days, quality drops
           environment: { ...s.environment, humanPresent: false, lighting: "dark" }, // stakeholder gone, morale drops
@@ -137,8 +134,7 @@ const oracle = new Agent({
       {
         id: "add",
         name: "Add to position",
-        description:
-          "Buy the dip. High conviction, high exposure if the print goes wrong.",
+        description: "Buy the dip. High conviction, high exposure if the print goes wrong.",
         apply: (s) => ({
           robot: { ...s.robot, x: 90, armAngle: 55 }, // position 90%, conviction up
           object: { ...s.object, y: 12 }, // potential 12 bps gain
@@ -149,8 +145,7 @@ const oracle = new Agent({
       {
         id: "trim",
         name: "Trim 30%",
-        description:
-          "Lock in partial gains. Leave skin in the game without full exposure.",
+        description: "Lock in partial gains. Leave skin in the game without full exposure.",
         apply: (s) => ({
           robot: { ...s.robot, x: 50, armAngle: 35 }, // position 50%, conviction medium
           object: { ...s.object, y: 5 }, // moderate P&L locked
@@ -161,8 +156,7 @@ const oracle = new Agent({
       {
         id: "hedge",
         name: "Hedge with puts",
-        description:
-          "Buy downside protection. Cost is paid upfront, tail risk is capped.",
+        description: "Buy downside protection. Cost is paid upfront, tail risk is capped.",
         apply: (s) => ({
           robot: { ...s.robot, x: 72, armAngle: 40 }, // position unchanged, conviction up
           object: { ...s.object, y: 2, stable: true }, // small P&L cost, tape stabilizes
@@ -173,8 +167,7 @@ const oracle = new Agent({
       {
         id: "flatten",
         name: "Flatten the book",
-        description:
-          "Exit everything. Wait for the print. Zero exposure, zero P&L.",
+        description: "Exit everything. Wait for the print. Zero exposure, zero P&L.",
         apply: () => ({
           robot: { x: 0, y: 34, armAngle: 0, gripOpen: true },
           object: { x: 40, y: 0, stable: false, grasped: false },
@@ -235,8 +228,7 @@ const atlas = new Agent({
       {
         id: "enterprise",
         name: "Ship enterprise tier",
-        description:
-          "Move upmarket. Bigger contracts, longer sales cycles, new product surface.",
+        description: "Move upmarket. Bigger contracts, longer sales cycles, new product surface.",
         apply: (s) => ({
           robot: { ...s.robot, armAngle: 78, y: 210 }, // momentum up, slight MRR lift
           object: { ...s.object, y: 30 }, // competition less relevant
@@ -247,8 +239,7 @@ const atlas = new Agent({
       {
         id: "cut-prices",
         name: "Cut prices 30%",
-        description:
-          "Accelerate growth at the cost of revenue per customer. Volume play.",
+        description: "Accelerate growth at the cost of revenue per customer. Volume play.",
         apply: (s) => ({
           robot: { ...s.robot, y: 160, armAngle: 55 }, // MRR dips short-term
           object: { ...s.object, x: 2, y: 50 }, // churn drops, competition hurt
@@ -259,8 +250,7 @@ const atlas = new Agent({
       {
         id: "hunker",
         name: "Extend runway, stay small",
-        description:
-          "Cut costs, pause hiring, buy time. Safe, but the window narrows.",
+        description: "Cut costs, pause hiring, buy time. Safe, but the window narrows.",
         apply: (s) => ({
           robot: { ...s.robot, x: 18, y: 150, armAngle: 40 }, // 18 mo runway, MRR flat, momentum drops
           environment: { ...s.environment, wind: 9 }, // competitive pressure grows

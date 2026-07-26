@@ -1,8 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type {
-  CachedSimulation,
-  SimulationCache,
-} from "../../domain/chronos/simulation-cache";
+import type { CachedSimulation, SimulationCache } from "../../domain/chronos/simulation-cache";
 import { supabase } from "../supabase/client";
 
 type CacheRow<T> = {
@@ -50,10 +47,7 @@ export class SupabaseSimulationCache<T> implements SimulationCache<T> {
   }
 
   async delete(key: string): Promise<void> {
-    const { error } = await this.client
-      .from("simulation_cache")
-      .delete()
-      .eq("cache_key", key);
+    const { error } = await this.client.from("simulation_cache").delete().eq("cache_key", key);
     if (error) throw new Error(`Simulation cache delete failed: ${error.message}`);
   }
 }

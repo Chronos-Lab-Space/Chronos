@@ -1,7 +1,11 @@
 import type { WorkspaceHome, WorkspaceRecord } from "../../domain/workspace/types";
 
 const STORAGE_KEY = "chronos.workspace.v4";
-const LEGACY_KEYS = ["chronos.workspace.v3", "chronos.workspace.v2", "chronos.workspace.v1"] as const;
+const LEGACY_KEYS = [
+  "chronos.workspace.v3",
+  "chronos.workspace.v2",
+  "chronos.workspace.v1",
+] as const;
 
 type OwnerBundle = {
   activeId: string | null;
@@ -63,9 +67,7 @@ function normalizeBundle(raw: OwnerBundle | WorkspaceHome | undefined): OwnerBun
     byId[id] = normalizeHome(home);
   }
   const activeId =
-    raw.activeId && byId[raw.activeId]
-      ? raw.activeId
-      : Object.keys(byId)[0] ?? null;
+    raw.activeId && byId[raw.activeId] ? raw.activeId : (Object.keys(byId)[0] ?? null);
   return { activeId, byId };
 }
 

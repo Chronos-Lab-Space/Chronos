@@ -4,13 +4,7 @@ import type { WorkspaceHome } from "./types";
  * Mandatory onboarding path for Decision Workspace:
  * welcome → name → goal → context → dashboard unlock.
  */
-export const ONBOARDING_STEPS = [
-  "welcome",
-  "name",
-  "goal",
-  "context",
-  "dashboard",
-] as const;
+export const ONBOARDING_STEPS = ["welcome", "name", "goal", "context", "dashboard"] as const;
 
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 

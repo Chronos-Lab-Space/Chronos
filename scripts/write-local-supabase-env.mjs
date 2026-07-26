@@ -16,9 +16,7 @@ const result = spawnSync("npx", ["supabase", "status", "-o", "env"], {
 
 if (result.status !== 0) {
   console.error(
-    result.stderr ||
-      result.stdout ||
-      "supabase status failed. Run `npm run supabase:start` first."
+    result.stderr || result.stdout || "supabase status failed. Run `npm run supabase:start` first."
   );
   process.exit(result.status ?? 1);
 }
@@ -47,10 +45,7 @@ const env = Object.fromEntries(
 
 const url = env.API_URL || env.SUPABASE_URL;
 const anon =
-  env.ANON_KEY ||
-  env.PUBLISHABLE_KEY ||
-  env.SUPABASE_ANON_KEY ||
-  env.SUPABASE_PUBLISHABLE_KEY;
+  env.ANON_KEY || env.PUBLISHABLE_KEY || env.SUPABASE_ANON_KEY || env.SUPABASE_PUBLISHABLE_KEY;
 
 if (!url || !anon) {
   console.error(

@@ -1,7 +1,4 @@
-import {
-  DEFAULT_PREFERENCES,
-  type UserPreferences,
-} from "../../domain/workspace/betaChecklist";
+import { DEFAULT_PREFERENCES, type UserPreferences } from "../../domain/workspace/betaChecklist";
 
 const KEY = "chronos.user.preferences.v1";
 
@@ -27,7 +24,9 @@ function writeAll(store: StoreShape): void {
   }
 }
 
-function normalize(raw: Partial<UserPreferences> | Record<string, unknown> | undefined): UserPreferences {
+function normalize(
+  raw: Partial<UserPreferences> | Record<string, unknown> | undefined
+): UserPreferences {
   const r = raw ?? {};
   return {
     shareAcknowledged: Boolean(r.shareAcknowledged),

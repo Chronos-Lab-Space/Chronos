@@ -1,12 +1,7 @@
 import type { FutureRecord, SimulationRecord, WorkspaceHome } from "./types";
 import { resolveKnowledgeUsed } from "./simulationReport";
 
-export type EvaluationCriterionId =
-  | "risk"
-  | "cost"
-  | "timeline"
-  | "resources"
-  | "growth";
+export type EvaluationCriterionId = "risk" | "cost" | "timeline" | "resources" | "growth";
 
 export type EvaluationCriterion = {
   id: EvaluationCriterionId;
@@ -61,9 +56,7 @@ export function buildDecisionEvidence(
 ): DecisionEvidence {
   const contextUsed = resolveKnowledgeUsed(simulation, home);
   const knowledgeSourcesUsed =
-    contextUsed.length > 0
-      ? contextUsed.length
-      : home.knowledge.length + home.notes.length;
+    contextUsed.length > 0 ? contextUsed.length : home.knowledge.length + home.notes.length;
 
   const strategiesGenerated =
     typeof simulation.result.futures_count === "number"
@@ -72,9 +65,7 @@ export function buildDecisionEvidence(
 
   const corpus = [
     simulation.title,
-    typeof simulation.result.recommendation === "string"
-      ? simulation.result.recommendation
-      : "",
+    typeof simulation.result.recommendation === "string" ? simulation.result.recommendation : "",
     typeof simulation.result.thesis === "string" ? simulation.result.thesis : "",
     ...futures.map((f) => `${f.name} ${f.summary}`),
     ...(Array.isArray(simulation.result.constraints)

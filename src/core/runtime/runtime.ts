@@ -1,7 +1,7 @@
 import type { Agent, AgentResult, AgentTask } from "../../agents/types";
 import { supportsCapability, taskToAgentTask } from "../../agents/types";
 import type { TaskGraph } from "../../domain/chronos/task-os";
-import { EventBus, eventBus } from "./events";
+import { type EventBus, eventBus } from "./events";
 
 export type RuntimeOptions = {
   retries?: number;

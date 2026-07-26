@@ -71,9 +71,7 @@ function toRanked(branch: Branch): RankedBranch {
  */
 export function runAgentSimulation(input: AgentSimulationInput): AgentSimulationResult {
   const strategy = input.strategy ?? "max-utility";
-  const agent =
-    input.agent ??
-    (input.agentId ? getAgent(input.agentId) : undefined);
+  const agent = input.agent ?? (input.agentId ? getAgent(input.agentId) : undefined);
   const scenario = input.scenario ?? agent?.scenario;
 
   if (!scenario) {
@@ -87,9 +85,7 @@ export function runAgentSimulation(input: AgentSimulationInput): AgentSimulation
     .map(toRanked)
     .sort(
       (a, b) =>
-        b.expectedValue - a.expectedValue ||
-        a.risk - b.risk ||
-        a.actionId.localeCompare(b.actionId)
+        b.expectedValue - a.expectedValue || a.risk - b.risk || a.actionId.localeCompare(b.actionId)
     );
 
   const winnerBranch = simulation.winner;

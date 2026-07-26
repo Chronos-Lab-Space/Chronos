@@ -17,9 +17,7 @@ describe("errorMonitoring scaffold", () => {
   });
 
   it("captureException never throws", () => {
-    expect(() =>
-      captureException(new Error("boom"), { tags: { area: "test" } })
-    ).not.toThrow();
+    expect(() => captureException(new Error("boom"), { tags: { area: "test" } })).not.toThrow();
   });
 
   it("captureMessage never throws", () => {

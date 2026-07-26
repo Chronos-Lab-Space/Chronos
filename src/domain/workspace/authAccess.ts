@@ -83,10 +83,7 @@ const ROLE_RANK: Record<WorkspaceRole, number> = {
   owner: 4,
 };
 
-export function requireRole(
-  access: AuthAccessContext,
-  minimum: WorkspaceRole
-): AccessResult {
+export function requireRole(access: AuthAccessContext, minimum: WorkspaceRole): AccessResult {
   if (ROLE_RANK[access.role] >= ROLE_RANK[minimum]) {
     return { ok: true, access };
   }

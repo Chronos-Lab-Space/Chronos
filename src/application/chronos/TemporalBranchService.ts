@@ -4,7 +4,7 @@ import {
   Hypothesis,
   Merge,
   type MergeStrategy,
-  Timeline,
+  type Timeline,
 } from "../../domain/chronos/entities";
 import type { Action, CollapseStrategy, WorldState } from "../../domain/chronos/types";
 
@@ -82,10 +82,7 @@ export class TemporalBranchService {
   }
 }
 
-function applyDelta(
-  state: WorldState,
-  delta: ReturnType<Action["apply"]>
-): WorldState {
+function applyDelta(state: WorldState, delta: ReturnType<Action["apply"]>): WorldState {
   return {
     ...state,
     robot: { ...state.robot, ...delta.robot },
@@ -98,7 +95,9 @@ function applyDelta(
 function selectMergeTarget(branches: readonly Branch[], strategy: MergeStrategy): Branch {
   if (strategy === "prefer-target") return branches[0];
   if (strategy === "lowest-risk") {
-    return branches.reduce((best, branch) => branch.risk < best.risk ? branch : best);
+    return branches.reduce((best, branch) => (branch.risk < best.risk ? branch : best));
   }
-  return branches.reduce((best, branch) => (branch.score ?? -1) > (best.score ?? -1) ? branch : best);
+  return branches.reduce((best, branch) =>
+    (branch.score ?? -1) > (best.score ?? -1) ? branch : best
+  );
 }

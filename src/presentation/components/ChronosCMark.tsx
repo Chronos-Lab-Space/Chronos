@@ -8,11 +8,7 @@ type ChronosCMarkProps = {
  * Chronos C: two temporal orbits around a clear open C. It borrows the
  * supplied atomic silhouette, but the central glyph makes it distinctly Chronos.
  */
-export function ChronosCMark({
-  size = 28,
-  className,
-  title = "Chronos Lab",
-}: ChronosCMarkProps) {
+export function ChronosCMark({ size = 28, className, title = "Chronos Lab" }: ChronosCMarkProps) {
   return (
     <svg
       width={size}

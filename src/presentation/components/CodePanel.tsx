@@ -39,10 +39,9 @@ export function CodePanel() {
           <div className="lg:col-span-5">
             <p className="max-w-md text-[15px] leading-[1.7] text-ink-dim">
               <span className="font-mono text-chronos">fork</span> clones state.{" "}
-              <span className="font-mono text-accent-2">evaluate</span> runs
-              every branch.{" "}
-              <span className="font-mono text-accent-warm">collapse</span>{" "}
-              merges the best one back. That's the whole API.
+              <span className="font-mono text-accent-2">evaluate</span> runs every branch.{" "}
+              <span className="font-mono text-accent-warm">collapse</span> merges the best one back.
+              That's the whole API.
             </p>
 
             <div className="mt-10 space-y-4">
@@ -74,12 +73,8 @@ export function CodePanel() {
                 >
                   <span className="font-mono text-sm text-ink">{s.lib}</span>
                   <div className="flex items-center gap-4">
-                    <span className="font-mono text-[11px] text-ink-faint">
-                      {s.lang}
-                    </span>
-                    <span className="font-mono text-[11px] text-chronos">
-                      {s.v}
-                    </span>
+                    <span className="font-mono text-[11px] text-ink-faint">{s.lang}</span>
+                    <span className="font-mono text-[11px] text-chronos">{s.v}</span>
                   </div>
                 </div>
               ))}
@@ -102,9 +97,7 @@ export function CodePanel() {
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2 py-0.5">
                     <span className="h-1 w-1 rounded-full bg-emerald-400" />
-                    <span className="font-mono text-[10px] text-ink-dim">
-                      compiled
-                    </span>
+                    <span className="font-mono text-[10px] text-ink-dim">compiled</span>
                   </span>
                 </div>
               </div>
@@ -153,9 +146,15 @@ function Highlight({ line }: { line: string }) {
     { re: /\/\/[^\n]*/g, cls: "text-ink-faint italic" },
     { re: /"([^"\\]|\\.)*"/g, cls: "text-accent-warm" },
     { re: /'([^'\\]|\\.)*'/g, cls: "text-accent-warm" },
-    { re: /\b(import|from|const|await|async|function|return|true|false|null|undefined)\b/g, cls: "text-chronos" },
+    {
+      re: /\b(import|from|const|await|async|function|return|true|false|null|undefined)\b/g,
+      cls: "text-chronos",
+    },
     { re: /\b(client|branches|scored|winner|plan|world|outcome|process)\b/g, cls: "text-ink" },
-    { re: /\b(chronos|fork|collapse|connect|evaluate|simulate|score|commit)\b/g, cls: "text-accent-2" },
+    {
+      re: /\b(chronos|fork|collapse|connect|evaluate|simulate|score|commit)\b/g,
+      cls: "text-accent-2",
+    },
     { re: /\b\d+(\.\d+)?\b/g, cls: "text-chronos" },
   ];
 
@@ -174,8 +173,7 @@ function Highlight({ line }: { line: string }) {
       }
       let last = 0;
       const re = new RegExp(t.re.source, t.re.flags);
-      let m: RegExpExecArray | null;
-      while ((m = re.exec(s.text))) {
+      for (let m = re.exec(s.text); m !== null; m = re.exec(s.text)) {
         if (m.index > last) next.push({ text: s.text.slice(last, m.index) });
         next.push({ text: m[0], cls: t.cls });
         last = m.index + m[0].length;

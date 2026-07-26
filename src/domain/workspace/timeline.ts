@@ -33,10 +33,7 @@ export function deriveFutureHooks(
   };
 
   // Fastest path = highest confidence (engine signal that the path is most certain)
-  const fastest = pick(
-    futures,
-    (a, b) => b.confidence - a.confidence || b.score - a.score
-  );
+  const fastest = pick(futures, (a, b) => b.confidence - a.confidence || b.score - a.score);
   if (fastest) {
     hooks.set(fastest.id, "Fastest path");
     taken.add(fastest.id);

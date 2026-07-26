@@ -45,7 +45,7 @@ export function MarkdownNoteEditor({
             </div>
             <div
               className="prose-lite min-h-[12rem] rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink-dim"
-              // Preview is produced from escaped + controlled markdown renderer
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: renderSimpleMarkdown escapes &<>"' and allows https-only links (covered by knowledge.test.ts)
               dangerouslySetInnerHTML={{ __html: renderSimpleMarkdown(content || "_Nothing yet_") }}
             />
           </div>

@@ -7,7 +7,7 @@ import {
   researchAgent,
   simulationAgent,
 } from "../../agents";
-import { AgentRuntime, runtime } from "./runtime";
+import { type AgentRuntime, runtime } from "./runtime";
 
 /** Register default specialist agents on a runtime instance. */
 export function registerDefaultAgents(target: AgentRuntime = runtime): AgentRuntime {

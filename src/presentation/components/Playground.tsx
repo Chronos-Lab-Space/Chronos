@@ -57,9 +57,13 @@ export function Playground() {
         setEvalProgress(progress);
         setEntropy(1.0 - progress * 0.85);
         setActiveBranch(
-          progress < 0.3 ? "0x2f1a" :
-          progress < 0.6 ? "0x4a2c" :
-          progress < 0.85 ? "0x7f3e" : "0x4a"
+          progress < 0.3
+            ? "0x2f1a"
+            : progress < 0.6
+              ? "0x4a2c"
+              : progress < 0.85
+                ? "0x7f3e"
+                : "0x4a"
         );
       }, 40);
       return () => clearInterval(interval);
@@ -92,6 +96,7 @@ export function Playground() {
             </span>
           </div>
           <button
+            type="button"
             onClick={run}
             className="group inline-flex items-center gap-2 rounded-full border border-line px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-dim transition hover:border-chronos/40 hover:text-chronos"
           >
@@ -176,9 +181,23 @@ export function Playground() {
                 />
                 <Metric
                   label="Evaluation"
-                  value={phase === "evaluate" ? `${Math.floor(evalProgress * 100)}%` : phase === "idle" ? "—" : phase === "fork" ? "0%" : "100%"}
+                  value={
+                    phase === "evaluate"
+                      ? `${Math.floor(evalProgress * 100)}%`
+                      : phase === "idle"
+                        ? "—"
+                        : phase === "fork"
+                          ? "0%"
+                          : "100%"
+                  }
                   color="#b79bff"
-                  progress={phase === "evaluate" ? evalProgress : phase === "idle" || phase === "fork" ? 0 : 1}
+                  progress={
+                    phase === "evaluate"
+                      ? evalProgress
+                      : phase === "idle" || phase === "fork"
+                        ? 0
+                        : 1
+                  }
                 />
                 <Metric
                   label="Entropy"
@@ -214,13 +233,13 @@ export function Playground() {
                 <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
                   Winner
                 </div>
-                <div className={`font-mono text-sm transition ${phase === "done" ? "text-accent-warm" : "text-ink-faint"}`}>
+                <div
+                  className={`font-mono text-sm transition ${phase === "done" ? "text-accent-warm" : "text-ink-faint"}`}
+                >
                   {phase === "done" ? "branch_0x4a" : "—"}
                 </div>
                 {phase === "done" && (
-                  <div className="mt-1 font-mono text-[11px] text-ink-faint">
-                    score: 0.942
-                  </div>
+                  <div className="mt-1 font-mono text-[11px] text-ink-faint">score: 0.942</div>
                 )}
               </div>
 
@@ -231,7 +250,12 @@ export function Playground() {
                 </div>
                 <div className="space-y-1 font-mono text-[11px] leading-[1.6]">
                   <LogLine
-                    active={phase === "fork" || phase === "evaluate" || phase === "collapse" || phase === "done"}
+                    active={
+                      phase === "fork" ||
+                      phase === "evaluate" ||
+                      phase === "collapse" ||
+                      phase === "done"
+                    }
                     done={phase !== "fork"}
                     color="#c6f0ff"
                   >
@@ -242,7 +266,12 @@ export function Playground() {
                     done={phase === "collapse" || phase === "done"}
                     color="#b79bff"
                   >
-                    evaluate · {phase === "evaluate" ? `${Math.floor(evalProgress * 100)}%` : phase === "idle" || phase === "fork" ? "0%" : "100%"}
+                    evaluate ·{" "}
+                    {phase === "evaluate"
+                      ? `${Math.floor(evalProgress * 100)}%`
+                      : phase === "idle" || phase === "fork"
+                        ? "0%"
+                        : "100%"}
                   </LogLine>
                   <LogLine
                     active={phase === "collapse" || phase === "done"}
@@ -251,11 +280,7 @@ export function Playground() {
                   >
                     collapse → branch_0x4a
                   </LogLine>
-                  <LogLine
-                    active={phase === "done"}
-                    done={phase === "done"}
-                    color="#ffd7a3"
-                  >
+                  <LogLine active={phase === "done"} done={phase === "done"} color="#ffd7a3">
                     commit · state hash 8f3a2c
                   </LogLine>
                 </div>
@@ -274,16 +299,23 @@ export function Playground() {
                   className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
                   style={{
                     width:
-                      phase === "idle" ? "0%" :
-                      phase === "fork" ? "15%" :
-                      phase === "evaluate" ? `${15 + evalProgress * 55}%` :
-                      phase === "collapse" ? "80%" :
-                      "100%",
+                      phase === "idle"
+                        ? "0%"
+                        : phase === "fork"
+                          ? "15%"
+                          : phase === "evaluate"
+                            ? `${15 + evalProgress * 55}%`
+                            : phase === "collapse"
+                              ? "80%"
+                              : "100%",
                     background:
-                      phase === "idle" ? "transparent" :
-                      phase === "fork" ? "#c6f0ff" :
-                      phase === "evaluate" ? "#b79bff" :
-                      "#ffd7a3",
+                      phase === "idle"
+                        ? "transparent"
+                        : phase === "fork"
+                          ? "#c6f0ff"
+                          : phase === "evaluate"
+                            ? "#b79bff"
+                            : "#ffd7a3",
                   }}
                 />
               </div>
@@ -455,10 +487,25 @@ function PlaygroundCanvas({
       <g>
         <circle cx="120" cy="250" r="10" fill="url(#pg-node)" filter="url(#pg-glow)" />
         <circle cx="120" cy="250" r="20" fill="#c6f0ff" opacity="0.08" />
-        <text x="120" y="295" fill="#4a5168" fontSize="10" fontFamily="JetBrains Mono" textAnchor="middle" style={{ letterSpacing: 2 }}>
+        <text
+          x="120"
+          y="295"
+          fill="#4a5168"
+          fontSize="10"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+          style={{ letterSpacing: 2 }}
+        >
           ORIGIN
         </text>
-        <text x="120" y="310" fill="#4a5168" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">
+        <text
+          x="120"
+          y="310"
+          fill="#4a5168"
+          fontSize="8"
+          fontFamily="JetBrains Mono"
+          textAnchor="middle"
+        >
           state_0x00
         </text>
       </g>
@@ -472,9 +519,15 @@ function PlaygroundCanvas({
         const stroke = isWinner
           ? "url(#pg-winner)"
           : isPruned
-          ? "url(#pg-pruned)"
-          : "url(#pg-branch)";
-        const opacity = isWinner ? 1 : isPruned ? 0.25 : phase === "collapse" ? 0.3 : 0.85 - i * 0.03;
+            ? "url(#pg-pruned)"
+            : "url(#pg-branch)";
+        const opacity = isWinner
+          ? 1
+          : isPruned
+            ? 0.25
+            : phase === "collapse"
+              ? 0.3
+              : 0.85 - i * 0.03;
 
         return (
           <g
@@ -543,8 +596,24 @@ function PlaygroundCanvas({
             {/* Score badge during evaluate */}
             {phase === "evaluate" && evalProgress > 0.3 && !isPruned && i % 3 === 0 && (
               <g opacity={Math.min(1, (evalProgress - 0.3) * 3)}>
-                <rect x={720} y={y - 8} width="40" height="16" rx="3" fill="#111111" stroke={isWinner ? "#E2DDDA" : "#989898"} strokeWidth="0.5" />
-                <text x={740} y={y + 3} fill={isWinner ? "#ffd7a3" : "#8a93a6"} fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">
+                <rect
+                  x={720}
+                  y={y - 8}
+                  width="40"
+                  height="16"
+                  rx="3"
+                  fill="#111111"
+                  stroke={isWinner ? "#E2DDDA" : "#989898"}
+                  strokeWidth="0.5"
+                />
+                <text
+                  x={740}
+                  y={y + 3}
+                  fill={isWinner ? "#ffd7a3" : "#8a93a6"}
+                  fontSize="8"
+                  fontFamily="JetBrains Mono"
+                  textAnchor="middle"
+                >
                   {isWinner ? "0.94" : (0.3 + i * 0.05).toFixed(2)}
                 </text>
               </g>
@@ -577,8 +646,25 @@ function PlaygroundCanvas({
       {/* Evaluate marker */}
       {(phase === "evaluate" || phase === "collapse" || phase === "done") && (
         <g>
-          <line x1="880" y1="60" x2="880" y2="440" stroke="#b79bff" strokeWidth="0.5" opacity="0.25" strokeDasharray="2 4" />
-          <text x="880" y="50" fill="#8a93a6" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle" style={{ letterSpacing: 2 }}>
+          <line
+            x1="880"
+            y1="60"
+            x2="880"
+            y2="440"
+            stroke="#b79bff"
+            strokeWidth="0.5"
+            opacity="0.25"
+            strokeDasharray="2 4"
+          />
+          <text
+            x="880"
+            y="50"
+            fill="#8a93a6"
+            fontSize="9"
+            fontFamily="JetBrains Mono"
+            textAnchor="middle"
+            style={{ letterSpacing: 2 }}
+          >
             EVALUATE
           </text>
         </g>
@@ -587,8 +673,25 @@ function PlaygroundCanvas({
       {/* Collapse marker */}
       {(phase === "collapse" || phase === "done") && (
         <g>
-          <line x1="700" y1="60" x2="700" y2="440" stroke="#ffd7a3" strokeWidth="0.5" opacity="0.25" strokeDasharray="2 4" />
-          <text x="700" y="50" fill="#8a93a6" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle" style={{ letterSpacing: 2 }}>
+          <line
+            x1="700"
+            y1="60"
+            x2="700"
+            y2="440"
+            stroke="#ffd7a3"
+            strokeWidth="0.5"
+            opacity="0.25"
+            strokeDasharray="2 4"
+          />
+          <text
+            x="700"
+            y="50"
+            fill="#8a93a6"
+            fontSize="9"
+            fontFamily="JetBrains Mono"
+            textAnchor="middle"
+            style={{ letterSpacing: 2 }}
+          >
             COLLAPSE
           </text>
         </g>
@@ -610,10 +713,25 @@ function PlaygroundCanvas({
             className={phase === "done" ? "pulse-ring" : ""}
             style={{ transformOrigin: "1080px 250px" }}
           />
-          <text x="1080" y="295" fill="#ffd7a3" fontSize="10" fontFamily="JetBrains Mono" textAnchor="middle" style={{ letterSpacing: 2 }}>
+          <text
+            x="1080"
+            y="295"
+            fill="#ffd7a3"
+            fontSize="10"
+            fontFamily="JetBrains Mono"
+            textAnchor="middle"
+            style={{ letterSpacing: 2 }}
+          >
             COMMIT
           </text>
-          <text x="1080" y="310" fill="#8a93a6" fontSize="8" fontFamily="JetBrains Mono" textAnchor="middle">
+          <text
+            x="1080"
+            y="310"
+            fill="#8a93a6"
+            fontSize="8"
+            fontFamily="JetBrains Mono"
+            textAnchor="middle"
+          >
             state_0x8f3a
           </text>
         </g>
@@ -622,7 +740,14 @@ function PlaygroundCanvas({
       {/* Branch count indicator (top-left) */}
       {phase !== "idle" && (
         <g>
-          <text x="50" y="40" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" style={{ letterSpacing: 2 }}>
+          <text
+            x="50"
+            y="40"
+            fill="#4a5168"
+            fontSize="9"
+            fontFamily="JetBrains Mono"
+            style={{ letterSpacing: 2 }}
+          >
             BRANCHES
           </text>
           <text x="50" y="60" fill="#c6f0ff" fontSize="16" fontFamily="JetBrains Mono">

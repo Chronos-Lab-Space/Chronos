@@ -3,42 +3,48 @@ const platformLayers = [
     number: "01",
     name: "SDK",
     label: "Embed",
-    detail: "Typed clients for TypeScript, Python, Rust, and Go. Bring temporal reasoning into the agent you already have.",
+    detail:
+      "Typed clients for TypeScript, Python, Rust, and Go. Bring temporal reasoning into the agent you already have.",
     color: "#60899B",
   },
   {
     number: "02",
     name: "API",
     label: "Connect",
-    detail: "A stable REST and event interface for forking, evaluating, replaying, and inspecting decisions from any environment.",
+    detail:
+      "A stable REST and event interface for forking, evaluating, replaying, and inspecting decisions from any environment.",
     color: "#CDCAB2",
   },
   {
     number: "03",
     name: "CLI",
     label: "Operate",
-    detail: "Run simulations, inspect branches, and ship Chronos programs from a terminal or CI pipeline.",
+    detail:
+      "Run simulations, inspect branches, and ship Chronos programs from a terminal or CI pipeline.",
     color: "#60899B",
   },
   {
     number: "04",
     name: "Visual Studio Extension",
     label: "Author",
-    detail: "Write Chronos programs with syntax awareness, live branch previews, and outcome inspection without leaving your editor.",
+    detail:
+      "Write Chronos programs with syntax awareness, live branch previews, and outcome inspection without leaving your editor.",
     color: "#E2DDDA",
   },
   {
     number: "05",
     name: "Agent Runtime",
     label: "Reason",
-    detail: "The deterministic workspace where an agent's tools, policies, memory, and decision plan execute across branches.",
+    detail:
+      "The deterministic workspace where an agent's tools, policies, memory, and decision plan execute across branches.",
     color: "#CDCAB2",
   },
   {
     number: "06",
     name: "Simulation Cloud",
     label: "Scale",
-    detail: "Elastic simulation capacity, branch archives, replay, observability, and durable memory for every production run.",
+    detail:
+      "Elastic simulation capacity, branch archives, replay, observability, and durable memory for every production run.",
     color: "#60899B",
   },
 ];
@@ -61,8 +67,8 @@ export function TemporalComputePlatform() {
           </h3>
         </div>
         <p className="max-w-sm text-[14px] leading-[1.7] text-ink-dim">
-          Chronos is not only a decision engine. It is the developer platform
-          for authoring, running, observing, and scaling temporal agents.
+          Chronos is not only a decision engine. It is the developer platform for authoring,
+          running, observing, and scaling temporal agents.
         </p>
       </div>
 
@@ -103,8 +109,14 @@ export function TemporalComputePlatform() {
         <div className="lg:col-span-7">
           <div className="divide-y divide-line border-y border-line">
             {platformLayers.map((layer) => (
-              <div key={layer.number} className="grid grid-cols-[42px_1fr] gap-x-4 py-4 sm:grid-cols-[42px_120px_1fr] sm:gap-x-6">
-                <div className="font-mono text-[10px] tracking-[0.2em]" style={{ color: layer.color }}>
+              <div
+                key={layer.number}
+                className="grid grid-cols-[42px_1fr] gap-x-4 py-4 sm:grid-cols-[42px_120px_1fr] sm:gap-x-6"
+              >
+                <div
+                  className="font-mono text-[10px] tracking-[0.2em]"
+                  style={{ color: layer.color }}
+                >
                   {layer.number}
                 </div>
                 <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink sm:pt-0.5">
@@ -119,9 +131,9 @@ export function TemporalComputePlatform() {
 
           <div className="mt-6 border-l-2 border-chronos/40 pl-5">
             <p className="text-[14px] leading-[1.7] text-ink-dim">
-              The SDK, API, CLI, and extension are how builders enter Chronos.
-              The Agent Runtime and Simulation Cloud are where production
-              decisions actually happen. One contract connects the entire path.
+              The SDK, API, CLI, and extension are how builders enter Chronos. The Agent Runtime and
+              Simulation Cloud are where production decisions actually happen. One contract connects
+              the entire path.
             </p>
           </div>
         </div>

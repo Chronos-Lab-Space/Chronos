@@ -25,6 +25,9 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      - name: Lint (Biome)
+        run: npx biome ci .
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 

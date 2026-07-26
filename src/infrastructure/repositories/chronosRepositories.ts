@@ -42,7 +42,10 @@ export function createSupabaseChronosRepositories(): ChronosRepositories {
     memories: new SupabaseRepository(supabase, "memories") as MemoryRepositoryPort,
     scenarios: new SupabaseRepository(supabase, "scenarios") as ScenarioRepository,
     workspaces: new SupabaseRepository(supabase, "workspaces") as WorkspaceRepository,
-    knowledgeGraphs: new SupabaseRepository(supabase, "knowledge_graphs") as KnowledgeGraphRepository,
+    knowledgeGraphs: new SupabaseRepository(
+      supabase,
+      "knowledge_graphs"
+    ) as KnowledgeGraphRepository,
     taskGraphs: new SupabaseRepository(supabase, "task_graphs") as TaskGraphRepository,
     capabilities: new SupabaseRepository(supabase, "capabilities") as CapabilityRepository,
     executions: new SupabaseRepository(supabase, "task_executions") as TaskExecutionRepository,

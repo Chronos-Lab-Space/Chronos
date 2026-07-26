@@ -46,12 +46,7 @@ describe("Chronos simulation integration", () => {
     expect(first.bestPath.probability).toBeGreaterThan(0);
     expect(first.bestPath.arr).toBeGreaterThan(0);
     expect(first.bestPath.milestones.map((milestone) => milestone.month)).toEqual([
-      1,
-      3,
-      6,
-      9,
-      12,
-      18,
+      1, 3, 6, 9, 12, 18,
     ]);
     expect(first.alternatives.length).toBeGreaterThan(0);
   });

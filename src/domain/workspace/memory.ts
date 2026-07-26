@@ -1,9 +1,4 @@
-import type {
-  FutureRecord,
-  SimulationRecord,
-  SimulationReport,
-  WorkspaceHome,
-} from "./types";
+import type { FutureRecord, SimulationRecord, SimulationReport, WorkspaceHome } from "./types";
 
 /**
  * Phase 6 — Persistent memory is history (no AI memory).
@@ -41,7 +36,9 @@ export function groupByLineage(simulations: readonly SimulationRecord[]): Simula
 
   const lineages: SimulationLineage[] = [];
   for (const [lineage_id, versions] of map) {
-    const sorted = [...versions].sort((a, b) => b.version - a.version || b.created_at.localeCompare(a.created_at));
+    const sorted = [...versions].sort(
+      (a, b) => b.version - a.version || b.created_at.localeCompare(a.created_at)
+    );
     lineages.push({
       lineage_id,
       title: sorted[0]?.title ?? "Simulation",
@@ -69,9 +66,7 @@ export function buildReport(home: WorkspaceHome, simulationId: string): Simulati
   const simulation = home.recentSimulations.find((s) => s.id === simulationId);
   if (!simulation) return null;
 
-  const risks = Array.isArray(simulation.result.risks)
-    ? (simulation.result.risks as string[])
-    : [];
+  const risks = Array.isArray(simulation.result.risks) ? (simulation.result.risks as string[]) : [];
   const tasks = Array.isArray(simulation.result.tasks)
     ? (simulation.result.tasks as SimulationReport["tasks"])
     : [];

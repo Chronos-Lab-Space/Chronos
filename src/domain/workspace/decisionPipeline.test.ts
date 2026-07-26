@@ -17,13 +17,7 @@ const completedTasks: EngineTaskLike[] = [
 describe("mapEngineTasksToLifecycle", () => {
   it("maps engine phases to product lifecycle labels in order", () => {
     const events = mapEngineTasksToLifecycle(completedTasks);
-    expect(events.map((e) => e.id)).toEqual([
-      "plan",
-      "generate",
-      "evaluate",
-      "rank",
-      "collapse",
-    ]);
+    expect(events.map((e) => e.id)).toEqual(["plan", "generate", "evaluate", "rank", "collapse"]);
     expect(events[0].label).toMatch(/understanding goal/i);
     expect(events[1].label).toMatch(/generating candidate futures/i);
     expect(events[2].label).toMatch(/evaluating trade-offs/i);
@@ -53,9 +47,7 @@ describe("buildPipelineProgress", () => {
     expect(progress.lifecycle.every((e) => e.status === "completed")).toBe(true);
     expect(progress.decideComplete).toBe(false);
     expect(progress.stages.find((s) => s.id === "decide")?.complete).toBe(false);
-    expect(progress.stages.filter((s) => s.id !== "decide").every((s) => s.complete)).toBe(
-      true
-    );
+    expect(progress.stages.filter((s) => s.id !== "decide").every((s) => s.complete)).toBe(true);
   });
 
   it("marks decide complete when chosen_future_id is set", () => {

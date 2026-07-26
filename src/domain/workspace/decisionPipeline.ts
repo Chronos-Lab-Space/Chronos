@@ -28,12 +28,7 @@ export type LifecycleEvent = {
 };
 
 /** High-level product stages (includes Decide after report). */
-export type DecisionStageId =
-  | "understand"
-  | "explore"
-  | "evaluate"
-  | "recommend"
-  | "decide";
+export type DecisionStageId = "understand" | "explore" | "evaluate" | "recommend" | "decide";
 
 export type DecisionStageProgress = {
   id: DecisionStageId;
@@ -50,13 +45,7 @@ export type PipelineProgress = {
   dwellMs: number;
 };
 
-const PHASE_ORDER: EngineTaskPhase[] = [
-  "plan",
-  "generate",
-  "evaluate",
-  "rank",
-  "collapse",
-];
+const PHASE_ORDER: EngineTaskPhase[] = ["plan", "generate", "evaluate", "rank", "collapse"];
 
 const PHASE_LABELS: Record<EngineTaskPhase, string> = {
   plan: "Understanding goal",
@@ -80,7 +69,13 @@ export function clampPhaseDwellMs(ms: number | undefined): number {
 }
 
 function asPhase(raw: unknown): EngineTaskPhase | null {
-  if (raw === "plan" || raw === "generate" || raw === "evaluate" || raw === "rank" || raw === "collapse") {
+  if (
+    raw === "plan" ||
+    raw === "generate" ||
+    raw === "evaluate" ||
+    raw === "rank" ||
+    raw === "collapse"
+  ) {
     return raw;
   }
   return null;

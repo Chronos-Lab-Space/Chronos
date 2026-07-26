@@ -4,7 +4,7 @@ import type { WorkspaceHome } from "../../../domain/workspace/types";
 
 /**
  * Right context rail — objective, constraints, related sims, outcome tracking.
- * Matches product HQ mock (public/image.png).
+ * Matches product HQ mock (docs/images/workspace-desktop-mock.png).
  */
 export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
   const goal = home.goal;
@@ -56,10 +56,7 @@ export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
             <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
               Constraints
             </div>
-            <Link
-              to="/workspace/simulations?new=1"
-              className="font-mono text-[10px] text-chronos"
-            >
+            <Link to="/workspace/simulations?new=1" className="font-mono text-[10px] text-chronos">
               Edit
             </Link>
           </div>
@@ -111,10 +108,7 @@ export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
             <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
               Related simulations
             </div>
-            <Link
-              to="/workspace/simulations"
-              className="font-mono text-[10px] text-chronos"
-            >
+            <Link to="/workspace/simulations" className="font-mono text-[10px] text-chronos">
               View all →
             </Link>
           </div>
@@ -149,8 +143,7 @@ export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
             </span>
           </div>
           <p className="mt-2 text-xs leading-relaxed text-ink-dim">
-            Track real-world outcome once a path is chosen to improve future
-            recommendations.
+            Track real-world outcome once a path is chosen to improve future recommendations.
           </p>
           {latest ? (
             <Link

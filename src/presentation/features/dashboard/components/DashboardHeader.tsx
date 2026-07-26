@@ -35,6 +35,7 @@ export function DashboardHeader({ workspace, goal, userLabel = "You" }: Props) {
       <div
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-bg-soft/50 font-mono text-[11px] text-chronos"
         title={userLabel}
+        role="img"
         aria-label={`Signed in as ${userLabel}`}
       >
         {initials || "CL"}

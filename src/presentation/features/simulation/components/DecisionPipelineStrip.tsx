@@ -36,6 +36,7 @@ export function DecisionPipelineStrip({
     replay && simulationStatus === "completed" ? 1 : base.lifecycle.length
   );
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies(tasks): restart the replay animation whenever the task set changes
   useEffect(() => {
     if (!replay || simulationStatus !== "completed") {
       setVisibleCount(base.lifecycle.length);
@@ -136,9 +137,7 @@ export function DecisionPipelineStrip({
           <li
             key={s.id}
             className={`rounded-full px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] ${
-              s.complete
-                ? "bg-chronos/15 text-chronos"
-                : "bg-bg text-ink-faint ring-1 ring-line"
+              s.complete ? "bg-chronos/15 text-chronos" : "bg-bg text-ink-faint ring-1 ring-line"
             }`}
           >
             {s.complete ? "✓ " : ""}

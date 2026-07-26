@@ -1,8 +1,5 @@
 import { Link } from "react-router-dom";
-import {
-  computeWorkspacePulse,
-  formatRelativeTime,
-} from "../../../../domain/workspace/pulse";
+import { computeWorkspacePulse, formatRelativeTime } from "../../../../domain/workspace/pulse";
 import type { WorkspaceHome } from "../../../../domain/workspace/types";
 
 export function WorkspacePulse({ home }: { home: WorkspaceHome }) {
@@ -44,19 +41,13 @@ export function WorkspacePulse({ home }: { home: WorkspaceHome }) {
   );
 }
 
-function Metric({
-  label,
-  value,
-  compact,
-}: {
-  label: string;
-  value: string;
-  compact?: boolean;
-}) {
+function Metric({ label, value, compact }: { label: string; value: string; compact?: boolean }) {
   return (
     <div className="rounded-xl border border-line bg-bg/50 px-3 py-3">
       <dt className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">{label}</dt>
-      <dd className={`mt-1.5 font-mono tabular-nums text-chronos ${compact ? "text-sm" : "text-2xl"}`}>
+      <dd
+        className={`mt-1.5 font-mono tabular-nums text-chronos ${compact ? "text-sm" : "text-2xl"}`}
+      >
         {value}
       </dd>
     </div>

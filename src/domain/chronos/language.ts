@@ -22,14 +22,7 @@ import type { Branch } from "./entities";
 
 // ---- Token types ----
 
-type TokenType =
-  | "keyword"
-  | "ident"
-  | "string"
-  | "number"
-  | "bool"
-  | "symbol"
-  | "eof";
+type TokenType = "keyword" | "ident" | "string" | "number" | "bool" | "symbol" | "eof";
 
 type Token = {
   type: TokenType;
@@ -250,11 +243,7 @@ class Parser {
   expectIdentLike(): Token {
     const t = this.peek();
     if (!isIdentLike(t)) {
-      throw new ChronosError(
-        `expected identifier, got '${t.value}'`,
-        t.line,
-        t.col
-      );
+      throw new ChronosError(`expected identifier, got '${t.value}'`, t.line, t.col);
     }
     return this.next();
   }
@@ -346,7 +335,11 @@ class Parser {
   parseRun(): { fork: boolean; evaluate: string | null; collapse: string | null } {
     this.expect("keyword", "run");
     this.expect("symbol", "{");
-    const result = { fork: false, evaluate: null as string | null, collapse: null as string | null };
+    const result = {
+      fork: false,
+      evaluate: null as string | null,
+      collapse: null as string | null,
+    };
     while (!this.match("symbol", "}")) {
       const t = this.peek();
       if (t.type === "keyword" && t.value === "fork") {
@@ -446,7 +439,13 @@ class Parser {
 
   parseComparison(): Expression {
     let left = this.parseAdd();
-    while (this.match("symbol", "==") || this.match("symbol", ">") || this.match("symbol", "<") || this.match("symbol", ">=") || this.match("symbol", "<=")) {
+    while (
+      this.match("symbol", "==") ||
+      this.match("symbol", ">") ||
+      this.match("symbol", "<") ||
+      this.match("symbol", ">=") ||
+      this.match("symbol", "<=")
+    ) {
       const op = this.next().value;
       const right = this.parseAdd();
       left = { kind: "binary", op, left, right };
@@ -672,10 +671,12 @@ export function compile(source: string): CompileResult {
           else if (field === "bugs") initialState.object.y = value;
           else if (field === "coverage") initialState.object.stable = value === "stable";
           else if (field === "shipped") initialState.object.grasped = value;
-          else if (field === "stakeholder") initialState.environment.humanPresent = value === "watching";
+          else if (field === "stakeholder")
+            initialState.environment.humanPresent = value === "watching";
           else if (field === "debt_pressure") initialState.environment.wind = value;
           else if (field === "morale") {
-            initialState.environment.lighting = value === "high" ? "bright" : value === "medium" ? "dim" : "dark";
+            initialState.environment.lighting =
+              value === "high" ? "bright" : value === "medium" ? "dim" : "dark";
           }
         } else if (parts[0] === "position") {
           const field = parts[1];
@@ -691,7 +692,8 @@ export function compile(source: string): CompileResult {
           else if (field === "human_desk") initialState.environment.humanPresent = value === "on";
           else if (field === "macro_wind") initialState.environment.wind = value;
           else if (field === "signals") {
-            initialState.environment.lighting = value === "clear" ? "bright" : value === "mixed" ? "dim" : "dark";
+            initialState.environment.lighting =
+              value === "clear" ? "bright" : value === "mixed" ? "dim" : "dark";
           }
         } else if (parts[0] === "company") {
           const field = parts[1];
@@ -707,7 +709,8 @@ export function compile(source: string): CompileResult {
           else if (field === "board") initialState.environment.humanPresent = value === "watching";
           else if (field === "competitive_wind") initialState.environment.wind = value;
           else if (field === "clarity") {
-            initialState.environment.lighting = value === "clear" ? "bright" : value === "mixed" ? "dim" : "dark";
+            initialState.environment.lighting =
+              value === "clear" ? "bright" : value === "mixed" ? "dim" : "dark";
           }
         }
       }
@@ -754,13 +757,28 @@ export function compile(source: string): CompileResult {
           context: {
             stakeholder: s.environment.humanPresent ? "watching" : "clear",
             debt_pressure: s.environment.wind,
-            morale: s.environment.lighting === "bright" ? "high" : s.environment.lighting === "dim" ? "medium" : "low",
+            morale:
+              s.environment.lighting === "bright"
+                ? "high"
+                : s.environment.lighting === "dim"
+                  ? "medium"
+                  : "low",
             human_desk: s.environment.humanPresent ? "on" : "off",
             macro_wind: s.environment.wind,
-            signals: s.environment.lighting === "bright" ? "clear" : s.environment.lighting === "dim" ? "mixed" : "cloudy",
+            signals:
+              s.environment.lighting === "bright"
+                ? "clear"
+                : s.environment.lighting === "dim"
+                  ? "mixed"
+                  : "cloudy",
             board: s.environment.humanPresent ? "watching" : "hands-off",
             competitive_wind: s.environment.wind,
-            clarity: s.environment.lighting === "bright" ? "clear" : s.environment.lighting === "dim" ? "mixed" : "cloudy",
+            clarity:
+              s.environment.lighting === "bright"
+                ? "clear"
+                : s.environment.lighting === "dim"
+                  ? "mixed"
+                  : "cloudy",
           },
           risk: a.body.risk ? evalExpression(a.body.risk, {}) : 0.5,
           reward: a.body.reward ? evalExpression(a.body.reward, {}) : 0.5,
@@ -777,18 +795,20 @@ export function compile(source: string): CompileResult {
           obj[m.path[m.path.length - 1]] = value;
         }
 
-        // Map back to WorldState
+        // Map back to WorldState. Every namespace maps unconditionally:
+        // untouched fields fall through to the current state via ?? / ||.
         const result: Partial<WorldState> = {};
-        // Detect which namespace was mutated
-        const isAgent = a.body.mutations.some((m) => m.path[0] === "agent") || Object.keys(env.agent).length;
-        const isWorld = a.body.mutations.some((m) => m.path[0] === "world");
-        const isContext = a.body.mutations.some((m) => m.path[0] === "context");
-
-        if (isAgent || true) {
+        {
           const x = env.agent.size ?? env.agent.velocity ?? env.agent.runway;
           const y = env.agent.days_left ?? env.agent.vol ?? env.agent.mrr;
           const armAngle = env.agent.quality ?? env.agent.conviction ?? env.agent.momentum;
-          const gripOpen = env.agent.flag_ready ?? (env.agent.exposure === "flexible" ? true : env.agent.optionality === "open" ? true : undefined);
+          const gripOpen =
+            env.agent.flag_ready ??
+            (env.agent.exposure === "flexible"
+              ? true
+              : env.agent.optionality === "open"
+                ? true
+                : undefined);
           result.robot = {
             x: x ?? s.robot.x,
             y: y ?? s.robot.y,
@@ -796,24 +816,39 @@ export function compile(source: string): CompileResult {
             gripOpen: gripOpen ?? s.robot.gripOpen,
           };
         }
-        if (isWorld || true) {
-          result.object = {
-            x: env.world.loc_target ?? env.world.minutes_to_print ?? env.world.churn ?? s.object.x,
-            y: env.world.bugs ?? env.world.pnl ?? env.world.competitor ?? s.object.y,
-            stable: env.world.coverage === "stable" || env.world.tape === "thick" || env.world.market === "stable" || s.object.stable,
-            grasped: env.world.shipped ?? env.world.holding ?? env.world.positioned ?? s.object.grasped,
-          };
-        }
-        if (isContext || true) {
-          result.environment = {
-            humanPresent: env.context.stakeholder === "watching" || env.context.human_desk === "on" || env.context.board === "watching" || s.environment.humanPresent,
-            wind: env.context.debt_pressure ?? env.context.macro_wind ?? env.context.competitive_wind ?? s.environment.wind,
-            lighting:
-              (env.context.morale === "high" || env.context.signals === "clear" || env.context.clarity === "clear") ? "bright"
-              : (env.context.morale === "low" || env.context.signals === "cloudy" || env.context.clarity === "cloudy") ? "dark"
-              : "dim",
-          };
-        }
+        result.object = {
+          x: env.world.loc_target ?? env.world.minutes_to_print ?? env.world.churn ?? s.object.x,
+          y: env.world.bugs ?? env.world.pnl ?? env.world.competitor ?? s.object.y,
+          stable:
+            env.world.coverage === "stable" ||
+            env.world.tape === "thick" ||
+            env.world.market === "stable" ||
+            s.object.stable,
+          grasped:
+            env.world.shipped ?? env.world.holding ?? env.world.positioned ?? s.object.grasped,
+        };
+        result.environment = {
+          humanPresent:
+            env.context.stakeholder === "watching" ||
+            env.context.human_desk === "on" ||
+            env.context.board === "watching" ||
+            s.environment.humanPresent,
+          wind:
+            env.context.debt_pressure ??
+            env.context.macro_wind ??
+            env.context.competitive_wind ??
+            s.environment.wind,
+          lighting:
+            env.context.morale === "high" ||
+            env.context.signals === "clear" ||
+            env.context.clarity === "clear"
+              ? "bright"
+              : env.context.morale === "low" ||
+                  env.context.signals === "cloudy" ||
+                  env.context.clarity === "cloudy"
+                ? "dark"
+                : "dim",
+        };
 
         return result;
       },
@@ -876,7 +911,10 @@ export function execute(source: string): ExecutionResult {
       actions: [],
       branches: [],
       winner: null,
-      error: err instanceof ChronosError ? `line ${err.line}, col ${err.col}: ${err.message}` : (e as Error).message,
+      error:
+        err instanceof ChronosError
+          ? `line ${err.line}, col ${err.col}: ${err.message}`
+          : (e as Error).message,
     };
   }
 }

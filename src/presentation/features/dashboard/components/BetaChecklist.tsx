@@ -25,8 +25,8 @@ export function BetaChecklist({ items }: Props) {
             Beta progress
           </div>
           <p className="mt-2 text-sm text-ink-dim">
-            Unlock Chronos by deciding — not by reading a tutorial. Chronos
-            recommends; you save the path.
+            Unlock Chronos by deciding — not by reading a tutorial. Chronos recommends; you save the
+            path.
           </p>
         </div>
         <div className="font-mono text-2xl tabular-nums text-chronos">{progress.percent}%</div>
@@ -44,8 +44,8 @@ export function BetaChecklist({ items }: Props) {
           First session
         </span>
         <span className="mt-1 block">
-          Decision → knowledge → run sim → review report → save path → log outcome.
-          Prefer Google/GitHub sign-in.
+          Decision → knowledge → run sim → review report → save path → log outcome. Prefer
+          Google/GitHub sign-in.
         </span>
       </p>
 

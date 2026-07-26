@@ -43,7 +43,8 @@ const phases = [
     status: "Next",
     statusColor: "#CDCAB2",
     date: "August–September 2026",
-    intent: "Move temporal workloads from browser-local persistence to elastic production infrastructure.",
+    intent:
+      "Move temporal workloads from browser-local persistence to elastic production infrastructure.",
     outcome: "Managed simulation capacity",
     items: [
       "Deeper cloud sync and multi-device conflict UX",
@@ -77,17 +78,30 @@ export function Roadmap() {
   return (
     <section className="relative py-24 lg:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
-        <ScrollReveal variant="fade" className="mb-8 rounded-xl border border-line bg-bg-soft/60 p-4 sm:p-5">
+        <ScrollReveal
+          variant="fade"
+          className="mb-8 rounded-xl border border-line bg-bg-soft/60 p-4 sm:p-5"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             <span>Project timeline · 2026</span>
-            <span className="flex items-center gap-2 text-chronos"><span className="h-1.5 w-1.5 rounded-full bg-chronos blink" /> Current point: Workspace MVP shipped · Cloud next</span>
-            <Link to="/changelog" className="transition hover:text-ink">View changelog →</Link>
+            <span className="flex items-center gap-2 text-chronos">
+              <span className="h-1.5 w-1.5 rounded-full bg-chronos blink" /> Current point:
+              Workspace MVP shipped · Cloud next
+            </span>
+            <Link to="/changelog" className="transition hover:text-ink">
+              View changelog →
+            </Link>
           </div>
           <div className="mt-4 grid grid-cols-4 gap-1.5">
             {phases.map((phase, index) => (
               <div key={phase.num} className="relative">
-                <div className="h-1.5 rounded-full" style={{ background: index < 2 ? phase.statusColor : `${phase.statusColor}55` }} />
-                <div className="mt-2 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">{phase.date.split("–")[0]}</div>
+                <div
+                  className="h-1.5 rounded-full"
+                  style={{ background: index < 2 ? phase.statusColor : `${phase.statusColor}55` }}
+                />
+                <div className="mt-2 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
+                  {phase.date.split("–")[0]}
+                </div>
               </div>
             ))}
           </div>
@@ -105,9 +119,7 @@ export function Roadmap() {
                   <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
                     {p.num}
                   </div>
-                  <h3 className="mt-2 font-serif text-3xl leading-tight text-ink">
-                    {p.name}
-                  </h3>
+                  <h3 className="mt-2 font-serif text-3xl leading-tight text-ink">{p.name}</h3>
                 </div>
                 <span
                   className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.15em]"
@@ -124,12 +136,12 @@ export function Roadmap() {
                 </span>
               </div>
 
-              <div className="mt-3 font-mono text-[11px] text-ink-faint">
-                {p.date}
-              </div>
+              <div className="mt-3 font-mono text-[11px] text-ink-faint">{p.date}</div>
 
               <div className="mt-5 border-l-2 pl-4" style={{ borderColor: `${p.statusColor}70` }}>
-                <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-faint">Why this phase</div>
+                <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-ink-faint">
+                  Why this phase
+                </div>
                 <p className="mt-1 text-[13px] leading-[1.6] text-ink-dim">{p.intent}</p>
               </div>
 
@@ -151,7 +163,9 @@ export function Roadmap() {
 
               <div className="mt-5 flex items-center justify-between rounded-lg border border-line bg-bg/60 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">
                 <span>Outcome</span>
-                <span className="max-w-[65%] text-right" style={{ color: p.statusColor }}>{p.outcome}</span>
+                <span className="max-w-[65%] text-right" style={{ color: p.statusColor }}>
+                  {p.outcome}
+                </span>
               </div>
 
               {/* Footer */}
@@ -177,7 +191,11 @@ export function Roadmap() {
         </ScrollReveal>
 
         {/* Bottom note */}
-        <ScrollReveal delay={100} variant="fade" className="mt-12 flex items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
+        <ScrollReveal
+          delay={100}
+          variant="fade"
+          className="mt-12 flex items-center justify-center gap-3 font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint"
+        >
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 blink" />
           <span>All phases ship with backward compatibility guarantees</span>
         </ScrollReveal>

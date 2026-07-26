@@ -2,7 +2,8 @@ import type { KnowledgeRecord } from "./types";
 
 export function knowledgeCounts(items: readonly KnowledgeRecord[]) {
   return {
-    documents: items.filter((k) => k.type === "pdf" || k.type === "markdown" || k.type === "txt").length,
+    documents: items.filter((k) => k.type === "pdf" || k.type === "markdown" || k.type === "txt")
+      .length,
     notes: items.filter((k) => k.type === "note").length,
     urls: items.filter((k) => k.type === "url" || k.type === "github").length,
   };

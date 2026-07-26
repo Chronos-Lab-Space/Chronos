@@ -112,12 +112,8 @@ export function DecisionReportCard({
 
         {/* 2 · Simulation summary */}
         <section className="px-5 py-5 sm:px-6" data-testid="simulation-summary">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">
-            Simulation summary
-          </div>
-          <p className="mt-3 text-[15px] text-ink">
-            {summaryLine || "Simulation completed"}
-          </p>
+          <div className="font-mono text-[10px] uppercase text-ink-faint">Simulation summary</div>
+          <p className="mt-3 text-[15px] text-ink">{summaryLine || "Simulation completed"}</p>
         </section>
 
         {/* 3 · Evidence */}
@@ -126,7 +122,10 @@ export function DecisionReportCard({
             Evidence
           </div>
           <dl className="mt-4 grid gap-3 sm:grid-cols-3">
-            <Stat label="Knowledge sources used" value={String(report.evidence.knowledgeSourcesUsed)} />
+            <Stat
+              label="Knowledge sources used"
+              value={String(report.evidence.knowledgeSourcesUsed)}
+            />
             <Stat
               label="Constraints evaluated"
               value={String(report.evidence.constraintsEvaluated)}
@@ -172,7 +171,9 @@ export function DecisionReportCard({
         {/* 4 · Recommendation */}
         <section className="px-5 py-6 sm:px-6">
           <div className="font-mono text-[10px] uppercase text-ink-faint">Recommendation</div>
-          <h2 className={`mt-3 font-serif text-ink ${compact ? "text-2xl" : "text-3xl sm:text-4xl"}`}>
+          <h2
+            className={`mt-3 font-serif text-ink ${compact ? "text-2xl" : "text-3xl sm:text-4xl"}`}
+          >
             {report.recommended}
             <span className="ml-2 text-chronos" aria-hidden>
               ⭐
@@ -206,7 +207,10 @@ export function DecisionReportCard({
           {!compact && report.why.length > 0 && (
             <ul className="mt-4 grid gap-2 sm:grid-cols-2">
               {report.why.map((w) => (
-                <li key={w} className="rounded-xl border border-line px-4 py-3 text-sm text-ink-dim">
+                <li
+                  key={w}
+                  className="rounded-xl border border-line px-4 py-3 text-sm text-ink-dim"
+                >
                   {w}
                 </li>
               ))}
@@ -308,9 +312,7 @@ export function DecisionReportCard({
           </div>
         </section>
 
-        {outcomeSlot ? (
-          <section className="px-5 py-5 sm:px-6">{outcomeSlot}</section>
-        ) : null}
+        {outcomeSlot ? <section className="px-5 py-5 sm:px-6">{outcomeSlot}</section> : null}
       </div>
 
       <div className="flex flex-wrap gap-2 border-t border-line px-5 py-4 sm:px-6">

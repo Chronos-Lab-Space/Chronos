@@ -33,10 +33,7 @@ function logId(engine: Engine, phase: Phase): string {
   return `log-${engine.id}-${phase}-${engine.log.length}`;
 }
 
-function applyDelta(
-  world: WorldState,
-  delta: ReturnType<Action["apply"]>
-): WorldState {
+function applyDelta(world: WorldState, delta: ReturnType<Action["apply"]>): WorldState {
   return {
     ...world,
     robot: { ...world.robot, ...delta.robot },
@@ -358,10 +355,7 @@ function selectWinner(scored: readonly Branch[], strategy: CollapseStrategy): Br
   });
 }
 
-export function collapse(
-  engine: Engine,
-  strategy: CollapseStrategy = "max-utility"
-): Engine {
+export function collapse(engine: Engine, strategy: CollapseStrategy = "max-utility"): Engine {
   if (engine.phase !== "evaluated") return engine;
 
   const scored = engine.branches.filter((b) => b.score !== null);
@@ -408,10 +402,7 @@ export function collapse(
  * Run the full temporal loop: idle → forked → evaluated → collapsed.
  * Idempotent on already-collapsed engines. Safe to call mid-pipeline.
  */
-export function run(
-  engine: Engine,
-  strategy: CollapseStrategy = "max-utility"
-): Engine {
+export function run(engine: Engine, strategy: CollapseStrategy = "max-utility"): Engine {
   let next = engine;
   if (next.phase === "idle") next = fork(next);
   if (next.phase === "forked") next = evaluate(next);
@@ -446,11 +437,7 @@ export function reset(engine: Engine, initialWorld: WorldState): Engine {
 
 // ---- Helpers ----
 
-export function createEngine(
-  scenarioId: string,
-  world: WorldState,
-  actions: Action[]
-): Engine {
+export function createEngine(scenarioId: string, world: WorldState, actions: Action[]): Engine {
   simulationCounter += 1;
   const id = `simulation-${scenarioId}-${simulationCounter}`;
   const readyLog: LogEntry = {

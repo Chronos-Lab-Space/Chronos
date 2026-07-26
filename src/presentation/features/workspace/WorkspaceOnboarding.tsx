@@ -71,9 +71,7 @@ export function WorkspaceOnboarding() {
     } catch (err) {
       const msg = (err as Error).message || "Could not create workspace.";
       setLocalError(
-        /not signed in/i.test(msg)
-          ? "Your session expired. Sign in again, then retry."
-          : msg
+        /not signed in/i.test(msg) ? "Your session expired. Sign in again, then retry." : msg
       );
     } finally {
       setBusy(false);
@@ -169,7 +167,8 @@ export function WorkspaceOnboarding() {
               Chronos is decision infrastructure — not a chatbot.
             </p>
             <p className="mt-2 text-[15px] text-ink">
-              Path: <span className="text-chronos">Goal → Knowledge → Simulation → Recommendation</span>
+              Path:{" "}
+              <span className="text-chronos">Goal → Knowledge → Simulation → Recommendation</span>
             </p>
             <button
               type="button"
@@ -267,7 +266,9 @@ export function WorkspaceOnboarding() {
                   type="button"
                   onClick={() => setContextMode(m)}
                   className={`rounded-full px-3 py-1.5 font-mono text-[10px] uppercase ${
-                    contextMode === m ? "bg-chronos/20 text-chronos" : "border border-line text-ink-faint"
+                    contextMode === m
+                      ? "bg-chronos/20 text-chronos"
+                      : "border border-line text-ink-faint"
                   }`}
                 >
                   {m}

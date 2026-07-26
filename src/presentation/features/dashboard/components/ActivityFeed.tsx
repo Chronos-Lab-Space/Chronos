@@ -32,7 +32,9 @@ export function ActivityFeed({ items }: Props) {
       </div>
 
       {items.length === 0 ? (
-        <p className="mt-4 text-sm text-ink-dim">Nothing recorded yet — run a simulation to start memory.</p>
+        <p className="mt-4 text-sm text-ink-dim">
+          Nothing recorded yet — run a simulation to start memory.
+        </p>
       ) : (
         <ul className="mt-4 space-y-0 divide-y divide-line">
           {items.map((item) => {

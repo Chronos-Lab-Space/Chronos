@@ -66,7 +66,8 @@ const releases: Release[] = [
       },
       {
         label: "Quiet HQ",
-        detail: "Pulse → Current goal → full report → Next action → Knowledge · Timeline (widget noise removed)",
+        detail:
+          "Pulse → Current goal → full report → Next action → Knowledge · Timeline (widget noise removed)",
       },
       {
         label: "Honest simulation",
@@ -83,7 +84,8 @@ const releases: Release[] = [
       },
       {
         label: "Workspace UX",
-        detail: "Chronos palette (#111 #2A4D5F #60899B #989898 #C4C2AA #F2EDEA) · orbit enter loading · reduced-motion safe",
+        detail:
+          "Chronos palette (#111 #2A4D5F #60899B #989898 #C4C2AA #F2EDEA) · orbit enter loading · reduced-motion safe",
       },
       {
         label: "Repo hygiene",
@@ -129,9 +131,19 @@ const releases: Release[] = [
     summary:
       "Memory is a primary nav item with post-decision CTAs on dashboard and after save path. Landing and marketing copy aligned to the real beta: ranked futures, Decision Workspace, dual-write memory, RLS — SDKs/API and cryptographic infra framed as roadmap or demo where appropriate.",
     highlights: [
-      { label: "Memory nav", detail: "Dashboard · Knowledge · Sims · Timeline · Memory · Settings" },
-      { label: "Post-decision CTA", detail: "View in Memory after path save + dashboard banner for latest saved path" },
-      { label: "Claim audit", detail: "Softened 1,000-futures / SDK-shipped / crypto-isolation language on landing & security pages" },
+      {
+        label: "Memory nav",
+        detail: "Dashboard · Knowledge · Sims · Timeline · Memory · Settings",
+      },
+      {
+        label: "Post-decision CTA",
+        detail: "View in Memory after path save + dashboard banner for latest saved path",
+      },
+      {
+        label: "Claim audit",
+        detail:
+          "Softened 1,000-futures / SDK-shipped / crypto-isolation language on landing & security pages",
+      },
     ],
   },
   {
@@ -142,10 +154,22 @@ const releases: Release[] = [
     summary:
       "Landing Get Started → Google/GitHub OAuth → profile + personal workspace + owner membership → first decision prompt → dashboard. Progressive beta checklist (LLM optional, decision, simulation, memory, share). Membership-aware schema and access helpers for JWT → workspace checks.",
     highlights: [
-      { label: "OAuth", detail: "Continue with Google / GitHub; email password & magic link secondary" },
-      { label: "Bootstrap", detail: "Post-auth: profile, personal workspace, owner membership, preferences" },
-      { label: "Checklist", detail: "Natural unlock: connect LLM · first decision · first sim · save memory · share" },
-      { label: "Schema", detail: "profiles, workspace_members, decisions, events + membership RLS helpers" },
+      {
+        label: "OAuth",
+        detail: "Continue with Google / GitHub; email password & magic link secondary",
+      },
+      {
+        label: "Bootstrap",
+        detail: "Post-auth: profile, personal workspace, owner membership, preferences",
+      },
+      {
+        label: "Checklist",
+        detail: "Natural unlock: connect LLM · first decision · first sim · save memory · share",
+      },
+      {
+        label: "Schema",
+        detail: "profiles, workspace_members, decisions, events + membership RLS helpers",
+      },
     ],
   },
   {
@@ -156,9 +180,19 @@ const releases: Release[] = [
     summary:
       "React Error Boundary and optional Sentry (VITE_SENTRY_DSN) so client crashes are visible. Authenticated Playwright covers idea → Decision Report → save path → outcome. Product funnel analytics and full Decision Workspace loop ship together.",
     highlights: [
-      { label: "Error monitoring", detail: "ErrorBoundary + Sentry scaffold (DSN optional); never blocks UX" },
-      { label: "E2E decision loop", detail: "Playwright: onboard → generate futures → report → choose path → outcome (VITE_E2E_AUTH)" },
-      { label: "Trust + analytics", detail: "Recommended because · funnel counters · docs beta framing" },
+      {
+        label: "Error monitoring",
+        detail: "ErrorBoundary + Sentry scaffold (DSN optional); never blocks UX",
+      },
+      {
+        label: "E2E decision loop",
+        detail:
+          "Playwright: onboard → generate futures → report → choose path → outcome (VITE_E2E_AUTH)",
+      },
+      {
+        label: "Trust + analytics",
+        detail: "Recommended because · funnel counters · docs beta framing",
+      },
     ],
   },
   {
@@ -169,10 +203,21 @@ const releases: Release[] = [
     summary:
       "Every recommendation now leads with transparent “Recommended because” bullets. Product analytics instrument the beta funnel (workspaces, sims, time-to-first-decision, exports, retention). Docs cover what Chronos is, branch → simulate → collapse, beta limits, and FAQ.",
     highlights: [
-      { label: "Recommended because", detail: "lowest execution risk · fits objective · fewer dependencies · highest expected success" },
-      { label: "Analytics", detail: "workspace_created, simulation_started/completed, path_chosen, report_exported, session/retention — local + Supabase events" },
+      {
+        label: "Recommended because",
+        detail:
+          "lowest execution risk · fits objective · fewer dependencies · highest expected success",
+      },
+      {
+        label: "Analytics",
+        detail:
+          "workspace_created, simulation_started/completed, path_chosen, report_exported, session/retention — local + Supabase events",
+      },
       { label: "Docs", detail: "What Chronos is · How it works · Beta limitations · FAQ" },
-      { label: "Settings", detail: "Browser funnel snapshot for time-to-first-decision and usage counters" },
+      {
+        label: "Settings",
+        detail: "Browser funnel snapshot for time-to-first-decision and usage counters",
+      },
     ],
   },
   {
@@ -183,10 +228,24 @@ const releases: Release[] = [
     summary:
       "Shareable Decision Report (objective, context, alternatives, trade-offs, confidence, path, risks, next actions). Dashboard answers what you’re working on, what’s pending, what ran, and what changed. Persistent goal history + outcome tracking: Did you follow this? How did it turn out?",
     highlights: [
-      { label: "Decision Report", detail: "Full artifact: objective, context used, alternative futures, trade-offs, confidence, recommended path, risks, next actions — copy/download markdown" },
-      { label: "Dashboard HQ", detail: "Working on · pending decisions · simulations run · activity since last time" },
-      { label: "Persistent memory", detail: "Previous goals, decision history, knowledge, simulations, past outcomes on Memory" },
-      { label: "Outcome tracking", detail: "Yes / Partially / No follow-through, then free-text how it turned out — stored on the sim + notes" },
+      {
+        label: "Decision Report",
+        detail:
+          "Full artifact: objective, context used, alternative futures, trade-offs, confidence, recommended path, risks, next actions — copy/download markdown",
+      },
+      {
+        label: "Dashboard HQ",
+        detail: "Working on · pending decisions · simulations run · activity since last time",
+      },
+      {
+        label: "Persistent memory",
+        detail: "Previous goals, decision history, knowledge, simulations, past outcomes on Memory",
+      },
+      {
+        label: "Outcome tracking",
+        detail:
+          "Yes / Partially / No follow-through, then free-text how it turned out — stored on the sim + notes",
+      },
     ],
   },
   {
@@ -197,9 +256,20 @@ const releases: Release[] = [
     summary:
       "Idea → decision in minutes: generate futures lands on the sim detail, comparison leads with exclusive hooks (Fastest path · Lower risk · Highest upside), then Decision Report, then choose path and save to timeline.",
     highlights: [
-      { label: "Wow comparison", detail: "Future A 92% · Fastest path · B Lower risk · C Highest upside — exclusive trade-off labels" },
-      { label: "Flow order", detail: "Compare outcomes → Decision Report → Choose path · Save timeline (pipeline demoted)" },
-      { label: "Post-run redirect", detail: "runSimulation returns sim id and opens the decision view immediately" },
+      {
+        label: "Wow comparison",
+        detail:
+          "Future A 92% · Fastest path · B Lower risk · C Highest upside — exclusive trade-off labels",
+      },
+      {
+        label: "Flow order",
+        detail:
+          "Compare outcomes → Decision Report → Choose path · Save timeline (pipeline demoted)",
+      },
+      {
+        label: "Post-run redirect",
+        detail: "runSimulation returns sim id and opens the decision view immediately",
+      },
       { label: "CTA", detail: "Generate futures (not “here’s an answer”)" },
     ],
   },
@@ -211,10 +281,19 @@ const releases: Release[] = [
     summary:
       "Full decision loop on main: mandatory onboarding, Workspace Pulse, Decision Report, multi-future comparison, timeline cards, and slim primary nav (Dashboard · Knowledge · Simulations · Timeline · Settings).",
     highlights: [
-      { label: "Decision Report", detail: "Recommended path, confidence, why, risks, next actions — screenshot-ready" },
+      {
+        label: "Decision Report",
+        detail: "Recommended path, confidence, why, risks, next actions — screenshot-ready",
+      },
       { label: "Onboarding", detail: "Create → Name → Goal → Context → Dashboard (no skip)" },
-      { label: "Pulse", detail: "Knowledge coverage, simulation confidence, open tasks, recommendation" },
-      { label: "Comparison", detail: "All ranked futures with confidence bars — not a single answer" },
+      {
+        label: "Pulse",
+        detail: "Knowledge coverage, simulation confidence, open tasks, recommendation",
+      },
+      {
+        label: "Comparison",
+        detail: "All ranked futures with confidence bars — not a single answer",
+      },
       { label: "Timeline", detail: "Goal → Future A ⭐ → B → C; choose and save path" },
       { label: "Nav", detail: "Primary chrome simplified; Memory remains deep-linkable" },
     ],
@@ -227,13 +306,41 @@ const releases: Release[] = [
     summary:
       "A usable path from sign-in to cumulative decisions: workspace HQ, knowledge library, simulation engine, future cards, and versioned memory—each gate shippable before the next, without building a full Workspace OS upfront.",
     highlights: [
-      { label: "HQ", detail: "Authenticated /workspace dashboard: goal, quick actions, recent runs, knowledge summary, MVP progress rail" },
-      { label: "Schema", detail: "Supabase tables for workspaces, goals, simulations, futures, knowledge, notes, timeline_nodes (+ RLS)" },
-      { label: "Knowledge", detail: "RAG-lite library: PDF/MD/TXT upload, website & GitHub README import, markdown notes, keyword search" },
-      { label: "Engine", detail: "Plan → generate → evaluate → rank → best future; five ranked futures, risks, confidence, pipeline tasks" },
-      { label: "Timeline", detail: "Card timeline (not a graph): Goal → Future A ⭐ … D; click for summary, risk, confidence, next steps" },
-      { label: "Memory", detail: "Every run saved with lineage versions (v1/v2/v3); reopen report, re-run, compare across sessions" },
-      { label: "Auth", detail: "BrowserRouter + magic-link callback + password sign-in; sessions persist; GH Pages SPA 404 fallback" },
+      {
+        label: "HQ",
+        detail:
+          "Authenticated /workspace dashboard: goal, quick actions, recent runs, knowledge summary, MVP progress rail",
+      },
+      {
+        label: "Schema",
+        detail:
+          "Supabase tables for workspaces, goals, simulations, futures, knowledge, notes, timeline_nodes (+ RLS)",
+      },
+      {
+        label: "Knowledge",
+        detail:
+          "RAG-lite library: PDF/MD/TXT upload, website & GitHub README import, markdown notes, keyword search",
+      },
+      {
+        label: "Engine",
+        detail:
+          "Plan → generate → evaluate → rank → best future; five ranked futures, risks, confidence, pipeline tasks",
+      },
+      {
+        label: "Timeline",
+        detail:
+          "Card timeline (not a graph): Goal → Future A ⭐ … D; click for summary, risk, confidence, next steps",
+      },
+      {
+        label: "Memory",
+        detail:
+          "Every run saved with lineage versions (v1/v2/v3); reopen report, re-run, compare across sessions",
+      },
+      {
+        label: "Auth",
+        detail:
+          "BrowserRouter + magic-link callback + password sign-in; sessions persist; GH Pages SPA 404 fallback",
+      },
     ],
   },
   {
@@ -244,10 +351,24 @@ const releases: Release[] = [
     summary:
       "Chronos workspaces now retain the evidence behind decisions. Successful futures feed the next plan; recurring failure patterns become guardrails instead of being forgotten after a run.",
     highlights: [
-      { label: "Workspace", detail: "knowledge graph links assumptions, simulations, outcomes, and recurring patterns" },
-      { label: "Memory", detail: "validated winning futures are promoted into reusable planning evidence" },
-      { label: "Guardrails", detail: "repeated failure signals are derived into recommended constraints for future plans" },
-      { label: "Access", detail: "private workspace preview replaces public runtime execution while Cohort 04 is onboarded" },
+      {
+        label: "Workspace",
+        detail: "knowledge graph links assumptions, simulations, outcomes, and recurring patterns",
+      },
+      {
+        label: "Memory",
+        detail: "validated winning futures are promoted into reusable planning evidence",
+      },
+      {
+        label: "Guardrails",
+        detail:
+          "repeated failure signals are derived into recommended constraints for future plans",
+      },
+      {
+        label: "Access",
+        detail:
+          "private workspace preview replaces public runtime execution while Cohort 04 is onboarded",
+      },
     ],
   },
   {
@@ -258,10 +379,18 @@ const releases: Release[] = [
     summary:
       "Chronos now decomposes objectives into dependency-aware task graphs, resolves registered capabilities, and ranks timeline outcomes without requiring users to choose individual agents.",
     highlights: [
-      { label: "Planner", detail: "Launch startup decomposes into research, market, roadmap, adoption, financial, and risk tasks" },
+      {
+        label: "Planner",
+        detail:
+          "Launch startup decomposes into research, market, roadmap, adoption, financial, and risk tasks",
+      },
       { label: "Runtime", detail: "capability registration replaces engine-owned named agents" },
       { label: "Timeline", detail: "subbranch, merge, and collapse records are replayable" },
-      { label: "Tests", detail: "engine lifecycle, task graph, temporal versioning, cache, and learning-loop coverage added" },
+      {
+        label: "Tests",
+        detail:
+          "engine lifecycle, task graph, temporal versioning, cache, and learning-loop coverage added",
+      },
     ],
   },
   {
@@ -272,10 +401,19 @@ const releases: Release[] = [
     summary:
       "Chronos expands from a decision engine into a platform surface: SDK, API, CLI, editor extension, Agent Runtime, and Simulation Cloud share one temporal contract.",
     highlights: [
-      { label: "SDK", detail: "typed task, timeline, branch, and memory contracts across supported languages" },
-      { label: "API", detail: "platform routes defined for task planning, execution, replay, and inspection" },
+      {
+        label: "SDK",
+        detail: "typed task, timeline, branch, and memory contracts across supported languages",
+      },
+      {
+        label: "API",
+        detail: "platform routes defined for task planning, execution, replay, and inspection",
+      },
       { label: "CLI", detail: "objective planning and timeline replay added to terminal workflow" },
-      { label: "Authoring", detail: "Visual Studio extension preview introduced for Chronos programs" },
+      {
+        label: "Authoring",
+        detail: "Visual Studio extension preview introduced for Chronos programs",
+      },
     ],
   },
   {
@@ -286,8 +424,14 @@ const releases: Release[] = [
     summary:
       "Hardened deterministic execution, cache identity, and branch archive behavior before the platform surface rollout.",
     highlights: [
-      { label: "Runtime", detail: "idempotent run, branch, and timeline identifiers added to service handoffs" },
-      { label: "Cache", detail: "prompt, workspace, model version, and configuration now determine cache identity" },
+      {
+        label: "Runtime",
+        detail: "idempotent run, branch, and timeline identifiers added to service handoffs",
+      },
+      {
+        label: "Cache",
+        detail: "prompt, workspace, model version, and configuration now determine cache identity",
+      },
       { label: "Replay", detail: "timeline snapshots preserve canonical state and event ordering" },
     ],
   },
@@ -300,7 +444,10 @@ const releases: Release[] = [
       "A decision can now retain its complete temporal history: root branches, subbranches, merge evidence, and a final collapse record.",
     highlights: [
       { label: "Branch", detail: "parent lineage and depth added for nested what-if exploration" },
-      { label: "Merge", detail: "compatible branches can converge before canonical state is committed" },
+      {
+        label: "Merge",
+        detail: "compatible branches can converge before canonical state is committed",
+      },
       { label: "Collapse", detail: "discarded timelines remain replayable evidence after ranking" },
     ],
   },
@@ -312,10 +459,23 @@ const releases: Release[] = [
     summary:
       "The first Chronos runtime ships with deterministic fork, evaluate, collapse, commit, replay, and query primitives.",
     highlights: [
-      { label: "Core", detail: "six temporal primitives establish the canonical decision lifecycle" },
-      { label: "Language", detail: "state, action, score, and run constructs establish the first authoring model" },
-      { label: "Workspace", detail: "initial simulation, memory, scenario, and timeline persistence ports introduced" },
-      { label: "Runtime", detail: "fork · evaluate · collapse · commit · replay · query are available as a deterministic lifecycle" },
+      {
+        label: "Core",
+        detail: "six temporal primitives establish the canonical decision lifecycle",
+      },
+      {
+        label: "Language",
+        detail: "state, action, score, and run constructs establish the first authoring model",
+      },
+      {
+        label: "Workspace",
+        detail: "initial simulation, memory, scenario, and timeline persistence ports introduced",
+      },
+      {
+        label: "Runtime",
+        detail:
+          "fork · evaluate · collapse · commit · replay · query are available as a deterministic lifecycle",
+      },
       { label: "SDK", detail: "initial TypeScript SDK contract and CLI workflow released" },
     ],
   },
@@ -339,7 +499,11 @@ export function ChangelogPage() {
       <PageHeader
         breadcrumb={[]}
         eyebrow="/ changelog"
-        title={<>What's new<span className="text-ink-faint">.</span></>}
+        title={
+          <>
+            What's new<span className="text-ink-faint">.</span>
+          </>
+        }
         subtitle="Ship notes from the Chronos Lab team. Every release, every primitive, every fix — in reverse chronological order."
       />
 
@@ -427,8 +591,8 @@ function ReleaseCard({ release }: { release: Release }) {
             release.tag === "major"
               ? "bg-accent-warm"
               : release.tag === "minor"
-              ? "bg-accent-2"
-              : "bg-chronos"
+                ? "bg-accent-2"
+                : "bg-chronos"
           }`}
         />
       </div>
@@ -444,17 +608,13 @@ function ReleaseCard({ release }: { release: Release }) {
               {release.tag}
             </span>
           </div>
-          <span className="font-mono text-[11px] text-ink-faint">
-            {release.date}
-          </span>
+          <span className="font-mono text-[11px] text-ink-faint">{release.date}</span>
         </div>
 
         {/* Title + summary */}
         <div className="mt-3">
           <div className="font-serif text-xl text-ink">{release.title}</div>
-          <p className="mt-1 text-[13px] leading-[1.6] text-ink-dim">
-            {release.summary}
-          </p>
+          <p className="mt-1 text-[13px] leading-[1.6] text-ink-dim">{release.summary}</p>
         </div>
 
         {/* Highlights */}

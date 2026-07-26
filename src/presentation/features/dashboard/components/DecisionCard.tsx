@@ -16,8 +16,7 @@ export function DecisionCard({ home }: { home: WorkspaceHome }) {
 }
 
 export function DecisionCardView({ card }: { card: DecisionCardModel }) {
-  const conf =
-    card.confidence != null ? confidencePercent(card.confidence) : "—";
+  const conf = card.confidence != null ? confidencePercent(card.confidence) : "—";
 
   return (
     <section

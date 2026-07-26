@@ -70,10 +70,7 @@ export async function initErrorMonitoring(): Promise<void> {
   }
 }
 
-export function captureException(
-  error: unknown,
-  context: CaptureContext = {}
-): void {
+export function captureException(error: unknown, context: CaptureContext = {}): void {
   try {
     console.error("[chronos]", error, context.extra ?? "");
     if (!sentry) return;
@@ -87,10 +84,7 @@ export function captureException(
   }
 }
 
-export function captureMessage(
-  message: string,
-  context: CaptureContext = {}
-): void {
+export function captureMessage(message: string, context: CaptureContext = {}): void {
   try {
     if (import.meta.env.DEV || !sentry) {
       console[context.level === "warning" ? "warn" : "error"]("[chronos]", message);
