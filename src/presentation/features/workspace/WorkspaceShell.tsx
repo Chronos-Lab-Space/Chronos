@@ -126,6 +126,18 @@ function WorkspaceShellInner() {
           )}
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
+            {ready && (
+              <button
+                type="button"
+                onClick={() => setPaletteOpen(true)}
+                aria-label="Open command palette"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-dim transition hover:border-chronos/40 hover:text-ink md:hidden"
+              >
+                <span aria-hidden className="text-[15px] leading-none">
+                  ⌕
+                </span>
+              </button>
+            )}
             <div
               className="flex h-9 w-9 items-center justify-center rounded-full border border-line font-mono text-[10px] text-chronos"
               title={ownerId ?? "You"}
