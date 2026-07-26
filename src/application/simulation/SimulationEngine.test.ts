@@ -171,10 +171,7 @@ describe("SimulationEngine", () => {
       goal,
       // B2B SaaS catalog includes "Top-down enterprise" — a genuinely
       // raise-heavy path that the hard constraint must disqualify.
-      // (Avoids the word "capital": substring keyword matching currently
-      // routes "c-api-tal" to the AI/DevTools catalog — see category fix
-      // in the backlog.)
-      objective: "Growth path for our B2B SaaS revenue",
+      objective: "Growth path for our B2B SaaS with capital options",
       knowledge,
       notes: [],
       constraints: [{ id: "c1", text: "no raise before launch", kind: "hard" }],
