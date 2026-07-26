@@ -17,11 +17,17 @@ export function AuthCallbackPage() {
   useEffect(() => {
     let isMounted = true;
     let timeoutId: number | undefined;
+    // finishSignIn and the auth-state listener can both see the same valid
+    // session; without this guard both bootstrap, both emit session_start,
+    // and both navigate.
+    let hasEntered = false;
 
     async function enterWorkspace() {
-      setPhase("Creating your workspace");
+      if (hasEntered) return false;
       const user = await authService.currentUser();
-      if (!user) return false;
+      if (!user || hasEntered) return false;
+      hasEntered = true;
+      setPhase("Creating your workspace");
       try {
         await accountBootstrapService.ensureAccount(user);
         trackProductEvent("session_start", {
@@ -96,5 +102,5 @@ export function AuthCallbackPage() {
   }
 
   // Brand loading only on sign-in → workspace entry
-  return <WorkspaceLoadingScreen message={phase} fullScreen />;
+  return <WorkspaceLoadingScreen message={phase} />;
 }

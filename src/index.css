@@ -574,45 +574,26 @@ svg [stopColor="#4a5168"] {
   }
 }
 
-/* Brand loading — full-screen chronos_loading.webp + light motion */
+/* Brand loading — full-screen chronos_loading.webp + light motion.
+   Only surface: sign-in → workspace entry (AuthCallbackPage). */
 .workspace-loading-screen {
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
   display: flex;
-  min-height: min(72vh, 580px);
+  min-height: 100dvh;
+  width: 100%;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   overflow: hidden;
-  border-radius: 1rem;
-  border: 1px solid rgba(242, 237, 234, 0.08);
   background: #0a0a0a;
   animation: workspace-loading-enter 640ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.workspace-loading-screen--full {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  min-height: 100dvh;
-  width: 100%;
-  border-radius: 0;
-  border: none;
-  justify-content: flex-end;
-}
-
 .workspace-loading-art-wrap {
-  position: relative;
-  width: min(92vw, 520px);
-  aspect-ratio: 1536 / 1024;
-  animation: workspace-art-breathe 4.2s ease-in-out infinite;
-}
-
-.workspace-loading-screen--full .workspace-loading-art-wrap {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
   animation: workspace-art-breathe-full 5s ease-in-out infinite;
 }
 
@@ -621,15 +602,9 @@ svg [stopColor="#4a5168"] {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 0.75rem;
+  object-position: center;
   user-select: none;
   pointer-events: none;
-}
-
-.workspace-loading-screen--full .workspace-loading-art {
-  border-radius: 0;
-  object-fit: cover;
-  object-position: center;
 }
 
 .workspace-loading-art-shine {
@@ -651,15 +626,11 @@ svg [stopColor="#4a5168"] {
   position: relative;
   z-index: 2;
   display: flex;
+  width: 100%;
   flex-direction: column;
   align-items: center;
-  padding: 0 1.25rem 2.5rem;
+  padding: 0 1.25rem max(2.5rem, env(safe-area-inset-bottom));
   background: linear-gradient(to top, rgba(10, 10, 10, 0.92) 20%, transparent);
-  width: 100%;
-}
-
-.workspace-loading-screen--full .workspace-loading-footer {
-  padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
 }
 
 .workspace-loading-sub {
@@ -708,53 +679,6 @@ svg [stopColor="#4a5168"] {
   background: rgba(96, 137, 155, 0.7);
 }
 
-/* Compact orbits fallback (auth callback etc.) */
-.workspace-loading-orbits {
-  position: relative;
-  width: 88px;
-  height: 88px;
-  animation: workspace-art-breathe 3.8s ease-in-out infinite;
-}
-
-.workspace-loading-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  border: 1px solid rgba(96, 137, 155, 0.4);
-  animation: workspace-orbit 5.2s linear infinite;
-}
-
-.workspace-loading-ring-mid {
-  inset: 14px;
-  border-color: rgba(196, 194, 170, 0.35);
-  animation-duration: 7s;
-  animation-direction: reverse;
-}
-
-.workspace-loading-ring-outer {
-  inset: 0;
-}
-
-.workspace-loading-core {
-  position: absolute;
-  inset: 30px;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 38% 32%, #7aa6b6, #2a4d5f 55%, #111111 90%);
-  box-shadow: 0 0 24px rgba(96, 137, 155, 0.4);
-  animation: workspace-phase-pulse 2.2s ease-in-out infinite;
-}
-
-.workspace-loading-node {
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: #f2edea;
-  box-shadow: 0 0 10px rgba(96, 137, 155, 0.9);
-  top: -3px;
-  left: calc(50% - 3px);
-}
-
 @keyframes workspace-loading-enter {
   from {
     opacity: 0;
@@ -763,18 +687,6 @@ svg [stopColor="#4a5168"] {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes workspace-art-breathe {
-  0%,
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-  50% {
-    transform: scale(1.02);
-    filter: brightness(1.06);
   }
 }
 
@@ -805,15 +717,6 @@ svg [stopColor="#4a5168"] {
   100% {
     background-position: -40% 0;
     opacity: 0;
-  }
-}
-
-@keyframes workspace-orbit {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -892,12 +795,9 @@ svg [stopColor="#4a5168"] {
   .workspace-banner-enter,
   .workspace-msg-enter,
   .workspace-shell-enter,
-  .workspace-loading-ring,
-  .workspace-loading-core,
   .workspace-loading-sub,
   .workspace-loading-phases,
   .workspace-loading-phases > span,
-  .workspace-loading-orbits,
   .workspace-loading-art-wrap,
   .workspace-loading-art-shine,
   .workspace-loading-footer,

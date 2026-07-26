@@ -1,27 +1,15 @@
 /**
- * Brand loading art (chronos_loading.webp).
- * Use fullScreen only for sign-in → workspace entry (AuthCallback).
- * Elsewhere prefer compact / inline loading.
+ * Brand loading art (chronos_loading.webp), full viewport.
+ * Only surface: sign-in → workspace entry (AuthCallbackPage).
+ * Everywhere else use QuietLoading.
  */
 export function WorkspaceLoadingScreen({
   message = "Opening decision workspace",
-  fullScreen = false,
 }: {
   message?: string;
-  /** Full viewport — only for auth / workspace entry. */
-  fullScreen?: boolean;
 }) {
   return (
-    <div
-      className={
-        fullScreen
-          ? "workspace-loading-screen workspace-loading-screen--full"
-          : "workspace-loading-screen"
-      }
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
+    <div className="workspace-loading-screen" role="status" aria-live="polite" aria-busy="true">
       <div className="workspace-loading-art-wrap" aria-hidden>
         <img
           src="/chronos_loading.webp"
@@ -30,22 +18,20 @@ export function WorkspaceLoadingScreen({
           width={1536}
           height={1024}
           decoding="async"
-          fetchPriority={fullScreen ? "high" : "auto"}
+          fetchPriority="high"
         />
         <div className="workspace-loading-art-shine" />
       </div>
 
       <div className="workspace-loading-footer">
         <p className="workspace-loading-sub">{message}</p>
-        {fullScreen ? (
-          <div className="workspace-loading-phases" aria-hidden>
-            <span>Branch</span>
-            <span className="workspace-loading-phase-dot" />
-            <span>Simulate</span>
-            <span className="workspace-loading-phase-dot" />
-            <span>Evaluate</span>
-          </div>
-        ) : null}
+        <div className="workspace-loading-phases" aria-hidden>
+          <span>Branch</span>
+          <span className="workspace-loading-phase-dot" />
+          <span>Simulate</span>
+          <span className="workspace-loading-phase-dot" />
+          <span>Evaluate</span>
+        </div>
       </div>
     </div>
   );
