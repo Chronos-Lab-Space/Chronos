@@ -154,6 +154,16 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page).toHaveURL(/\/workspace\/?$/, { timeout: 10_000 });
     await expect(page.getByTestId("decision-brief")).toBeVisible();
 
+    // --- ⌘K command palette: type a command, Enter runs the top match ---
+    await expect(page.getByTestId("stage-band")).toBeVisible();
+    await page.keyboard.press("ControlOrMeta+k");
+    await expect(page.getByTestId("command-palette")).toBeVisible();
+    await page.keyboard.type("show memory");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/workspace\/memory$/, { timeout: 10_000 });
+    // The lifecycle band persists on every workspace page
+    await expect(page.getByTestId("stage-band")).toBeVisible();
+
     // --- HQ Decision Card still lives at /workspace/hq (review-only CTA) ---
     await page.goto("/workspace/hq");
     await expect(page.getByTestId("decision-card")).toBeVisible({ timeout: 15_000 });

@@ -1,13 +1,14 @@
 import { Link } from "react-router-dom";
-import { type BriefStage, deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
+import { deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
 import { useWorkspace } from "./WorkspaceContext";
 
 /**
  * Decision Brief — the decision-centric workspace surface.
  * One continuous editorial column: Decision → Recommendation → Confidence →
- * Evidence → Ranked futures, under a persistent six-state lifecycle band.
- * Everything on this page is derived from real workspace data
- * (deriveDecisionBrief); missing stages render as honest empty states.
+ * Evidence → Ranked futures. The six-state lifecycle band above it is owned
+ * by the shell (WorkspaceStageBand) so it persists on every workspace page.
+ * Everything here is derived from real workspace data (deriveDecisionBrief);
+ * missing stages render as honest empty states.
  */
 
 function formatDay(iso: string | null): string | null {
@@ -21,40 +22,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
       {children}
-    </div>
-  );
-}
-
-function StageBand({ stages }: { stages: BriefStage[] }) {
-  return (
-    <div className="mb-10 flex items-start overflow-x-auto border-b border-line pb-5">
-      {stages.map((stage, i) => {
-        const date = formatDay(stage.at);
-        return (
-          <div
-            key={stage.id}
-            aria-current={stage.state === "current" ? "step" : undefined}
-            className={`min-w-[128px] flex-1 border-t-2 pt-3 pr-3 last:pr-0 ${
-              stage.state === "current"
-                ? "border-chronos"
-                : stage.state === "past"
-                  ? "border-chronos/45 opacity-70"
-                  : "border-line opacity-40"
-            }`}
-          >
-            <div className="mb-1 flex items-center gap-2">
-              <span className="font-mono text-[9px] tracking-[0.16em] text-ink-faint">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="text-[13px] text-ink">{stage.label}</span>
-            </div>
-            <div className="text-[11px] text-ink-faint">
-              {stage.sub}
-              {date ? ` · ${date}` : ""}
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -87,8 +54,6 @@ export function DecisionBriefPage() {
 
   return (
     <div className="mx-auto max-w-4xl pb-16" data-testid="decision-brief">
-      <StageBand stages={brief.stages} />
-
       <Eyebrow>DECISION</Eyebrow>
       <h1 className="mt-3 font-serif text-4xl leading-tight text-ink sm:text-5xl">
         {brief.goalTitle}

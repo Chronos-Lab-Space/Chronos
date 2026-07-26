@@ -12,6 +12,34 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.3.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "The new workspace shell",
+    summary:
+      "The rest of the decision-workspace redesign lands in the chrome. ⌘K opens a real command palette — type to filter, Enter runs, unmatched queries fall back to knowledge search. The six-state lifecycle band now persists on every workspace page. The sidebar shows live counts and the context rail gains a real Notes tab backed by workspace notes.",
+    highlights: [
+      {
+        label: "Command palette",
+        detail:
+          "⌘K / Ctrl+K anywhere in the workspace · commands derived from real state (review recommendation and log outcome appear once a run completes) · knowledge-search fallback",
+      },
+      {
+        label: "Lifecycle band",
+        detail: "Draft → Learned band on every workspace page, not just the brief",
+      },
+      {
+        label: "Sidebar",
+        detail: "Live counts for Knowledge / Simulations / Memory · pulse on the current decision",
+      },
+      {
+        label: "Context rail",
+        detail:
+          "Details / Notes tabs — Notes shows real workspace notes · rail also on Workspace HQ",
+      },
+    ],
+  },
+  {
     version: "5.2.1",
     date: "2026-07-26",
     tag: "patch",

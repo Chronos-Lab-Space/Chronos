@@ -1,11 +1,14 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
 import { isWorkspaceOnboarded } from "../../../domain/workspace/onboarding";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 import { ChronosCMark } from "../../components/ChronosCMark";
+import { WorkspaceCommandPalette } from "./WorkspaceCommandPalette";
 import { WorkspaceContextRail } from "./WorkspaceContextRail";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
 import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
+import { WorkspaceStageBand } from "./WorkspaceStageBand";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
 
@@ -48,34 +51,49 @@ function WorkspaceShellInner() {
   const location = useLocation();
   const { home, loading, ownerId, error, remoteError } = useWorkspace();
   const [moreOpen, setMoreOpen] = useState(false);
-  const [search, setSearch] = useState("");
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const ready = isWorkspaceOnboarded(home);
   const initials = (ownerId ?? "You").slice(0, 2).toUpperCase();
   const routeKey = location.pathname;
+  const brief = deriveDecisionBrief(home);
   const showContextRail =
-    ready && (location.pathname === "/workspace" || location.pathname === "/workspace/");
+    ready &&
+    (location.pathname === "/workspace" ||
+      location.pathname === "/workspace/" ||
+      location.pathname === "/workspace/hq");
+
+  // Live counts for the sidebar — same numbers the pages report.
+  const sourcesCount = home ? home.knowledge.length + home.notes.length : null;
+  const simsCount = home ? home.recentSimulations.length : null;
+  const memoryCount = home
+    ? home.recentSimulations.filter((s) => Boolean(s.result.outcome_result?.toString().trim()))
+        .length
+    : null;
+  const navCounts: Record<string, number | null> = {
+    "/workspace/knowledge": sourcesCount,
+    "/workspace/simulations": simsCount,
+    "/workspace/memory": memoryCount,
+  };
+
   const handleSignOut = async () => {
     await authService.signOut();
     navigate("/login", { replace: true });
   };
 
-  const handleSearch = (e: FormEvent) => {
-    e.preventDefault();
-    const q = search.trim();
-    if (!q) return;
-    const lower = q.toLowerCase();
-    if (lower.startsWith("sim") || lower.includes("run")) {
-      navigate("/workspace/simulations?new=1");
-    } else if (lower.startsWith("mem")) {
-      navigate("/workspace/memory");
-    } else if (lower.startsWith("time")) {
-      navigate("/workspace/timeline");
-    } else {
-      navigate(`/workspace/knowledge?q=${encodeURIComponent(q)}`);
-    }
-    setMoreOpen(false);
-  };
+  // ⌘K / Ctrl+K opens the command palette anywhere in the workspace.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((open) => !open);
+      } else if (e.key === "Escape") {
+        setPaletteOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
     <div className="workspace-shell-enter min-h-dvh bg-bg pb-[5.25rem] lg:pb-0">
@@ -97,25 +115,14 @@ function WorkspaceShellInner() {
           </div>
 
           {ready && (
-            // biome-ignore lint/a11y/useSemanticElements: form role="search" is the established landmark pattern; a <search> wrapper adds an extra element for no gain
-            <form
-              onSubmit={handleSearch}
-              className="mx-auto hidden min-w-0 flex-1 max-w-xl md:block"
-              role="search"
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="mx-auto hidden min-w-0 flex-1 max-w-xl cursor-text items-center gap-3 rounded-full border border-line bg-bg-soft/25 py-2 pl-3 pr-4 text-left text-sm text-ink-faint transition hover:border-chronos/50 md:flex"
             >
-              <div className="relative">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-mono text-[10px] text-ink-faint">
-                  ⌘K
-                </span>
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search, ask, or run a command…"
-                  className="w-full rounded-full border border-line bg-bg-soft/25 py-2 pl-12 pr-4 text-sm text-ink placeholder:text-ink-faint outline-none focus:border-chronos/50"
-                />
-              </div>
-            </form>
+              <span className="shrink-0 font-mono text-[10px]">⌘K</span>
+              <span className="truncate">Search, ask, or run a command…</span>
+            </button>
           )}
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -157,22 +164,30 @@ function WorkspaceShellInner() {
               <div className="mb-2 px-3 pt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
                 Workspace
               </div>
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    `workspace-nav-active rounded-lg px-3 py-2.5 text-[13px] transition ${
-                      isActive
-                        ? "bg-chronos/15 font-medium text-chronos"
-                        : "text-ink-dim hover:bg-bg-soft/30 hover:text-ink"
-                    }`
-                  }
-                >
-                  {item.label}
-                </NavLink>
-              ))}
+              {navItems.map((item) => {
+                const count = navCounts[item.to];
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.end}
+                    className={({ isActive }) =>
+                      `workspace-nav-active flex items-center justify-between rounded-lg px-3 py-2.5 text-[13px] transition ${
+                        isActive
+                          ? "bg-chronos/15 font-medium text-chronos"
+                          : "text-ink-dim hover:bg-bg-soft/30 hover:text-ink"
+                      }`
+                    }
+                  >
+                    <span>{item.label}</span>
+                    {item.to === "/workspace" ? (
+                      <span className="blink h-[5px] w-[5px] rounded-full bg-chronos" aria-hidden />
+                    ) : count != null && count > 0 ? (
+                      <span className="font-mono text-[10px] text-ink-faint">{count}</span>
+                    ) : null}
+                  </NavLink>
+                );
+              })}
 
               <div className="mt-auto space-y-3 border-t border-line px-1 pt-4 pb-2">
                 <div className="rounded-xl border border-line bg-bg-soft/20 p-3">
@@ -239,19 +254,26 @@ function WorkspaceShellInner() {
               ) : null}
             </div>
           ) : (
-            <div key={routeKey} className="page-enter">
-              {loading ? (
-                <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                  Syncing workspace…
-                </p>
-              ) : null}
-              <Outlet />
-            </div>
+            <>
+              {brief && <WorkspaceStageBand stages={brief.stages} />}
+              <div key={routeKey} className="page-enter">
+                {loading ? (
+                  <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                    Syncing workspace…
+                  </p>
+                ) : null}
+                <Outlet />
+              </div>
+            </>
           )}
         </main>
 
         {showContextRail && home ? <WorkspaceContextRail home={home} /> : null}
       </div>
+
+      {paletteOpen && ready ? (
+        <WorkspaceCommandPalette home={home} onClose={() => setPaletteOpen(false)} />
+      ) : null}
 
       {/* Mobile tab bar — docs/images/workspace-mobile-mock.png */}
       {ready && (
