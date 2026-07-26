@@ -23,10 +23,10 @@ The current codebase uses React lazy boundaries for the dashboard engine,
 Chronos Language, documentation, changelog, system architecture, and non-home
 route compositions.
 
-> The current Vite single-file plugin intentionally inlines chunks for demo
-> distribution. Before production deployment to `chronoslab.space`, remove that
-> delivery constraint and retain Vite's emitted chunks so browser code splitting
-> can reduce first-load JavaScript.
+> The build keeps Vite's emitted chunks so the lazy boundaries above actually
+> ship as separate, content-hashed files: the shell loads first and route/tab
+> code arrives on demand. Do not reintroduce single-file inlining (it defeats
+> code splitting and disables long-lived asset caching).
 
 ## Virtualized rendering
 

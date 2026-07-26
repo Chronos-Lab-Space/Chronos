@@ -35,19 +35,13 @@ export class EventBus {
     };
   }
 
-  async publish<T = Record<string, unknown>>(
-    type: ChronosEventType,
-    payload: T
-  ): Promise<void> {
+  async publish<T = Record<string, unknown>>(type: ChronosEventType, payload: T): Promise<void> {
     const event: ChronosEvent<T> = {
       type,
       payload,
       at: new Date().toISOString(),
     };
-    const targets = [
-      ...(this.handlers.get(type) ?? []),
-      ...(this.handlers.get("*") ?? []),
-    ];
+    const targets = [...(this.handlers.get(type) ?? []), ...(this.handlers.get("*") ?? [])];
     for (const handler of targets) {
       await handler(event as ChronosEvent);
     }

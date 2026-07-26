@@ -1,9 +1,4 @@
-import type {
-  FutureRecord,
-  SimulationRecord,
-  TimelineNodeRecord,
-  WorkspaceHome,
-} from "./types";
+import type { FutureRecord, SimulationRecord, TimelineNodeRecord, WorkspaceHome } from "./types";
 
 /**
  * Merge remote + local workspace homes for cloud memory sync.
@@ -13,10 +8,7 @@ import type {
  * - Union simulations, knowledge, notes by id (remote wins on shared ids)
  * - Union futures/timeline maps; for shared sim ids prefer remote arrays when non-empty
  */
-export function mergeWorkspaceHomes(
-  remote: WorkspaceHome,
-  local: WorkspaceHome
-): WorkspaceHome {
+export function mergeWorkspaceHomes(remote: WorkspaceHome, local: WorkspaceHome): WorkspaceHome {
   // Same workspace id expected; if mismatched, remote is source of truth for identity.
   const workspace =
     remote.workspace.id === local.workspace.id
@@ -47,10 +39,7 @@ export function mergeWorkspaceHomes(
     ).sort((a, b) => b.created_at.localeCompare(a.created_at)),
     knowledge: mergeById(remote.knowledge, local.knowledge, (k) => k.id, preferRemote),
     notes: mergeById(remote.notes, local.notes, (n) => n.id, preferRemote),
-    futuresBySimulation: mergeRelationMaps(
-      remote.futuresBySimulation,
-      local.futuresBySimulation
-    ),
+    futuresBySimulation: mergeRelationMaps(remote.futuresBySimulation, local.futuresBySimulation),
     timelineBySimulation: mergeRelationMaps(
       remote.timelineBySimulation,
       local.timelineBySimulation

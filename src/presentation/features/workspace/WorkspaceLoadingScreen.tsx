@@ -1,5 +1,5 @@
 /**
- * Brand loading art (chronos_loading.png).
+ * Brand loading art (chronos_loading.webp).
  * Use fullScreen only for sign-in → workspace entry (AuthCallback).
  * Elsewhere prefer compact / inline loading.
  */
@@ -24,7 +24,7 @@ export function WorkspaceLoadingScreen({
     >
       <div className="workspace-loading-art-wrap" aria-hidden>
         <img
-          src="/chronos_loading.png"
+          src="/chronos_loading.webp"
           alt=""
           className="workspace-loading-art"
           width={1536}
@@ -52,11 +52,7 @@ export function WorkspaceLoadingScreen({
 }
 
 /** Lightweight non-brand spinner for route suspense / generic waits. */
-export function QuietLoading({
-  message = "Loading…",
-}: {
-  message?: string;
-}) {
+export function QuietLoading({ message = "Loading…" }: { message?: string }) {
   return (
     <div
       className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-4 py-10"

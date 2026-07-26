@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Chronos user workflows", () => {
-  test("the landing page turns an objective into a visible task plan and ranked path", async ({ page }) => {
+  test("the landing page turns an objective into a visible task plan and ranked path", async ({
+    page,
+  }) => {
     await page.goto("/");
 
     await expect(page.getByRole("heading", { name: /make agents think/i })).toBeVisible();
@@ -20,18 +22,14 @@ test.describe("Chronos user workflows", () => {
 
     // Private workspace requires a session
     await expect(page).toHaveURL(/\/login/);
-    await expect(
-      page.getByRole("heading", { name: /welcome back|start deciding/i })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /welcome back|start deciding/i })).toBeVisible();
   });
 
   test("legacy dashboard URL redirects unauthenticated users to login", async ({ page }) => {
     await page.goto("/dashboard");
 
     await expect(page).toHaveURL(/\/login/);
-    await expect(
-      page.getByRole("heading", { name: /welcome back|start deciding/i })
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: /welcome back|start deciding/i })).toBeVisible();
   });
 
   test("login page leads with OAuth and email password", async ({ page }) => {

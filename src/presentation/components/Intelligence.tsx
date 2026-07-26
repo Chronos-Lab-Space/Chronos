@@ -6,91 +6,88 @@ export function Intelligence() {
       <div className="mx-auto max-w-7xl px-6 lg:px-10">
         {/* The feedback loop */}
         <ScrollReveal variant="scale">
-        <div className="glow-border relative overflow-hidden rounded-2xl border border-line bg-bg-soft p-10 lg:p-16">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
-            {/* Left: The loop */}
-            <div className="lg:col-span-5">
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
-                The compounding cycle
-              </h3>
-              <div className="mt-8">
-                <FeedbackLoop />
+          <div className="glow-border relative overflow-hidden rounded-2xl border border-line bg-bg-soft p-10 lg:p-16">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
+              {/* Left: The loop */}
+              <div className="lg:col-span-5">
+                <h3 className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
+                  The compounding cycle
+                </h3>
+                <div className="mt-8">
+                  <FeedbackLoop />
+                </div>
               </div>
-            </div>
 
-            {/* Right: The five domains */}
-            <div className="lg:col-span-7">
-              <h3 className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
-                What it learns
-              </h3>
-              <div className="mt-8 space-y-6">
-                {[
-                  {
-                    domain: "Software projects",
-                    pattern: "How codebases evolve, where bugs emerge, which architectures scale",
-                    color: "#c6f0ff",
-                  },
-                  {
-                    domain: "User behavior",
-                    pattern: "What drives engagement, where users drop off, which features compound",
-                    color: "#b79bff",
-                  },
-                  {
-                    domain: "Business growth",
-                    pattern: "How companies scale, where bottlenecks form, which strategies win",
-                    color: "#ffd7a3",
-                  },
-                  {
-                    domain: "Market reactions",
-                    pattern: "How markets respond to events, what creates momentum, where risks hide",
-                    color: "#c6f0ff",
-                  },
-                  {
-                    domain: "Agent interactions",
-                    pattern: "How AI agents collaborate, where conflicts emerge, which protocols work",
-                    color: "#b79bff",
-                  },
-                ].map((d, i) => (
-                  <div key={d.domain} className="flex items-start gap-4">
-                    <div
-                      className="mt-1 h-2 w-2 rounded-full"
-                      style={{ background: d.color }}
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-baseline gap-3">
-                        <span className="text-[15px] font-medium text-ink">
-                          {d.domain}
-                        </span>
-                        <span className="font-mono text-[10px] text-ink-faint">
-                          0{i + 1}
-                        </span>
+              {/* Right: The five domains */}
+              <div className="lg:col-span-7">
+                <h3 className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
+                  What it learns
+                </h3>
+                <div className="mt-8 space-y-6">
+                  {[
+                    {
+                      domain: "Software projects",
+                      pattern: "How codebases evolve, where bugs emerge, which architectures scale",
+                      color: "#c6f0ff",
+                    },
+                    {
+                      domain: "User behavior",
+                      pattern:
+                        "What drives engagement, where users drop off, which features compound",
+                      color: "#b79bff",
+                    },
+                    {
+                      domain: "Business growth",
+                      pattern: "How companies scale, where bottlenecks form, which strategies win",
+                      color: "#ffd7a3",
+                    },
+                    {
+                      domain: "Market reactions",
+                      pattern:
+                        "How markets respond to events, what creates momentum, where risks hide",
+                      color: "#c6f0ff",
+                    },
+                    {
+                      domain: "Agent interactions",
+                      pattern:
+                        "How AI agents collaborate, where conflicts emerge, which protocols work",
+                      color: "#b79bff",
+                    },
+                  ].map((d, i) => (
+                    <div key={d.domain} className="flex items-start gap-4">
+                      <div className="mt-1 h-2 w-2 rounded-full" style={{ background: d.color }} />
+                      <div className="flex-1">
+                        <div className="flex items-baseline gap-3">
+                          <span className="text-[15px] font-medium text-ink">{d.domain}</span>
+                          <span className="font-mono text-[10px] text-ink-faint">0{i + 1}</span>
+                        </div>
+                        <p className="mt-1 text-[13px] leading-[1.65] text-ink-dim">{d.pattern}</p>
                       </div>
-                      <p className="mt-1 text-[13px] leading-[1.65] text-ink-dim">
-                        {d.pattern}
-                      </p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {/* Moat callout */}
-              <div className="mt-10 border-l-2 border-chronos/40 pl-6">
-                <p className="text-[14px] leading-[1.7] text-ink-dim">
-                  <span className="font-medium text-ink">The moat:</span> Every
-                  customer makes the world model richer. Every simulation makes
-                  the next one more accurate. This compounds over years into an
-                  advantage that's nearly impossible to replicate — because
-                  competitors would need to run the same volume of simulations
-                  across the same diversity of domains to catch up.
-                </p>
+                {/* Moat callout */}
+                <div className="mt-10 border-l-2 border-chronos/40 pl-6">
+                  <p className="text-[14px] leading-[1.7] text-ink-dim">
+                    <span className="font-medium text-ink">The moat:</span> Every customer makes the
+                    world model richer. Every simulation makes the next one more accurate. This
+                    compounds over years into an advantage that's nearly impossible to replicate —
+                    because competitors would need to run the same volume of simulations across the
+                    same diversity of domains to catch up.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </ScrollReveal>
 
         {/* Bottom: The implication */}
-        <ScrollReveal stagger variant="fade" className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3">
+        <ScrollReveal
+          stagger
+          variant="fade"
+          className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-3"
+        >
           {[
             {
               title: "Day 1",
@@ -108,17 +105,12 @@ export function Intelligence() {
               desc: "The world model knows things no individual could. Simulations approach prescience.",
             },
           ].map((m) => (
-            <div
-              key={m.title}
-              className="rounded-2xl border border-line bg-bg-soft p-8"
-            >
+            <div key={m.title} className="rounded-2xl border border-line bg-bg-soft p-8">
               <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
                 {m.title}
               </div>
               <div className="mt-3 font-serif text-4xl text-ink">{m.value}</div>
-              <p className="mt-4 text-[13px] leading-[1.7] text-ink-dim">
-                {m.desc}
-              </p>
+              <p className="mt-4 text-[13px] leading-[1.7] text-ink-dim">{m.desc}</p>
             </div>
           ))}
         </ScrollReveal>
@@ -146,12 +138,42 @@ function FeedbackLoop() {
       </defs>
 
       {/* Center: World model */}
-      <circle cx="200" cy="200" r="50" stroke="#c6f0ff" strokeWidth="1.5" fill="none" opacity="0.6" />
-      <circle cx="200" cy="200" r="60" stroke="#c6f0ff" strokeWidth="0.5" fill="none" opacity="0.2" />
-      <text x="200" y="195" fill="#c6f0ff" fontSize="12" fontFamily="JetBrains Mono" textAnchor="middle">
+      <circle
+        cx="200"
+        cy="200"
+        r="50"
+        stroke="#c6f0ff"
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.6"
+      />
+      <circle
+        cx="200"
+        cy="200"
+        r="60"
+        stroke="#c6f0ff"
+        strokeWidth="0.5"
+        fill="none"
+        opacity="0.2"
+      />
+      <text
+        x="200"
+        y="195"
+        fill="#c6f0ff"
+        fontSize="12"
+        fontFamily="JetBrains Mono"
+        textAnchor="middle"
+      >
         WORLD
       </text>
-      <text x="200" y="210" fill="#c6f0ff" fontSize="12" fontFamily="JetBrains Mono" textAnchor="middle">
+      <text
+        x="200"
+        y="210"
+        fill="#c6f0ff"
+        fontSize="12"
+        fontFamily="JetBrains Mono"
+        textAnchor="middle"
+      >
         MODEL
       </text>
 
@@ -179,7 +201,15 @@ function FeedbackLoop() {
         const y = 200 + 140 * Math.sin(rad);
         return (
           <g key={i}>
-            <circle cx={x} cy={y} r="30" stroke={stage.color} strokeWidth="1" fill="#111111" opacity="0.8" />
+            <circle
+              cx={x}
+              cy={y}
+              r="30"
+              stroke={stage.color}
+              strokeWidth="1"
+              fill="#111111"
+              opacity="0.8"
+            />
             <text
               x={x}
               y={y + 4}

@@ -25,9 +25,7 @@ function memoryCloud(): WorkspaceCloudStore & {
     },
     async load(ownerId: string, workspaceId?: string) {
       const matches = [...homes.values()].filter(
-        (h) =>
-          h.workspace.owner_id === ownerId &&
-          (!workspaceId || h.workspace.id === workspaceId)
+        (h) => h.workspace.owner_id === ownerId && (!workspaceId || h.workspace.id === workspaceId)
       );
       return matches[0] ?? null;
     },
@@ -99,9 +97,7 @@ describe("WorkspaceService dual-write", () => {
     expect(home.recentSimulations.some((s) => s.id === simId)).toBe(true);
     expect(service.getRemoteError()).toBeNull();
     expect(cloud.homes.size).toBe(1);
-    expect(
-      [...cloud.homes.values()][0].recentSimulations.some((s) => s.id === simId)
-    ).toBe(true);
+    expect([...cloud.homes.values()][0].recentSimulations.some((s) => s.id === simId)).toBe(true);
   });
 
   it("merges remote + local simulations without dropping either side", async () => {

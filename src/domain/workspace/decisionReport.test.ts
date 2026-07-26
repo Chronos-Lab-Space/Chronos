@@ -7,10 +7,7 @@ import {
 } from "./decisionReport";
 import type { FutureRecord, SimulationRecord, WorkspaceHome } from "./types";
 
-function homeWithSim(
-  sim: SimulationRecord,
-  futures: FutureRecord[] = []
-): WorkspaceHome {
+function homeWithSim(sim: SimulationRecord, futures: FutureRecord[] = []): WorkspaceHome {
   return {
     workspace: {
       id: "w1",

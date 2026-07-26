@@ -124,13 +124,20 @@ describe("mergeWorkspaceHomes", () => {
   });
 
   it("hasLocalMemory detects empty vs populated homes", () => {
-    expect(hasLocalMemory(baseHome({ goal: null, workspace: {
-      id: "ws-1",
-      owner_id: "user-1",
-      name: "X",
-      description: "",
-      created_at: "2026-07-01T00:00:00.000Z",
-    }}))).toBe(true);
+    expect(
+      hasLocalMemory(
+        baseHome({
+          goal: null,
+          workspace: {
+            id: "ws-1",
+            owner_id: "user-1",
+            name: "X",
+            description: "",
+            created_at: "2026-07-01T00:00:00.000Z",
+          },
+        })
+      )
+    ).toBe(true);
     expect(
       hasLocalMemory(
         baseHome({

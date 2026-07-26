@@ -45,11 +45,7 @@ export function Ticker({ time }: TickerProps) {
                 {it.value}
                 {it.suffix}
               </span>
-              {it.delta && (
-                <span className="font-mono text-[10px] text-chronos">
-                  {it.delta}
-                </span>
-              )}
+              {it.delta && <span className="font-mono text-[10px] text-chronos">{it.delta}</span>}
             </div>
           ))}
         </div>

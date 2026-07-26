@@ -17,6 +17,7 @@ export function Nav() {
     { label: "FAQ", to: "/faq" },
   ];
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies(pathname): close the mobile menu on every route change
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
@@ -25,11 +26,16 @@ export function Nav() {
     <header className="sticky top-0 z-50 border-b border-line bg-bg/60 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-10">
         {/* Signature wordmark + independent C mark. */}
-        <Link to="/" className="group flex items-center gap-2.5 text-ink transition hover:text-chronos">
+        <Link
+          to="/"
+          className="group flex items-center gap-2.5 text-ink transition hover:text-chronos"
+        >
           <ChronosCMark size={27} className="chronos-brand-mark shrink-0" />
           <span className="flex items-baseline gap-1.5">
             <span className="font-chronos-wordmark text-[25px] sm:text-[27px]">Chronos</span>
-            <span className="font-mono text-[8px] uppercase tracking-[0.28em] text-ink-faint">Lab</span>
+            <span className="font-mono text-[8px] uppercase tracking-[0.28em] text-ink-faint">
+              Lab
+            </span>
           </span>
         </Link>
 
@@ -60,17 +66,28 @@ export function Nav() {
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           {/* Mobile / tablet menu button */}
           <button
+            type="button"
             onClick={() => setMobileOpen((v) => !v)}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink-dim transition hover:border-line-strong hover:text-ink lg:hidden"
             aria-label="Toggle menu"
           >
             {mobileOpen ? (
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path
+                  d="M3 3l8 8M11 3l-8 8"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
               </svg>
             ) : (
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 4h10M2 7h10M2 10h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path
+                  d="M2 4h10M2 7h10M2 10h10"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
               </svg>
             )}
           </button>
@@ -92,7 +109,12 @@ export function Nav() {
             <span className="sm:hidden" aria-hidden="true">
               Join beta
             </span>
-            <svg width="12" height="12" viewBox="0 0 12 12" className="transition group-hover:translate-x-0.5">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              className="transition group-hover:translate-x-0.5"
+            >
               <path
                 d="M2 6h8M6 2l4 4-4 4"
                 stroke="currentColor"
@@ -140,4 +162,3 @@ export function Nav() {
     </header>
   );
 }
-

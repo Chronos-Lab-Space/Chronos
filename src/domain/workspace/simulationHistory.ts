@@ -18,10 +18,7 @@ function startOfLocalDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 }
 
-export function historyBucketFor(
-  iso: string,
-  now: Date = new Date()
-): HistoryBucketId {
+export function historyBucketFor(iso: string, now: Date = new Date()): HistoryBucketId {
   const then = new Date(iso).getTime();
   if (!Number.isFinite(then)) return "earlier";
 

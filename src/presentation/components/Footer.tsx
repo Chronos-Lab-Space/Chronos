@@ -12,15 +12,21 @@ export function Footer() {
               to="/"
               className="group flex items-center gap-5 text-ink transition hover:text-chronos"
             >
-              <span className="hidden sm:block"><ChronosCMark size={60} className="chronos-brand-mark" /></span>
+              <span className="hidden sm:block">
+                <ChronosCMark size={60} className="chronos-brand-mark" />
+              </span>
               <span className="flex items-baseline gap-3">
-                <span className="font-chronos-wordmark text-[clamp(3.5rem,14vw,13rem)]">Chronos</span>
-                <span className="font-mono text-[clamp(0.6rem,1.25vw,1rem)] uppercase tracking-[0.3em] text-ink-faint">Lab</span>
+                <span className="font-chronos-wordmark text-[clamp(3.5rem,14vw,13rem)]">
+                  Chronos
+                </span>
+                <span className="font-mono text-[clamp(0.6rem,1.25vw,1rem)] uppercase tracking-[0.3em] text-ink-faint">
+                  Lab
+                </span>
               </span>
             </Link>
             <div className="max-w-xs text-[13px] leading-[1.65] text-ink-dim">
-              Chronos Lab builds temporal compute infrastructure for the next
-              generation of autonomous systems.
+              Chronos Lab builds temporal compute infrastructure for the next generation of
+              autonomous systems.
             </div>
           </div>
         </div>
@@ -34,10 +40,26 @@ export function Footer() {
             Product
           </div>
           <ul className="space-y-3 text-sm">
-            <li><Link to="/core" className="text-ink-dim transition hover:text-ink">Core</Link></li>
-            <li><Link to="/simulate" className="text-ink-dim transition hover:text-ink">Simulate</Link></li>
-            <li><Link to="/platform" className="text-ink-dim transition hover:text-ink">Platform</Link></li>
-            <li><Link to="/roadmap" className="text-ink-dim transition hover:text-ink">Roadmap</Link></li>
+            <li>
+              <Link to="/core" className="text-ink-dim transition hover:text-ink">
+                Core
+              </Link>
+            </li>
+            <li>
+              <Link to="/simulate" className="text-ink-dim transition hover:text-ink">
+                Simulate
+              </Link>
+            </li>
+            <li>
+              <Link to="/platform" className="text-ink-dim transition hover:text-ink">
+                Platform
+              </Link>
+            </li>
+            <li>
+              <Link to="/roadmap" className="text-ink-dim transition hover:text-ink">
+                Roadmap
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -47,10 +69,36 @@ export function Footer() {
             Company
           </div>
           <ul className="space-y-3 text-sm">
-            <li><Link to="/about" className="text-ink-dim transition hover:text-ink">About</Link></li>
-            <li><Link to="/contact" className="text-ink-dim transition hover:text-ink">Contact</Link></li>
-            <li><a href="https://x.com/chronoslabspace" target="_blank" rel="noopener noreferrer" className="text-ink-dim transition hover:text-ink">X (Twitter)</a></li>
-            <li><a href="https://t.me/+I9MN0GfvgwllZGRh" target="_blank" rel="noopener noreferrer" className="text-ink-dim transition hover:text-ink">Telegram</a></li>
+            <li>
+              <Link to="/about" className="text-ink-dim transition hover:text-ink">
+                About
+              </Link>
+            </li>
+            <li>
+              <Link to="/contact" className="text-ink-dim transition hover:text-ink">
+                Contact
+              </Link>
+            </li>
+            <li>
+              <a
+                href="https://x.com/chronoslabspace"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink-dim transition hover:text-ink"
+              >
+                X (Twitter)
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://t.me/+I9MN0GfvgwllZGRh"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-ink-dim transition hover:text-ink"
+              >
+                Telegram
+              </a>
+            </li>
           </ul>
         </div>
 
@@ -60,11 +108,31 @@ export function Footer() {
             Resources
           </div>
           <ul className="space-y-3 text-sm">
-            <li><Link to="/docs" className="text-ink-dim transition hover:text-ink">Docs</Link></li>
-            <li><Link to="/faq" className="text-ink-dim transition hover:text-ink">FAQ</Link></li>
-            <li><Link to="/changelog" className="text-ink-dim transition hover:text-ink">Changelog</Link></li>
-            <li><Link to="/security" className="text-ink-dim transition hover:text-ink">Security</Link></li>
-            <li><Link to="/contact" className="text-ink-dim transition hover:text-ink">Support</Link></li>
+            <li>
+              <Link to="/docs" className="text-ink-dim transition hover:text-ink">
+                Docs
+              </Link>
+            </li>
+            <li>
+              <Link to="/faq" className="text-ink-dim transition hover:text-ink">
+                FAQ
+              </Link>
+            </li>
+            <li>
+              <Link to="/changelog" className="text-ink-dim transition hover:text-ink">
+                Changelog
+              </Link>
+            </li>
+            <li>
+              <Link to="/security" className="text-ink-dim transition hover:text-ink">
+                Security
+              </Link>
+            </li>
+            <li>
+              <Link to="/contact" className="text-ink-dim transition hover:text-ink">
+                Support
+              </Link>
+            </li>
           </ul>
         </div>
 
@@ -74,9 +142,21 @@ export function Footer() {
             Legal
           </div>
           <ul className="space-y-3 text-sm">
-            <li><Link to="/privacy" className="text-ink-dim transition hover:text-ink">Privacy</Link></li>
-            <li><Link to="/terms" className="text-ink-dim transition hover:text-ink">Terms</Link></li>
-            <li><Link to="/security" className="text-ink-dim transition hover:text-ink">Security</Link></li>
+            <li>
+              <Link to="/privacy" className="text-ink-dim transition hover:text-ink">
+                Privacy
+              </Link>
+            </li>
+            <li>
+              <Link to="/terms" className="text-ink-dim transition hover:text-ink">
+                Terms
+              </Link>
+            </li>
+            <li>
+              <Link to="/security" className="text-ink-dim transition hover:text-ink">
+                Security
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
@@ -87,8 +167,12 @@ export function Footer() {
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <span>© 2026 Chronos Lab AG</span>
             <span className="hidden h-3 w-px bg-line sm:inline-block" />
-            <Link to="/privacy" className="hover:text-ink-dim">Privacy</Link>
-            <Link to="/terms" className="hover:text-ink-dim">Terms</Link>
+            <Link to="/privacy" className="hover:text-ink-dim">
+              Privacy
+            </Link>
+            <Link to="/terms" className="hover:text-ink-dim">
+              Terms
+            </Link>
           </div>
 
           <div className="flex items-center gap-5">

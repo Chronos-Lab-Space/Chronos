@@ -49,7 +49,9 @@ export function MvpProgress({ home }: { home: WorkspaceHome }) {
 
       {next && (
         <p className="mt-3 text-sm text-ink-dim">
-          <span className="text-ink">Phase {next.phase} — {next.label}:</span>{" "}
+          <span className="text-ink">
+            Phase {next.phase} — {next.label}:
+          </span>{" "}
           {next.usableWhen}
         </p>
       )}

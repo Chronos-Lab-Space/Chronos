@@ -67,8 +67,12 @@ body {
 
 /* === Orbit — slow, elegant === */
 @keyframes orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .orbit-slow {
   animation: orbit 60s linear infinite;
@@ -76,22 +80,40 @@ body {
 
 /* === Float — gentle === */
 @keyframes floaty {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
-.floaty { animation: floaty 8s ease-in-out infinite; }
+.floaty {
+  animation: floaty 8s ease-in-out infinite;
+}
 
 /* === Blink === */
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }
-.blink { animation: blink 2.4s ease-in-out infinite; }
+.blink {
+  animation: blink 2.4s ease-in-out infinite;
+}
 
 /* === Marquee === */
 @keyframes marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 .marquee-track {
   animation: marquee 60s linear infinite;
@@ -99,8 +121,14 @@ body {
 
 /* === Pulse ring — very subtle === */
 @keyframes pulse-ring {
-  0% { transform: scale(1); opacity: 0.4; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 .pulse-ring {
   animation: pulse-ring 4s ease-out infinite;
@@ -108,13 +136,7 @@ body {
 
 /* === Gradient text — slow, subtle === */
 .gradient-text {
-  background: linear-gradient(
-    110deg,
-    #f2edea 0%,
-    #c4c2aa 42%,
-    #60899b 72%,
-    #f2edea 100%
-  );
+  background: linear-gradient(110deg, #f2edea 0%, #c4c2aa 42%, #60899b 72%, #f2edea 100%);
   background-size: 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -143,25 +165,64 @@ body {
    Earlier prototypes used cyan, violet, amber, emerald, and rose accents.
    Normalize SVG and inline diagram colors to the six-color Chronos palette so
    future components cannot accidentally reintroduce the former neon system. */
-svg [stroke="#c6f0ff"] { stroke: #60899b; }
-svg [fill="#c6f0ff"] { fill: #60899b; }
-svg [stop-color="#c6f0ff"], svg [stopColor="#c6f0ff"] { stop-color: #60899b; }
+svg [stroke="#c6f0ff"] {
+  stroke: #60899b;
+}
+svg [fill="#c6f0ff"] {
+  fill: #60899b;
+}
+svg [stop-color="#c6f0ff"],
+svg [stopColor="#c6f0ff"] {
+  stop-color: #60899b;
+}
 
-svg [stroke="#b79bff"] { stroke: #c4c2aa; }
-svg [fill="#b79bff"] { fill: #c4c2aa; }
-svg [stop-color="#b79bff"], svg [stopColor="#b79bff"] { stop-color: #c4c2aa; }
+svg [stroke="#b79bff"] {
+  stroke: #c4c2aa;
+}
+svg [fill="#b79bff"] {
+  fill: #c4c2aa;
+}
+svg [stop-color="#b79bff"],
+svg [stopColor="#b79bff"] {
+  stop-color: #c4c2aa;
+}
 
-svg [stroke="#ffd7a3"] { stroke: #f2edea; }
-svg [fill="#ffd7a3"] { fill: #f2edea; }
-svg [stop-color="#ffd7a3"], svg [stopColor="#ffd7a3"] { stop-color: #f2edea; }
+svg [stroke="#ffd7a3"] {
+  stroke: #f2edea;
+}
+svg [fill="#ffd7a3"] {
+  fill: #f2edea;
+}
+svg [stop-color="#ffd7a3"],
+svg [stopColor="#ffd7a3"] {
+  stop-color: #f2edea;
+}
 
-svg [stroke="#e8ecf2"] { stroke: #f2edea; }
-svg [fill="#e8ecf2"] { fill: #f2edea; }
-svg [stop-color="#e8ecf2"], svg [stopColor="#e8ecf2"] { stop-color: #f2edea; }
+svg [stroke="#e8ecf2"] {
+  stroke: #f2edea;
+}
+svg [fill="#e8ecf2"] {
+  fill: #f2edea;
+}
+svg [stop-color="#e8ecf2"],
+svg [stopColor="#e8ecf2"] {
+  stop-color: #f2edea;
+}
 
-svg [stroke="#8a93a6"], svg [stroke="#4a5168"] { stroke: #989898; }
-svg [fill="#8a93a6"], svg [fill="#4a5168"] { fill: #989898; }
-svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"], svg [stopColor="#4a5168"] { stop-color: #989898; }
+svg [stroke="#8a93a6"],
+svg [stroke="#4a5168"] {
+  stroke: #989898;
+}
+svg [fill="#8a93a6"],
+svg [fill="#4a5168"] {
+  fill: #989898;
+}
+svg [stop-color="#8a93a6"],
+svg [stopColor="#8a93a6"],
+svg [stop-color="#4a5168"],
+svg [stopColor="#4a5168"] {
+  stop-color: #989898;
+}
 
 .text-emerald-400,
 .text-rose-400,
@@ -194,25 +255,66 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 /* React serializes inline hex colors as rgb() values. These targeted rules
    keep legacy inline diagrams on the current palette without adding visual
    side effects to unrelated style properties. */
-[style*="color: rgb(198, 240, 255)"] { color: #60899b !important; }
-[style*="color: rgb(183, 155, 255)"] { color: #c4c2aa !important; }
-[style*="color: rgb(255, 215, 163)"], [style*="color: rgb(240, 138, 169)"] { color: #f2edea !important; }
-[style*="color: rgb(138, 147, 166)"], [style*="color: rgb(74, 81, 104)"] { color: #989898 !important; }
+[style*="color: rgb(198, 240, 255)"] {
+  color: #60899b !important;
+}
+[style*="color: rgb(183, 155, 255)"] {
+  color: #c4c2aa !important;
+}
+[style*="color: rgb(255, 215, 163)"],
+[style*="color: rgb(240, 138, 169)"] {
+  color: #f2edea !important;
+}
+[style*="color: rgb(138, 147, 166)"],
+[style*="color: rgb(74, 81, 104)"] {
+  color: #989898 !important;
+}
 
-[style*="background: rgb(198, 240, 255)"], [style*="background-color: rgb(198, 240, 255)"] { background: #60899b !important; }
-[style*="background: rgb(183, 155, 255)"], [style*="background-color: rgb(183, 155, 255)"] { background: #c4c2aa !important; }
-[style*="background: rgb(255, 215, 163)"], [style*="background-color: rgb(255, 215, 163)"], [style*="background: rgb(240, 138, 169)"], [style*="background-color: rgb(240, 138, 169)"] { background: #f2edea !important; }
-[style*="background: rgb(138, 147, 166)"], [style*="background-color: rgb(138, 147, 166)"], [style*="background: rgb(74, 81, 104)"], [style*="background-color: rgb(74, 81, 104)"] { background: #989898 !important; }
+[style*="background: rgb(198, 240, 255)"],
+[style*="background-color: rgb(198, 240, 255)"] {
+  background: #60899b !important;
+}
+[style*="background: rgb(183, 155, 255)"],
+[style*="background-color: rgb(183, 155, 255)"] {
+  background: #c4c2aa !important;
+}
+[style*="background: rgb(255, 215, 163)"],
+[style*="background-color: rgb(255, 215, 163)"],
+[style*="background: rgb(240, 138, 169)"],
+[style*="background-color: rgb(240, 138, 169)"] {
+  background: #f2edea !important;
+}
+[style*="background: rgb(138, 147, 166)"],
+[style*="background-color: rgb(138, 147, 166)"],
+[style*="background: rgb(74, 81, 104)"],
+[style*="background-color: rgb(74, 81, 104)"] {
+  background: #989898 !important;
+}
 
-[style*="border-color: rgb(198, 240, 255)"] { border-color: #60899b !important; }
-[style*="border-color: rgb(183, 155, 255)"] { border-color: #c4c2aa !important; }
-[style*="border-color: rgb(255, 215, 163)"], [style*="border-color: rgb(240, 138, 169)"] { border-color: #f2edea !important; }
-[style*="border-color: rgb(138, 147, 166)"], [style*="border-color: rgb(74, 81, 104)"] { border-color: #989898 !important; }
+[style*="border-color: rgb(198, 240, 255)"] {
+  border-color: #60899b !important;
+}
+[style*="border-color: rgb(183, 155, 255)"] {
+  border-color: #c4c2aa !important;
+}
+[style*="border-color: rgb(255, 215, 163)"],
+[style*="border-color: rgb(240, 138, 169)"] {
+  border-color: #f2edea !important;
+}
+[style*="border-color: rgb(138, 147, 166)"],
+[style*="border-color: rgb(74, 81, 104)"] {
+  border-color: #989898 !important;
+}
 
 /* === Spatial star field === */
 .star-field {
   opacity: 0.7;
-  mask-image: radial-gradient(ellipse at 50% 38%, #000 0%, rgba(0,0,0,0.75) 50%, transparent 100%);
+  mask-image: radial-gradient(
+    ellipse at 50% 38%,
+    #000 0%,
+    rgba(0, 0, 0, 0.75) 50%,
+    transparent 100%
+  );
 }
 
 .star-field-dot {
@@ -266,17 +368,39 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   animation: motion-fade-up 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(1) { animation-delay: 0ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(2) { animation-delay: 70ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(3) { animation-delay: 140ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(4) { animation-delay: 210ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(5) { animation-delay: 280ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(6) { animation-delay: 350ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(7) { animation-delay: 420ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(8) { animation-delay: 490ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(9) { animation-delay: 560ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(10) { animation-delay: 630ms; }
-.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(n + 11) { animation-delay: 700ms; }
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(2) {
+  animation-delay: 70ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(3) {
+  animation-delay: 140ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(4) {
+  animation-delay: 210ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(5) {
+  animation-delay: 280ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(6) {
+  animation-delay: 350ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(7) {
+  animation-delay: 420ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(8) {
+  animation-delay: 490ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(9) {
+  animation-delay: 560ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(10) {
+  animation-delay: 630ms;
+}
+.scroll-reveal-stagger.scroll-reveal-visible > *:nth-child(n + 11) {
+  animation-delay: 700ms;
+}
 
 @keyframes motion-fade-up {
   from {
@@ -310,20 +434,36 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   animation: motion-fade-up 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.header-enter > *:nth-child(1) { animation-delay: 40ms; }
-.header-enter > *:nth-child(2) { animation-delay: 120ms; }
-.header-enter > *:nth-child(3) { animation-delay: 200ms; }
-.header-enter > *:nth-child(4) { animation-delay: 280ms; }
+.header-enter > *:nth-child(1) {
+  animation-delay: 40ms;
+}
+.header-enter > *:nth-child(2) {
+  animation-delay: 120ms;
+}
+.header-enter > *:nth-child(3) {
+  animation-delay: 200ms;
+}
+.header-enter > *:nth-child(4) {
+  animation-delay: 280ms;
+}
 
 /* Hero copy cascade on first paint */
 .hero-enter > * {
   animation: motion-fade-up 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.hero-enter > *:nth-child(1) { animation-delay: 60ms; }
-.hero-enter > *:nth-child(2) { animation-delay: 160ms; }
-.hero-enter > *:nth-child(3) { animation-delay: 260ms; }
-.hero-enter > *:nth-child(4) { animation-delay: 360ms; }
+.hero-enter > *:nth-child(1) {
+  animation-delay: 60ms;
+}
+.hero-enter > *:nth-child(2) {
+  animation-delay: 160ms;
+}
+.hero-enter > *:nth-child(3) {
+  animation-delay: 260ms;
+}
+.hero-enter > *:nth-child(4) {
+  animation-delay: 360ms;
+}
 
 .hero-visual-enter {
   animation: hero-visual-in 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -359,14 +499,30 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   animation: motion-fade-up 560ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.ws-cascade > *:nth-child(1) { animation-delay: 30ms; }
-.ws-cascade > *:nth-child(2) { animation-delay: 90ms; }
-.ws-cascade > *:nth-child(3) { animation-delay: 150ms; }
-.ws-cascade > *:nth-child(4) { animation-delay: 210ms; }
-.ws-cascade > *:nth-child(5) { animation-delay: 270ms; }
-.ws-cascade > *:nth-child(6) { animation-delay: 330ms; }
-.ws-cascade > *:nth-child(7) { animation-delay: 390ms; }
-.ws-cascade > *:nth-child(n + 8) { animation-delay: 450ms; }
+.ws-cascade > *:nth-child(1) {
+  animation-delay: 30ms;
+}
+.ws-cascade > *:nth-child(2) {
+  animation-delay: 90ms;
+}
+.ws-cascade > *:nth-child(3) {
+  animation-delay: 150ms;
+}
+.ws-cascade > *:nth-child(4) {
+  animation-delay: 210ms;
+}
+.ws-cascade > *:nth-child(5) {
+  animation-delay: 270ms;
+}
+.ws-cascade > *:nth-child(6) {
+  animation-delay: 330ms;
+}
+.ws-cascade > *:nth-child(7) {
+  animation-delay: 390ms;
+}
+.ws-cascade > *:nth-child(n + 8) {
+  animation-delay: 450ms;
+}
 
 .workspace-drawer-enter {
   animation: workspace-drawer-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -410,7 +566,7 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   }
 }
 
-/* Brand loading — full-screen chronos_loading.png + light motion */
+/* Brand loading — full-screen chronos_loading.webp + light motion */
 .workspace-loading-screen {
   position: relative;
   display: flex;
@@ -592,35 +748,75 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes workspace-loading-enter {
-  from { opacity: 0; transform: translateY(12px) scale(0.985); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes workspace-art-breathe {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.02); filter: brightness(1.06); }
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.06);
+  }
 }
 
 @keyframes workspace-art-breathe-full {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.015); filter: brightness(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.015);
+    filter: brightness(1.05);
+  }
 }
 
 @keyframes workspace-art-shine {
-  0% { background-position: 120% 0; opacity: 0; }
-  25% { opacity: 1; }
-  55% { background-position: -40% 0; opacity: 0.85; }
-  100% { background-position: -40% 0; opacity: 0; }
+  0% {
+    background-position: 120% 0;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  55% {
+    background-position: -40% 0;
+    opacity: 0.85;
+  }
+  100% {
+    background-position: -40% 0;
+    opacity: 0;
+  }
 }
 
 @keyframes workspace-orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes workspace-phase-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .workspace-nav-active {
@@ -636,18 +832,34 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes star-twinkle {
-  0%, 100% { opacity: 0.15; transform: scale(0.75); }
-  50% { opacity: 0.72; transform: scale(1.35); }
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.75);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.35);
+  }
 }
 
 @keyframes star-flare {
-  0%, 100% { opacity: 0.16; transform: scale(0.8); }
-  50% { opacity: 0.8; transform: scale(1.45); }
+  0%,
+  100% {
+    opacity: 0.16;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.45);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .star-field-dot,
-  .star-field-flare { animation: none; }
+  .star-field-flare {
+    animation: none;
+  }
 
   .scroll-reveal,
   .scroll-reveal-up,
@@ -713,7 +925,9 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   letter-spacing: 0.02em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--color-ink-faint, #989898) 100%, transparent);
-  transition: color 160ms ease, background-color 160ms ease;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
 }
 
 @media (min-width: 400px) {
@@ -749,7 +963,9 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   font-size: 1.4rem;
   line-height: 1;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  transition: transform 160ms ease, background-color 160ms ease;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
 }
 
 .workspace-mobile-create:hover,
@@ -765,8 +981,13 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   }
 }
 @keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* === Refined glow border (1px gradient, no heavy halo) === */
@@ -811,8 +1032,9 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 
 /* === Card hover — subtle === */
 .card-hover {
-  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
-              border-color 0.5s ease;
+  transition:
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.5s ease;
 }
 .card-hover:hover {
   border-color: rgba(198, 240, 255, 0.2);
@@ -821,8 +1043,13 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 
 /* === Ticker dot === */
 @keyframes ticker-fade {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 .ticker-dot {
   animation: ticker-fade 2.4s ease-in-out infinite;
@@ -830,10 +1057,20 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 
 /* === Scan line — subtle === */
 @keyframes scan {
-  0% { transform: translateY(-100%); opacity: 0; }
-  10% { opacity: 0.6; }
-  90% { opacity: 0.6; }
-  100% { transform: translateY(300%); opacity: 0; }
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(300%);
+    opacity: 0;
+  }
 }
 .scan-line {
   animation: scan 8s ease-in-out infinite;
@@ -847,7 +1084,9 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
    9-12s   winner pulses, then reset
 */
 .ba-path {
-  animation: ba-draw 12s ease-out infinite, ba-prune 12s ease-in infinite;
+  animation:
+    ba-draw 12s ease-out infinite,
+    ba-prune 12s ease-in infinite;
   transform-origin: 110px 260px;
 }
 .ba-path-winner {
@@ -858,13 +1097,17 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   opacity: 0;
   transform-origin: center;
   transform-box: fill-box;
-  animation: ba-dot-in 12s ease-out infinite, ba-prune 12s ease-in infinite;
+  animation:
+    ba-dot-in 12s ease-out infinite,
+    ba-prune 12s ease-in infinite;
 }
 .ba-dot-winner {
   opacity: 0;
   transform-origin: center;
   transform-box: fill-box;
-  animation: ba-dot-in 12s ease-out infinite, ba-pulse 12s ease-in-out infinite;
+  animation:
+    ba-dot-in 12s ease-out infinite,
+    ba-pulse 12s ease-in-out infinite;
 }
 
 .ba-winner-halo {
@@ -880,43 +1123,105 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes ba-draw {
-  0% { opacity: 0; }
-  15% { opacity: 1; }
-  30% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 0; opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  30% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
 }
 
 @keyframes ba-dot-in {
-  0%, 24% { opacity: 0; transform: scale(0); }
-  34% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
+  0%,
+  24% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  34% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes ba-prune {
-  0%, 58% { opacity: 1; }
-  82% { opacity: 0.12; }
-  100% { opacity: 0.12; }
+  0%,
+  58% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0.12;
+  }
 }
 
 @keyframes ba-pulse {
-  0%, 58% { opacity: 1; transform: scale(1); }
-  70% { opacity: 1; transform: scale(1.4); }
-  80% { opacity: 1; transform: scale(1); }
-  90% { opacity: 1; transform: scale(1.3); }
-  100% { opacity: 1; transform: scale(1); }
+  0%,
+  58% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  90% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes ba-halo {
-  0%, 60% { opacity: 0; transform: scale(0.5); }
-  72% { opacity: 0.7; transform: scale(1); }
-  95% { opacity: 0; transform: scale(2); }
-  100% { opacity: 0; transform: scale(2); }
+  0%,
+  60% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  72% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  95% {
+    opacity: 0;
+    transform: scale(2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
 }
 
 @keyframes ba-label {
-  0%, 62% { opacity: 0; }
-  75% { opacity: 1; }
-  100% { opacity: 1; }
+  0%,
+  62% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* Winner path glow — fades in with the path, then pulses */
@@ -927,8 +1232,15 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 
 /* Ambient halo pulse */
 @keyframes ba-ambient {
-  0%, 100% { opacity: 0.1; transform: scale(1); }
-  50% { opacity: 0.2; transform: scale(1.1); }
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.2;
+    transform: scale(1.1);
+  }
 }
 
 /* Floating particles */
@@ -939,8 +1251,15 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes ba-particle {
-  0%, 100% { opacity: 0.1; transform: translateY(0); }
-  50% { opacity: 0.4; transform: translateY(-8px); }
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translateY(-8px);
+  }
 }
 
 /* Winner flow particle — travels along path */
@@ -950,10 +1269,19 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes ba-winner-flow {
-  0%, 35% { opacity: 0; }
-  40% { opacity: 1; }
-  70% { opacity: 0; }
-  100% { opacity: 0; }
+  0%,
+  35% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Winner expanding ring */
@@ -965,10 +1293,23 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes ba-ring {
-  0%, 65% { opacity: 0; transform: scale(0.3); }
-  75% { opacity: 0.6; transform: scale(1); }
-  95% { opacity: 0; transform: scale(1.8); }
-  100% { opacity: 0; transform: scale(1.8); }
+  0%,
+  65% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  75% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  95% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
 }
 
 /* === Temporal decision tree (hero) === */
@@ -988,12 +1329,21 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes tree-ambient {
-  0%, 100% { opacity: 0.45; transform: scale(1); }
-  50% { opacity: 0.9; transform: scale(1.08); }
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
 }
 
 .tree-futures-count {
-  transition: color 280ms ease, transform 280ms ease;
+  transition:
+    color 280ms ease,
+    transform 280ms ease;
 }
 
 .tree-visual[data-phase="result"] .tree-futures-count {
@@ -1054,7 +1404,9 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
   transform-box: fill-box;
   opacity: 0;
   transform: scale(0.55);
-  transition: opacity 420ms ease, transform 760ms ease-out;
+  transition:
+    opacity 420ms ease,
+    transform 760ms ease-out;
 }
 
 .tree-origin-ring {
@@ -1072,14 +1424,25 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes tree-ring-pulse {
-  0% { opacity: 0.55; transform: scale(0.92); }
-  70% { opacity: 0; transform: scale(1.35); }
-  100% { opacity: 0; transform: scale(1.35); }
+  0% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.35);
+  }
 }
 
 .tree-prune {
   opacity: 0;
-  transition: opacity 280ms ease, transform 280ms ease;
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease;
   transform-origin: center;
   transform-box: fill-box;
   transform: scale(0.6);
@@ -1088,7 +1451,9 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 .tree-collapse {
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity 300ms ease, transform 420ms ease-out;
+  transition:
+    opacity 300ms ease,
+    transform 420ms ease-out;
 }
 
 .tree-result {
@@ -1103,7 +1468,9 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 
 .tree-branch-label {
   opacity: 0;
-  transition: opacity 320ms ease, fill 320ms ease;
+  transition:
+    opacity 320ms ease,
+    fill 320ms ease;
 }
 
 .tree-particle {
@@ -1113,8 +1480,15 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes tree-float {
-  0%, 100% { opacity: 0.06; transform: translateY(0); }
-  50% { opacity: 0.28; transform: translateY(-10px); }
+  0%,
+  100% {
+    opacity: 0.06;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.28;
+    transform: translateY(-10px);
+  }
 }
 
 /* Flow dots only visible after expand on winner path */
@@ -1167,8 +1541,12 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes tree-eval-tick {
-  from { transform: scale(1); }
-  to { transform: scale(1.08); }
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
 }
 
 /* ---- Phase: prune / collapse / result — dim losers ---- */
@@ -1215,8 +1593,15 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
 }
 
 @keyframes tree-halo-breathe {
-  0%, 100% { opacity: 0.55; transform: scale(1.25); }
-  50% { opacity: 0.9; transform: scale(1.55); }
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1.25);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.55);
+  }
 }
 
 .tree-visual[data-phase="prune"] .tree-prune,
@@ -1263,4 +1648,3 @@ svg [stop-color="#8a93a6"], svg [stopColor="#8a93a6"], svg [stop-color="#4a5168"
     transition-duration: 1ms !important;
   }
 }
-

@@ -2,12 +2,7 @@
  * Persistent memory helpers — leave and come back to goals, sims,
  * decision history, knowledge, and past outcomes.
  */
-import type {
-  GoalRecord,
-  OutcomeFollowed,
-  SimulationRecord,
-  WorkspaceHome,
-} from "./types";
+import type { GoalRecord, OutcomeFollowed, SimulationRecord, WorkspaceHome } from "./types";
 
 export type PendingDecision = {
   simulationId: string;
@@ -76,8 +71,7 @@ export function listPendingDecisions(home: WorkspaceHome): PendingDecision[] {
         reason: "record_followed",
         detail: "Did you follow this recommendation?",
         createdAt:
-          (typeof sim.result.chosen_at === "string" && sim.result.chosen_at) ||
-          sim.created_at,
+          (typeof sim.result.chosen_at === "string" && sim.result.chosen_at) || sim.created_at,
         href: `/workspace/simulations/${sim.id}`,
       });
       continue;
@@ -90,8 +84,7 @@ export function listPendingDecisions(home: WorkspaceHome): PendingDecision[] {
         reason: "record_outcome",
         detail: "How did it turn out?",
         createdAt:
-          (typeof sim.result.outcome_followed_at === "string" &&
-            sim.result.outcome_followed_at) ||
+          (typeof sim.result.outcome_followed_at === "string" && sim.result.outcome_followed_at) ||
           sim.created_at,
         href: `/workspace/simulations/${sim.id}`,
       });
@@ -106,10 +99,8 @@ export function listDecisionHistory(home: WorkspaceHome): DecisionHistoryItem[] 
   const items: DecisionHistoryItem[] = [];
   for (const sim of home.recentSimulations) {
     const pathName =
-      (typeof sim.result.chosen_future_name === "string" && sim.result.chosen_future_name) ||
-      null;
-    const chosenAt =
-      (typeof sim.result.chosen_at === "string" && sim.result.chosen_at) || null;
+      (typeof sim.result.chosen_future_name === "string" && sim.result.chosen_future_name) || null;
+    const chosenAt = (typeof sim.result.chosen_at === "string" && sim.result.chosen_at) || null;
     if (!pathName || !chosenAt) continue;
 
     const followed =
@@ -181,10 +172,7 @@ export function buildActivityFeed(home: WorkspaceHome, limit = 10): ActivityItem
       });
     }
 
-    if (
-      typeof sim.result.outcome_followed_at === "string" &&
-      sim.result.outcome_followed
-    ) {
+    if (typeof sim.result.outcome_followed_at === "string" && sim.result.outcome_followed) {
       items.push({
         id: `out-f-${sim.id}`,
         kind: "outcome",
@@ -234,9 +222,7 @@ export function buildActivityFeed(home: WorkspaceHome, limit = 10): ActivityItem
     });
   }
 
-  return items
-    .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, limit);
+  return items.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
 }
 
 /** Snapshot a goal into history when the objective changes. */

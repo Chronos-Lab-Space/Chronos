@@ -3,6 +3,7 @@ import {
   githubReadmeCandidates,
   inferUploadType,
   isGithubRepoUrl,
+  renderSimpleMarkdown,
   searchLibrary,
 } from "./knowledge";
 import type { KnowledgeRecord, NoteRecord } from "./types";
@@ -60,5 +61,19 @@ describe("knowledge library (RAG-lite)", () => {
     const urls = githubReadmeCandidates("https://github.com/Chronos-Lab-Space/Chronos");
     expect(urls.some((u) => u.includes("/main/README.md"))).toBe(true);
     expect(urls.some((u) => u.includes("/master/README.md"))).toBe(true);
+  });
+
+  it("escapes HTML and blocks attribute injection through link URLs", () => {
+    expect(renderSimpleMarkdown("<script>alert(1)</script>")).not.toContain("<script");
+
+    // A quote in the URL must not break out of href="…"
+    const html = renderSimpleMarkdown('[x](https://evil.test/" onmouseover="steal)');
+    expect(html).not.toContain('onmouseover="');
+    expect(html).not.toMatch(/href="[^"]*"\s+on/i);
+
+    // Plain links still render
+    expect(renderSimpleMarkdown("[docs](https://chronoslab.space)")).toContain(
+      '<a href="https://chronoslab.space"'
+    );
   });
 });

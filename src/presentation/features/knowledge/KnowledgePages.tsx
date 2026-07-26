@@ -39,10 +39,7 @@ export function KnowledgePage() {
   const notes = home?.notes ?? [];
 
   const counts = useMemo(() => knowledgeCounts(knowledge), [knowledge]);
-  const hits = useMemo(
-    () => searchLibrary(knowledge, notes, query),
-    [knowledge, notes, query]
-  );
+  const hits = useMemo(() => searchLibrary(knowledge, notes, query), [knowledge, notes, query]);
 
   if (!home) return null;
 
@@ -110,8 +107,16 @@ export function KnowledgePage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <ActionButton label="+ Upload" onClick={() => openPanel("upload")} active={panel === "upload"} />
-          <ActionButton label="+ Import" onClick={() => openPanel("import")} active={panel === "import"} />
+          <ActionButton
+            label="+ Upload"
+            onClick={() => openPanel("upload")}
+            active={panel === "upload"}
+          />
+          <ActionButton
+            label="+ Import"
+            onClick={() => openPanel("import")}
+            active={panel === "import"}
+          />
           <Link
             to="/workspace/notes?new=1"
             className="rounded-full border border-line px-3 py-1.5 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
@@ -144,7 +149,10 @@ export function KnowledgePage() {
       </div>
 
       {panel === "upload" && (
-        <form onSubmit={onUpload} className="workspace-panel-enter mt-8 space-y-3 border border-line p-4">
+        <form
+          onSubmit={onUpload}
+          className="workspace-panel-enter mt-8 space-y-3 border border-line p-4"
+        >
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Upload · PDF · Markdown · TXT
           </div>
@@ -181,7 +189,10 @@ export function KnowledgePage() {
       )}
 
       {panel === "import" && (
-        <form onSubmit={onImport} className="workspace-panel-enter mt-8 space-y-3 border border-line p-4">
+        <form
+          onSubmit={onImport}
+          className="workspace-panel-enter mt-8 space-y-3 border border-line p-4"
+        >
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Import
           </div>
@@ -203,9 +214,7 @@ export function KnowledgePage() {
             value={importUrl}
             onChange={(e) => setImportUrl(e.target.value)}
             placeholder={
-              importMode === "github"
-                ? "https://github.com/owner/repo"
-                : "https://example.com/docs"
+              importMode === "github" ? "https://github.com/owner/repo" : "https://example.com/docs"
             }
             className="w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink focus:border-chronos focus:outline-none"
           />
@@ -355,7 +364,9 @@ export function NotesPage() {
     <div className="ws-cascade">
       <div className="header-enter flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">Notes</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            Notes
+          </div>
           <h1 className="mt-2 font-serif text-3xl text-ink">Working notes</h1>
         </div>
         {!isNew && (
@@ -377,7 +388,10 @@ export function NotesPage() {
       />
 
       {isNew && (
-        <form onSubmit={submit} className="workspace-panel-enter mt-8 space-y-4 border border-line p-4">
+        <form
+          onSubmit={submit}
+          className="workspace-panel-enter mt-8 space-y-4 border border-line p-4"
+        >
           <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
             Markdown note
           </div>
@@ -416,6 +430,7 @@ export function NotesPage() {
               <h2 className="text-ink">{note.title}</h2>
               <div
                 className="prose-lite mt-2 text-sm text-ink-dim"
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: renderSimpleMarkdown escapes &<>"' and allows https-only links (covered by knowledge.test.ts)
                 dangerouslySetInnerHTML={{
                   __html: renderSimpleMarkdown(note.content || "_Empty_"),
                 }}

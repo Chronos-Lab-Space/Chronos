@@ -19,7 +19,9 @@ const RuntimePage = lazy(async () => ({ default: (await import("./pages")).Runti
 const DevelopersPage = lazy(async () => ({ default: (await import("./pages")).DevelopersPage }));
 const MetricsPage = lazy(async () => ({ default: (await import("./pages")).MetricsPage }));
 const RoadmapPage = lazy(async () => ({ default: (await import("./pages")).RoadmapPage }));
-const IntelligencePage = lazy(async () => ({ default: (await import("./pages")).IntelligencePage }));
+const IntelligencePage = lazy(async () => ({
+  default: (await import("./pages")).IntelligencePage,
+}));
 const ShiftPage = lazy(async () => ({ default: (await import("./pages")).ShiftPage }));
 const AboutPage = lazy(async () => ({ default: (await import("./pages")).AboutPage }));
 const ContactPage = lazy(async () => ({ default: (await import("./pages")).ContactPage }));

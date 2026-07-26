@@ -4,11 +4,12 @@ import { OllamaAIProvider } from "./OllamaAIProvider";
 
 describe("OllamaAIProvider", () => {
   it("maps /api/generate response", async () => {
-    const fetchImpl = vi.fn(async () =>
-      new Response(JSON.stringify({ response: "hello from ollama", model: "llama3.2:1b" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      })
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ response: "hello from ollama", model: "llama3.2:1b" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
     );
     const ai = new OllamaAIProvider({
       baseUrl: "http://127.0.0.1:11434",

@@ -8,7 +8,9 @@ import {
 } from "./memory";
 import type { FutureRecord, SimulationRecord, WorkspaceHome } from "./types";
 
-function sim(partial: Partial<SimulationRecord> & Pick<SimulationRecord, "id" | "version" | "lineage_id">): SimulationRecord {
+function sim(
+  partial: Partial<SimulationRecord> & Pick<SimulationRecord, "id" | "version" | "lineage_id">
+): SimulationRecord {
   return {
     workspace_id: "w1",
     goal_id: null,
@@ -26,8 +28,21 @@ describe("persistent memory (history)", () => {
   it("groups simulations into version lineages", () => {
     const sims = [
       sim({ id: "s1", version: 1, lineage_id: "L1", created_at: "2026-01-01T00:00:00.000Z" }),
-      sim({ id: "s2", version: 2, lineage_id: "L1", parent_simulation_id: "s1", created_at: "2026-01-02T00:00:00.000Z", confidence: 0.85 }),
-      sim({ id: "s3", version: 1, lineage_id: "L2", title: "Launch API", created_at: "2026-01-03T00:00:00.000Z" }),
+      sim({
+        id: "s2",
+        version: 2,
+        lineage_id: "L1",
+        parent_simulation_id: "s1",
+        created_at: "2026-01-02T00:00:00.000Z",
+        confidence: 0.85,
+      }),
+      sim({
+        id: "s3",
+        version: 1,
+        lineage_id: "L2",
+        title: "Launch API",
+        created_at: "2026-01-03T00:00:00.000Z",
+      }),
     ];
     const groups = groupByLineage(sims);
     expect(groups).toHaveLength(2);
@@ -76,8 +91,28 @@ describe("persistent memory (history)", () => {
       knowledge: [],
       notes: [],
       futuresBySimulation: {
-        s1: [{ id: "f1", simulation_id: "s1", name: "Bootstrap", score: 0.7, risk: 0.2, confidence: 0.7, summary: "lean" }],
-        s2: [{ id: "f2", simulation_id: "s2", name: "Partner-led path", score: 0.9, risk: 0.3, confidence: 0.9, summary: "distro" }],
+        s1: [
+          {
+            id: "f1",
+            simulation_id: "s1",
+            name: "Bootstrap",
+            score: 0.7,
+            risk: 0.2,
+            confidence: 0.7,
+            summary: "lean",
+          },
+        ],
+        s2: [
+          {
+            id: "f2",
+            simulation_id: "s2",
+            name: "Partner-led path",
+            score: 0.9,
+            risk: 0.3,
+            confidence: 0.9,
+            summary: "distro",
+          },
+        ],
       },
       timelineBySimulation: {},
     };

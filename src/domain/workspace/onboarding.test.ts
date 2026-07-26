@@ -31,13 +31,7 @@ function baseHome(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
 
 describe("onboarding domain", () => {
   it("exposes the mandatory steps in order", () => {
-    expect(ONBOARDING_STEPS).toEqual([
-      "welcome",
-      "name",
-      "goal",
-      "context",
-      "dashboard",
-    ]);
+    expect(ONBOARDING_STEPS).toEqual(["welcome", "name", "goal", "context", "dashboard"]);
   });
 
   it("detects workspace context and onboarded state", () => {

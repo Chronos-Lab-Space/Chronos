@@ -1,5 +1,5 @@
 import { Planner } from "../agent-os/AgentOperatingSystem";
-import { Task, TaskGraph } from "../../domain/chronos/task-os";
+import { Task, type TaskGraph } from "../../domain/chronos/task-os";
 
 export type LaunchStartupPlanInput = {
   workspaceId: string;

@@ -11,7 +11,9 @@ export function TaskGraphPreview({ graph, capabilityName }: TaskGraphPreviewProp
     <section className="mb-6 overflow-hidden rounded-xl border border-line bg-bg-soft">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.23em] text-chronos">Planner decomposition</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.23em] text-chronos">
+            Planner decomposition
+          </div>
           <div className="mt-1 font-serif text-2xl text-ink">Launch startup</div>
         </div>
         <div className="rounded-full border border-line bg-bg px-3 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-dim">
@@ -39,7 +41,14 @@ export function TaskGraphPreview({ graph, capabilityName }: TaskGraphPreviewProp
               </div>
               {index < graph.tasks.length - 1 && (
                 <svg width="16" height="16" viewBox="0 0 16 16" className="shrink-0 text-ink-faint">
-                  <path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M2 8h11M9 4l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.2"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               )}
             </div>

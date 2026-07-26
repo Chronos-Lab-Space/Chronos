@@ -21,6 +21,7 @@ export function WorkspaceSettingsPage() {
   const [busy, setBusy] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [shareNote, setShareNote] = useState<string | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies(home): re-read the local analytics snapshot whenever workspace data changes
   const analytics = useMemo(() => getProductAnalyticsSnapshot(), [home]);
 
   if (!home) return null;
@@ -56,7 +57,9 @@ export function WorkspaceSettingsPage() {
   return (
     <div className="ws-cascade space-y-10">
       <div className="header-enter">
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">Settings</div>
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+          Settings
+        </div>
         <h1 className="mt-2 font-serif text-3xl text-ink sm:text-4xl">Workspaces</h1>
         <p className="mt-2 text-sm text-ink-dim">
           Create a new HQ anytime. Switch without losing history — each workspace keeps its own
@@ -93,7 +96,9 @@ export function WorkspaceSettingsPage() {
                   <div className="truncate text-sm text-ink">
                     {ws.name}
                     {active && (
-                      <span className="ml-2 font-mono text-[10px] uppercase text-chronos">active</span>
+                      <span className="ml-2 font-mono text-[10px] uppercase text-chronos">
+                        active
+                      </span>
                     )}
                   </div>
                   {ws.description ? (
@@ -122,8 +127,8 @@ export function WorkspaceSettingsPage() {
           Share workspace
         </div>
         <p className="mt-2 text-sm text-ink-dim">
-          Membership is ready for multi-user workspaces. For this beta, copy a share
-          note for teammates — full invites land next.
+          Membership is ready for multi-user workspaces. For this beta, copy a share note for
+          teammates — full invites land next.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <button
@@ -184,8 +189,8 @@ export function WorkspaceSettingsPage() {
           Product analytics (this browser)
         </div>
         <p className="mt-2 text-sm text-ink-dim">
-          Funnel counters for beta learning — workspace creation, simulations, time
-          to first decision, exports, and return visits. Never blocks the product.
+          Funnel counters for beta learning — workspace creation, simulations, time to first
+          decision, exports, and return visits. Never blocks the product.
         </p>
         <dl className="mt-4 grid gap-3 sm:grid-cols-2">
           <Row label="Workspaces created" value={String(analytics.workspace_created)} />

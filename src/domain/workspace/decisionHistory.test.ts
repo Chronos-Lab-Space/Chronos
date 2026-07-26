@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  decisionHistoryPreview,
-  deriveDecisionHistory,
-} from "./decisionHistory";
+import { decisionHistoryPreview, deriveDecisionHistory } from "./decisionHistory";
 import type { SimulationRecord, WorkspaceHome } from "./types";
 
 function baseHome(sims: SimulationRecord[] = []): WorkspaceHome {
@@ -65,11 +62,7 @@ function completedSim(
 describe("deriveDecisionHistory", () => {
   it("builds workspace → goal → knowledge narrative without sims", () => {
     const events = deriveDecisionHistory(baseHome());
-    expect(events.map((e) => e.kind)).toEqual([
-      "workspace_created",
-      "goal_set",
-      "knowledge_added",
-    ]);
+    expect(events.map((e) => e.kind)).toEqual(["workspace_created", "goal_set", "knowledge_added"]);
     expect(events[0]!.label).toBe("Workspace created");
     expect(events[2]!.label).toMatch(/knowledge added/i);
   });
@@ -100,9 +93,7 @@ describe("deriveDecisionHistory", () => {
     expect(recIdx).toBeLessThan(accIdx);
     expect(accIdx).toBeLessThan(outIdx);
 
-    expect(events.find((e) => e.kind === "decision_accepted")?.label).toMatch(
-      /Private Beta/
-    );
+    expect(events.find((e) => e.kind === "decision_accepted")?.label).toMatch(/Private Beta/);
   });
 
   it("preview returns newest first, capped", () => {

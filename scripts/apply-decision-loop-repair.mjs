@@ -28,14 +28,10 @@ const migration = path.join(
 
 const password = process.env.SUPABASE_DB_PASSWORD || process.env.POSTGRES_PASSWORD;
 const ref = process.env.SUPABASE_PROJECT_REF || "gkyhqnjgwxlyzptpiiob";
-const host =
-  process.env.SUPABASE_DB_HOST ||
-  "aws-1-ap-northeast-2.pooler.supabase.com";
+const host = process.env.SUPABASE_DB_HOST || "aws-1-ap-northeast-2.pooler.supabase.com";
 
 if (!password) {
-  console.error(
-    "Missing SUPABASE_DB_PASSWORD (Database settings password, not sb_secret_)."
-  );
+  console.error("Missing SUPABASE_DB_PASSWORD (Database settings password, not sb_secret_).");
   process.exit(1);
 }
 

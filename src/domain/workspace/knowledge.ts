@@ -110,10 +110,14 @@ export function isGithubRepoUrl(input: string): boolean {
 
 /** Minimal markdown → HTML for the note preview (RAG-lite, no heavy editor). */
 export function renderSimpleMarkdown(source: string): string {
+  // Escape quotes too: link URLs are interpolated into href="…", so an
+  // unescaped " would allow attribute injection (e.g. onmouseover=…).
   const escaped = source
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
   const lines = escaped.split("\n");
   const html: string[] = [];
@@ -159,7 +163,10 @@ function inline(text: string): string {
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+    .replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noreferrer">$1</a>'
+    );
 }
 
 export function snippet(content: string, max = 160): string {

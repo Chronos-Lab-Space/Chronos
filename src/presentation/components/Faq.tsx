@@ -19,9 +19,9 @@ const faqs: FaqItem[] = [
       <>
         <p>Most models return a single answer.</p>
         <p className="mt-3">
-          Chronos runs branch → simulate → collapse: multiple strategies, scored
-          trade-offs, a ranked recommendation with “Recommended because” reasons,
-          and a Decision Report you can share and reopen later.
+          Chronos runs branch → simulate → collapse: multiple strategies, scored trade-offs, a
+          ranked recommendation with “Recommended because” reasons, and a Decision Report you can
+          share and reopen later.
         </p>
       </>
     ),
@@ -98,7 +98,10 @@ export function FaqPage() {
 
       <section className="relative pb-24 lg:pb-32">
         <div className="mx-auto max-w-3xl px-6 lg:px-10">
-          <ScrollReveal variant="fade" className="divide-y divide-line rounded-2xl border border-line bg-bg-soft">
+          <ScrollReveal
+            variant="fade"
+            className="divide-y divide-line rounded-2xl border border-line bg-bg-soft"
+          >
             {faqs.map((item, i) => (
               <details key={item.question} className="group faq-item">
                 <summary className="flex cursor-pointer list-none items-start justify-between gap-4 px-5 py-5 transition hover:bg-bg/40 sm:px-6 sm:py-6 [&::-webkit-details-marker]:hidden">

@@ -108,7 +108,9 @@ export function Timeline() {
                     {/* Visual */}
                     <div
                       className={`min-w-0 ${
-                        copyOnRight ? "lg:order-1 lg:pr-12 xl:pr-16" : "lg:order-2 lg:pl-12 xl:pl-16"
+                        copyOnRight
+                          ? "lg:order-1 lg:pr-12 xl:pr-16"
+                          : "lg:order-2 lg:pl-12 xl:pl-16"
                       }`}
                     >
                       <PhaseVisual index={i} color={p.color} footer={p.footer} />
@@ -124,15 +126,7 @@ export function Timeline() {
   );
 }
 
-function PhaseVisual({
-  index,
-  color,
-  footer,
-}: {
-  index: number;
-  color: string;
-  footer: string;
-}) {
+function PhaseVisual({ index, color, footer }: { index: number; color: string; footer: string }) {
   return (
     <div className="flex min-h-[200px] flex-col overflow-hidden rounded-xl border border-line bg-bg-soft/60 sm:min-h-[220px]">
       <div className="flex min-h-0 flex-1 items-center justify-center px-3 pt-4 pb-2 sm:px-4 sm:pt-5">

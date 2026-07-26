@@ -36,17 +36,20 @@ const workloadMetadata = {
   forge: {
     name: "Coding Workload",
     domain: "Code planning capability",
-    description: "Registered capabilities for code planning, change-risk simulation, test coverage analysis, and release decisions.",
+    description:
+      "Registered capabilities for code planning, change-risk simulation, test coverage analysis, and release decisions.",
   },
   oracle: {
     name: "Market Workload",
     domain: "Market simulation capability",
-    description: "Registered capabilities for position planning, event simulation, downside analysis, and risk-adjusted ranking.",
+    description:
+      "Registered capabilities for position planning, event simulation, downside analysis, and risk-adjusted ranking.",
   },
   atlas: {
     name: "Strategy Workload",
     domain: "Business planning capability",
-    description: "Registered capabilities for company strategy, scenario generation, runway planning, and growth evaluation.",
+    description:
+      "Registered capabilities for company strategy, scenario generation, runway planning, and growth evaluation.",
   },
 } as const;
 
@@ -55,7 +58,8 @@ const workloadMetadata = {
  * The engine receives tasks; providers can change without changing task state.
  */
 export const capabilityWorkloads: readonly CapabilityWorkload[] = agents.map((agent) => {
-  const metadata = workloadMetadata[agent.id as keyof typeof workloadMetadata] ?? workloadMetadata.forge;
+  const metadata =
+    workloadMetadata[agent.id as keyof typeof workloadMetadata] ?? workloadMetadata.forge;
   return {
     id: agent.id,
     name: metadata.name,

@@ -1,16 +1,11 @@
-import type {
-  FutureRecord,
-  TimelineNodeRecord,
-  WorkspaceHome,
-} from "./types";
+import type { FutureRecord, TimelineNodeRecord, WorkspaceHome } from "./types";
 
 /**
  * Postgres `uuid` columns reject demo ids (`0x8d21`, `var-…`, etc.).
  * Repair any non-UUID primary keys before dual-write / local resume.
  */
 
-export const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function isUuid(value: unknown): value is string {
   return typeof value === "string" && UUID_RE.test(value.trim());
@@ -64,7 +59,7 @@ export function sanitizeWorkspaceHomeIds(home: WorkspaceHome): WorkspaceHome {
       const parent =
         n.parent_id == null
           ? null
-          : idMap.get(n.parent_id) ?? (isUuid(n.parent_id) ? n.parent_id : null);
+          : (idMap.get(n.parent_id) ?? (isUuid(n.parent_id) ? n.parent_id : null));
       return {
         ...n,
         id: isUuid(n.id) ? n.id : id,
@@ -85,7 +80,7 @@ export function sanitizeWorkspaceHomeIds(home: WorkspaceHome): WorkspaceHome {
     const chosenRaw = sim.result?.chosen_future_id;
     const chosen =
       typeof chosenRaw === "string"
-        ? idMap.get(chosenRaw) ?? (isUuid(chosenRaw) ? chosenRaw : undefined)
+        ? (idMap.get(chosenRaw) ?? (isUuid(chosenRaw) ? chosenRaw : undefined))
         : undefined;
 
     // Collapse is binary: a concrete future UUID or absent — never null.

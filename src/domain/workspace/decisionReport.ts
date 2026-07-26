@@ -1,22 +1,12 @@
-import {
-  deriveFutureHooks,
-  futureCardLabel,
-  type FutureHookLabel,
-} from "./timeline";
+import { deriveFutureHooks, futureCardLabel, type FutureHookLabel } from "./timeline";
 import {
   deriveTradeoffs,
   resolveKnowledgeUsed,
   type KnowledgeUsedRef,
   type TradeoffRow,
 } from "./simulationReport";
-import {
-  buildDecisionEvidence,
-  type DecisionEvidence,
-} from "./evidence";
-import {
-  deriveExpectedValue,
-  type ExpectedValueResult,
-} from "./expectedValue";
+import { buildDecisionEvidence, type DecisionEvidence } from "./evidence";
+import { deriveExpectedValue, type ExpectedValueResult } from "./expectedValue";
 import type {
   FutureRecord,
   GoalRecord,
@@ -95,10 +85,7 @@ export function buildDecisionReport(
     typeof simulation.result.chosen_future_id === "string"
       ? simulation.result.chosen_future_id
       : null;
-  const chosen =
-    (chosenId ? futures.find((f) => f.id === chosenId) : null) ??
-    futures[0] ??
-    null;
+  const chosen = (chosenId ? futures.find((f) => f.id === chosenId) : null) ?? futures[0] ?? null;
 
   const recommended =
     (typeof simulation.result.chosen_future_name === "string" &&
@@ -108,17 +95,10 @@ export function buildDecisionReport(
     "—";
 
   const confidence =
-    chosen?.confidence ??
-    (simulation.confidence != null ? simulation.confidence : 0);
+    chosen?.confidence ?? (simulation.confidence != null ? simulation.confidence : 0);
 
   const risks = resolveRisks(simulation, chosen);
-  const recommendedBecause = deriveRecommendedBecause(
-    chosen,
-    futures,
-    goal,
-    simulation,
-    home
-  );
+  const recommendedBecause = deriveRecommendedBecause(chosen, futures, goal, simulation, home);
   const why = deriveWhyReasons(simulation, chosen, goal, home);
   const nextActions = deriveNextActions(simulation, chosen, risks);
   const hooks = deriveFutureHooks(futures);
@@ -144,8 +124,7 @@ export function buildDecisionReport(
     null;
 
   const evidence = buildDecisionEvidence(home, simulation, futures);
-  const knowledgeCount =
-    evidence.knowledgeSourcesUsed || home.knowledge.length + home.notes.length;
+  const knowledgeCount = evidence.knowledgeSourcesUsed || home.knowledge.length + home.notes.length;
   const expectedValue = deriveExpectedValue({
     chosen,
     futures,
@@ -194,7 +173,7 @@ export function buildDecisionReport(
     engineBest:
       typeof simulation.result.best_future === "string"
         ? simulation.result.best_future
-        : futures[0]?.name ?? null,
+        : (futures[0]?.name ?? null),
     pathSaved: Boolean(chosenId),
     outcomeFollowed: parseOutcomeFollowed(simulation.result.outcome_followed),
     outcomeFollowedAt:
@@ -252,10 +231,7 @@ export function deriveRecommendedBecause(
   // fewer dependencies (heuristic from path language)
   const depLoad = (f: FutureRecord) => dependencyLoad(f);
   const chosenDeps = depLoad(chosen);
-  if (
-    futures.length === 1 ||
-    peers.every((p) => chosenDeps <= depLoad(p))
-  ) {
+  if (futures.length === 1 || peers.every((p) => chosenDeps <= depLoad(p))) {
     reasons.push("requires fewer dependencies");
   } else if (chosenDeps < average(peers.map(depLoad))) {
     reasons.push("requires fewer dependencies than average alternatives");
@@ -385,7 +361,9 @@ export function deriveWhyReasons(
 
   const knowledgeCount = home ? home.knowledge.length + home.notes.length : 0;
   if (knowledgeCount > 0) {
-    reasons.push(`Grounded in ${knowledgeCount} knowledge source${knowledgeCount === 1 ? "" : "s"}`);
+    reasons.push(
+      `Grounded in ${knowledgeCount} knowledge source${knowledgeCount === 1 ? "" : "s"}`
+    );
   }
 
   if (simulation.result.chosen_future_id) {
@@ -397,10 +375,7 @@ export function deriveWhyReasons(
   return dedupe(reasons).slice(0, 6);
 }
 
-function resolveRisks(
-  simulation: SimulationRecord,
-  chosen: FutureRecord | null
-): string[] {
+function resolveRisks(simulation: SimulationRecord, chosen: FutureRecord | null): string[] {
   const fromResult = Array.isArray(simulation.result.risks)
     ? (simulation.result.risks as string[]).filter(Boolean)
     : [];
@@ -485,9 +460,7 @@ export function exportDecisionReportMarkdown(report: DecisionReport): string {
     `- Strategies generated: ${report.evidence.strategiesGenerated}`,
     ``,
     `### Evaluation criteria`,
-    ...report.evidence.criteria.map(
-      (c) => `- ${c.evaluated ? "✓" : "—"} ${c.label}`
-    ),
+    ...report.evidence.criteria.map((c) => `- ${c.evaluated ? "✓" : "—"} ${c.label}`),
     ...(report.contextUsed.length
       ? ["", "### Context used", ...report.contextUsed.map((c) => `- [${c.type}] ${c.title}`)]
       : []),

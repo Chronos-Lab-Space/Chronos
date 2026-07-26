@@ -1,10 +1,6 @@
 import type { AuthChangeEvent, Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { supabase } from "../supabase/client";
-import {
-  buildE2ESession,
-  buildE2EUser,
-  isE2EAuthEnabled,
-} from "./e2eAuth";
+import { buildE2ESession, buildE2EUser, isE2EAuthEnabled } from "./e2eAuth";
 
 /**
  * Authentication boundary for dashboard users. Presentation code depends on
@@ -80,9 +76,7 @@ export class SupabaseAuthService {
     return this.client.auth.signOut();
   }
 
-  onAuthStateChange(
-    listener: (event: AuthChangeEvent, session: Session | null) => void
-  ) {
+  onAuthStateChange(listener: (event: AuthChangeEvent, session: Session | null) => void) {
     if (isE2EAuthEnabled()) {
       // Fire once so ProtectedRoute / WorkspaceProvider settle like a real session.
       queueMicrotask(() => listener("SIGNED_IN", buildE2ESession()));

@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SimulationRecord } from "../../domain/workspace/types";
 import { orderSimulationsForUpsert } from "./SupabaseWorkspaceRepository";
 
-function sim(
-  id: string,
-  parent: string | null,
-  created_at: string
-): SimulationRecord {
+function sim(id: string, parent: string | null, created_at: string): SimulationRecord {
   return {
     id,
     workspace_id: "w",

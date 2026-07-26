@@ -71,7 +71,10 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByText("Launch CLAB public beta").first()).toBeVisible();
 
     // --- Generate futures ---
-    await page.getByRole("link", { name: /^simulations$/i }).first().click();
+    await page
+      .getByRole("link", { name: /^simulations$/i })
+      .first()
+      .click();
     await expect(page.getByRole("heading", { name: /^simulations$/i })).toBeVisible({
       timeout: 10_000,
     });

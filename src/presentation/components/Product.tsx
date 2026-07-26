@@ -7,10 +7,7 @@ import {
   run,
   createEngine,
 } from "../../application/chronos/engine";
-import {
-  capabilityWorkloads,
-  getCapabilityWorkload,
-} from "../../domain/chronos/capabilities";
+import { capabilityWorkloads, getCapabilityWorkload } from "../../domain/chronos/capabilities";
 import type { CapabilityWorkload } from "../../domain/chronos/capabilities";
 import type { CollapseStrategy, Engine } from "../../domain/chronos/types";
 import { VirtualBranchList } from "../features/visualization/VirtualBranchList";
@@ -32,22 +29,25 @@ export function Product() {
 
   const workload = useMemo(() => getCapabilityWorkload(workloadId), [workloadId]);
   const taskGraph = useMemo(
-    () => new StartupLaunchPlanner().decompose({
-      workspaceId: "workspace-demo",
-      decisionId: `launch-startup-${workload.id}`,
-      prompt: "Launch startup",
-    }),
+    () =>
+      new StartupLaunchPlanner().decompose({
+        workspaceId: "workspace-demo",
+        decisionId: `launch-startup-${workload.id}`,
+        prompt: "Launch startup",
+      }),
     [workload.id]
   );
 
   const switchWorkload = (id: string) => {
     const nextWorkload = getCapabilityWorkload(id);
     setWorkloadId(id);
-    setEngine(createEngine(
-      nextWorkload.scenario.id,
-      nextWorkload.scenario.initialState,
-      nextWorkload.scenario.actions
-    ));
+    setEngine(
+      createEngine(
+        nextWorkload.scenario.id,
+        nextWorkload.scenario.initialState,
+        nextWorkload.scenario.actions
+      )
+    );
   };
 
   return (
@@ -82,12 +82,13 @@ export function Product() {
               >
                 {workload.domain} · {workload.problem}
               </div>
-              <div className="mt-2 text-[13px] leading-[1.65] text-ink-dim">
-                {workload.stakes}
-              </div>
+              <div className="mt-2 text-[13px] leading-[1.65] text-ink-dim">{workload.stakes}</div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {workload.capabilities.map((capability) => (
-                  <span key={capability.id} className="rounded-full border border-line bg-bg px-2 py-1 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
+                  <span
+                    key={capability.id}
+                    className="rounded-full border border-line bg-bg px-2 py-1 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint"
+                  >
                     registered: {capability.name}
                   </span>
                 ))}
@@ -144,9 +145,7 @@ export function Product() {
               </span>
               <select
                 value={strategy}
-                onChange={(e) =>
-                  setStrategy(e.target.value as CollapseStrategy)
-                }
+                onChange={(e) => setStrategy(e.target.value as CollapseStrategy)}
                 className="rounded-md border border-line bg-bg px-2 py-1 font-mono text-[11px] text-ink focus:border-chronos/40 focus:outline-none"
               >
                 <option value="max-utility">max-utility</option>
@@ -155,9 +154,8 @@ export function Product() {
               </select>
             </div>
             <button
-              onClick={() =>
-                setEngine(reset(engine, workload.scenario.initialState))
-              }
+              type="button"
+              onClick={() => setEngine(reset(engine, workload.scenario.initialState))}
               className="rounded-md border border-line px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-ink-dim transition hover:border-line-strong hover:text-ink"
             >
               Reset
@@ -188,19 +186,14 @@ export function Product() {
         {/* Candidate scenarios generated from registered capabilities */}
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-4">
           {workload.candidateScenarios.map((q, i) => (
-            <div
-              key={i}
-              className="rounded-xl border border-line bg-bg-soft/60 p-4"
-            >
+            <div key={i} className="rounded-xl border border-line bg-bg-soft/60 p-4">
               <div
                 className="mb-2 font-mono text-[10px] uppercase tracking-[0.25em]"
                 style={{ color: workload.accent }}
               >
                 branch · 0x{i.toString(16).padStart(2, "0")}
               </div>
-              <div className="text-[13px] leading-[1.55] text-ink-dim italic">
-                {q}
-              </div>
+              <div className="text-[13px] leading-[1.55] text-ink-dim italic">{q}</div>
             </div>
           ))}
         </div>
@@ -222,6 +215,7 @@ function CapabilityCard({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`group relative overflow-hidden rounded-xl border p-5 text-left transition ${
         active
@@ -238,9 +232,7 @@ function CapabilityCard({
         <CapabilityIcon icon={workload.icon} accent={workload.accent} />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
-            <div className="font-serif text-2xl leading-tight text-ink">
-              {workload.name}
-            </div>
+            <div className="font-serif text-2xl leading-tight text-ink">{workload.name}</div>
             {active && (
               <span
                 className="font-mono text-[10px] uppercase tracking-[0.25em]"
@@ -270,13 +262,24 @@ function CapabilityIcon({ icon, accent }: { icon: CapabilityWorkload["icon"]; ac
     >
       {icon === "forge" && (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M4 18h16M6 18v-4l2-2h8l2 2v4M9 12V8l3-3 3 3v4" stroke={accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M4 18h16M6 18v-4l2-2h8l2 2v4M9 12V8l3-3 3 3v4"
+            stroke={accent}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
           <path d="M11 10h2" stroke={accent} strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       )}
       {icon === "oracle" && (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z" stroke={accent} strokeWidth="1.5" strokeLinejoin="round" />
+          <path
+            d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"
+            stroke={accent}
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
           <circle cx="12" cy="12" r="3" stroke={accent} strokeWidth="1.5" />
           <circle cx="12" cy="12" r="1" fill={accent} />
         </svg>
@@ -284,7 +287,12 @@ function CapabilityIcon({ icon, accent }: { icon: CapabilityWorkload["icon"]; ac
       {icon === "atlas" && (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="12" r="9" stroke={accent} strokeWidth="1.5" />
-          <path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18" stroke={accent} strokeWidth="1.2" strokeLinecap="round" />
+          <path
+            d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"
+            stroke={accent}
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
         </svg>
       )}
     </div>
@@ -310,21 +318,22 @@ function PhaseButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       className={`rounded-md border px-4 py-2 font-mono text-[11px] uppercase tracking-[0.2em] transition ${
         active
           ? "border-transparent"
           : disabled
-          ? "cursor-not-allowed border-line text-ink-faint/50"
-          : "border-line text-ink-dim hover:border-line-strong hover:text-ink"
+            ? "cursor-not-allowed border-line text-ink-faint/50"
+            : "border-line text-ink-dim hover:border-line-strong hover:text-ink"
       }`}
       style={
         active
           ? { background: `${color}20`, color, borderColor: `${color}60` }
           : done
-          ? { borderColor: `${color}40`, color }
-          : undefined
+            ? { borderColor: `${color}40`, color }
+            : undefined
       }
     >
       {done ? "✓ " : ""}
@@ -335,13 +344,7 @@ function PhaseButton({
 
 // ---- World State panel (domain-aware labels) ----
 
-function WorldStatePanel({
-  engine,
-  workload,
-}: {
-  engine: Engine;
-  workload: CapabilityWorkload;
-}) {
+function WorldStatePanel({ engine, workload }: { engine: Engine; workload: CapabilityWorkload }) {
   const { world } = engine;
 
   // Map each capability workload's semantics onto the generic fields.
@@ -438,15 +441,17 @@ function WorldStatePanel({
         <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
           World State
         </div>
-        <div className="font-mono text-[10px] text-ink-faint">
-          t = {world.timestamp}
-        </div>
+        <div className="font-mono text-[10px] text-ink-faint">t = {world.timestamp}</div>
       </div>
 
       <div className="space-y-4">
         <StateGroup label={labels.agent.title} color={workload.accent} rows={labels.agent.rows} />
         <StateGroup label={labels.goal.title} color={workload.accent} rows={labels.goal.rows} />
-        <StateGroup label={labels.context.title} color={workload.accent} rows={labels.context.rows} />
+        <StateGroup
+          label={labels.context.title}
+          color={workload.accent}
+          rows={labels.context.rows}
+        />
       </div>
     </div>
   );
@@ -491,9 +496,7 @@ function ActionsPanel({ engine }: { engine: Engine }) {
         <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
           Candidate Tasks
         </div>
-        <div className="font-mono text-[10px] text-ink-faint">
-          {engine.actions.length}
-        </div>
+        <div className="font-mono text-[10px] text-ink-faint">{engine.actions.length}</div>
       </div>
 
       <div className="space-y-2">
@@ -507,9 +510,7 @@ function ActionsPanel({ engine }: { engine: Engine }) {
                 <span className="text-ink-faint">W:{a.baseReward.toFixed(2)}</span>
               </div>
             </div>
-            <div className="mt-1 text-[11px] leading-[1.5] text-ink-dim">
-              {a.description}
-            </div>
+            <div className="mt-1 text-[11px] leading-[1.5] text-ink-dim">{a.description}</div>
           </div>
         ))}
       </div>
@@ -538,7 +539,15 @@ function BranchTree({ engine }: { engine: Engine }) {
         {!hasBranches ? (
           <div className="flex h-[280px] flex-col items-center justify-center sm:h-[440px]">
             <svg width="60" height="60" viewBox="0 0 60 60" className="mb-4 text-ink-faint">
-              <circle cx="30" cy="30" r="20" stroke="currentColor" strokeWidth="1" fill="none" strokeDasharray="2 4" />
+              <circle
+                cx="30"
+                cy="30"
+                r="20"
+                stroke="currentColor"
+                strokeWidth="1"
+                fill="none"
+                strokeDasharray="2 4"
+              />
               <circle cx="30" cy="30" r="4" fill="currentColor" opacity="0.4" />
             </svg>
             <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-ink-faint">
@@ -548,7 +557,11 @@ function BranchTree({ engine }: { engine: Engine }) {
         ) : branches.length > 60 ? (
           <VirtualBranchList branches={branches} />
         ) : (
-          <svg viewBox="0 0 640 440" className="h-auto min-w-[520px] w-full" preserveAspectRatio="xMidYMid meet">
+          <svg
+            viewBox="0 0 640 440"
+            className="h-auto min-w-[520px] w-full"
+            preserveAspectRatio="xMidYMid meet"
+          >
             <defs>
               <linearGradient id="br-branch" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#c6f0ff" stopOpacity="0.8" />
@@ -571,7 +584,15 @@ function BranchTree({ engine }: { engine: Engine }) {
             <g>
               <circle cx="60" cy="220" r="12" fill="#c6f0ff" opacity="0.15" />
               <circle cx="60" cy="220" r="6" fill="#c6f0ff" />
-              <text x="60" y="252" fill="#4a5168" fontSize="9" fontFamily="JetBrains Mono" textAnchor="middle" style={{ letterSpacing: 2 }}>
+              <text
+                x="60"
+                y="252"
+                fill="#4a5168"
+                fontSize="9"
+                fontFamily="JetBrains Mono"
+                textAnchor="middle"
+                style={{ letterSpacing: 2 }}
+              >
                 ORIGIN
               </text>
             </g>
@@ -620,33 +641,83 @@ function BranchTree({ engine }: { engine: Engine }) {
                     branch_{b.id}
                   </text>
                   {b.reason && (
-                    <text x="380" y={y + 24} fill="#4a5168" fontSize="8" fontFamily="JetBrains Mono" fontStyle="italic">
+                    <text
+                      x="380"
+                      y={y + 24}
+                      fill="#4a5168"
+                      fontSize="8"
+                      fontFamily="JetBrains Mono"
+                      fontStyle="italic"
+                    >
                       {b.reason}
                     </text>
                   )}
 
                   {b.score !== null && (
                     <g>
-                      <rect x={520} y={y - 10} width="60" height="20" rx="3" fill={b.status === "winner" ? "#ffd7a3" : "#b79bff"} opacity={b.status === "winner" ? 0.2 : 0.15} />
-                      <text x={550} y={y + 4} fill={b.status === "winner" ? "#ffd7a3" : "#b79bff"} fontSize="11" fontFamily="JetBrains Mono" textAnchor="middle">
+                      <rect
+                        x={520}
+                        y={y - 10}
+                        width="60"
+                        height="20"
+                        rx="3"
+                        fill={b.status === "winner" ? "#ffd7a3" : "#b79bff"}
+                        opacity={b.status === "winner" ? 0.2 : 0.15}
+                      />
+                      <text
+                        x={550}
+                        y={y + 4}
+                        fill={b.status === "winner" ? "#ffd7a3" : "#b79bff"}
+                        fontSize="11"
+                        fontFamily="JetBrains Mono"
+                        textAnchor="middle"
+                      >
                         {(b.score ?? 0).toFixed(3)}
                       </text>
                     </g>
                   )}
 
                   {b.status === "winner" && (
-                    <text x={520} y={y + 22} fill="#ffd7a3" fontSize="8" fontFamily="JetBrains Mono" style={{ letterSpacing: 1.5 }}>
+                    <text
+                      x={520}
+                      y={y + 22}
+                      fill="#ffd7a3"
+                      fontSize="8"
+                      fontFamily="JetBrains Mono"
+                      style={{ letterSpacing: 1.5 }}
+                    >
                       WINNER
                     </text>
                   )}
                   {b.status === "pruned" && (
                     <>
-                      <text x={520} y={y + 22} fill="#4a5168" fontSize="8" fontFamily="JetBrains Mono" style={{ letterSpacing: 1.5 }}>
+                      <text
+                        x={520}
+                        y={y + 22}
+                        fill="#4a5168"
+                        fontSize="8"
+                        fontFamily="JetBrains Mono"
+                        style={{ letterSpacing: 1.5 }}
+                      >
                         PRUNED
                       </text>
                       <g opacity="0.6">
-                        <line x1="355" y1={y - 5} x2="365" y2={y + 5} stroke="#4a5168" strokeWidth="1" />
-                        <line x1="365" y1={y - 5} x2="355" y2={y + 5} stroke="#4a5168" strokeWidth="1" />
+                        <line
+                          x1="355"
+                          y1={y - 5}
+                          x2="365"
+                          y2={y + 5}
+                          stroke="#4a5168"
+                          strokeWidth="1"
+                        />
+                        <line
+                          x1="365"
+                          y1={y - 5}
+                          x2="355"
+                          y2={y + 5}
+                          stroke="#4a5168"
+                          strokeWidth="1"
+                        />
                       </g>
                     </>
                   )}
@@ -678,8 +749,16 @@ function StatsPanel({ engine }: { engine: Engine }) {
         <Stat k="Branches" v={engine.branches.length} color="#c6f0ff" />
         <Stat k="Evaluated" v={evaluated.length} color="#b79bff" />
         <Stat k="Pruned" v={pruned.length} color="#4a5168" />
-        <Stat k="Winner" v={winner ? `branch_${winner.id}` : "—"} color={winner ? "#ffd7a3" : "#4a5168"} />
-        <Stat k="Score" v={winner?.score !== undefined && winner?.score !== null ? winner.score.toFixed(3) : "—"} color={winner ? "#ffd7a3" : "#4a5168"} />
+        <Stat
+          k="Winner"
+          v={winner ? `branch_${winner.id}` : "—"}
+          color={winner ? "#ffd7a3" : "#4a5168"}
+        />
+        <Stat
+          k="Score"
+          v={winner?.score !== undefined && winner?.score !== null ? winner.score.toFixed(3) : "—"}
+          color={winner ? "#ffd7a3" : "#4a5168"}
+        />
         {winner?.reason && <Stat k="Why" v={winner.reason} color="#ffd7a3" />}
       </div>
     </div>
@@ -689,9 +768,7 @@ function StatsPanel({ engine }: { engine: Engine }) {
 function Stat({ k, v, color }: { k: string; v: string | number; color: string }) {
   return (
     <div className="flex items-baseline justify-between border-b border-line/60 pb-2 last:border-0 last:pb-0">
-      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
-        {k}
-      </span>
+      <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">{k}</span>
       <span className="font-mono text-[12px] tabular-nums" style={{ color }}>
         {v}
       </span>
@@ -708,9 +785,7 @@ function ExecutionLog({ engine }: { engine: Engine }) {
         <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
           Execution Log
         </div>
-        <div className="font-mono text-[10px] text-ink-faint">
-          {engine.log.length}
-        </div>
+        <div className="font-mono text-[10px] text-ink-faint">{engine.log.length}</div>
       </div>
 
       <VirtualTimelineEvents events={engine.log} />
