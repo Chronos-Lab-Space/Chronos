@@ -104,6 +104,29 @@ begin
   end if;
 end $$;
 
+-- No SECURITY DEFINER function in the exposed schema may be callable
+-- without signing in. has_function_privilege is used rather than reading
+-- proacl because it resolves grants inherited from PUBLIC *and* direct
+-- grants — the distinction that made this bite on the hosted project but
+-- not locally. See 20260726150000_revoke_function_grants_from_api_roles.
+do $$
+declare
+  offenders text;
+begin
+  select string_agg(p.proname, ', ' order by p.proname)
+  into offenders
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public'
+    and p.prosecdef
+    and has_function_privilege('anon', p.oid, 'EXECUTE');
+
+  if offenders is not null then
+    raise exception
+      'SECURITY DEFINER function(s) executable by anon: %', offenders;
+  end if;
+end $$;
+
 -- ------------------------------------------------------------
 -- 4. One permissive policy per table per role per command
 -- ------------------------------------------------------------
