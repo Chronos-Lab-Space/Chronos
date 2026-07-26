@@ -597,6 +597,10 @@ svg [stopColor="#4a5168"] {
   animation: workspace-art-breathe-full 5s ease-in-out infinite;
 }
 
+.workspace-loading-art-picture {
+  display: contents;
+}
+
 .workspace-loading-art {
   display: block;
   width: 100%;

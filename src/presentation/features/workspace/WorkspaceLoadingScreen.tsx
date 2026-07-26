@@ -11,15 +11,25 @@ export function WorkspaceLoadingScreen({
   return (
     <div className="workspace-loading-screen" role="status" aria-live="polite" aria-busy="true">
       <div className="workspace-loading-art-wrap" aria-hidden>
-        <img
-          src="/chronos_loading.webp"
-          alt=""
-          className="workspace-loading-art"
-          width={1536}
-          height={1024}
-          decoding="async"
-          fetchPriority="high"
-        />
+        {/* Portrait phones get a taller crop of the same art — the landscape
+            frame's wordmark is wider than `cover` leaves visible there. */}
+        <picture className="workspace-loading-art-picture">
+          <source
+            media="(orientation: portrait)"
+            srcSet="/chronos_loading_portrait.webp"
+            width={576}
+            height={1280}
+          />
+          <img
+            src="/chronos_loading.webp"
+            alt=""
+            className="workspace-loading-art"
+            width={1536}
+            height={1024}
+            decoding="async"
+            fetchPriority="high"
+          />
+        </picture>
         <div className="workspace-loading-art-shine" />
       </div>
 
