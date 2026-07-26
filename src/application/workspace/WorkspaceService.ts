@@ -485,6 +485,69 @@ export class WorkspaceService {
     };
 
     // Product path: Planner → Agent Runtime → SimulationAgent → SimulationEngine
+    try {
+      return await this.executeSimulation({
+        ownerId,
+        home,
+        simId,
+        objectiveForEngine,
+        engineInput,
+        engineConstraints,
+        constraints,
+        knowledgeUsed,
+        learnedPreferences,
+        createdAt,
+        version,
+        lineageId,
+        parent: parent ?? null,
+      });
+    } catch (err) {
+      // Never leave a phantom "running" record behind — locally or in the
+      // cloud. Mark it failed (best-effort), then surface the original error.
+      await this.markSimulationFailed(ownerId, simId, err);
+      throw err;
+    }
+  }
+
+  private async executeSimulation(args: {
+    ownerId: string;
+    home: WorkspaceHome;
+    simId: string;
+    objectiveForEngine: string;
+    engineInput: {
+      simulationId: string;
+      workspaceId: string;
+      goal: WorkspaceHome["goal"];
+      objective: string;
+      knowledge: WorkspaceHome["knowledge"];
+      notes: WorkspaceHome["notes"];
+      constraints: SimulationConstraint[];
+    };
+    engineConstraints: SimulationConstraint[];
+    constraints: readonly SimulationConstraint[];
+    knowledgeUsed: ReturnType<typeof snapshotKnowledgeUsed>;
+    learnedPreferences: string[];
+    createdAt: string;
+    version: number;
+    lineageId: string;
+    parent: SimulationRecord | null;
+  }): Promise<WorkspaceHome> {
+    const {
+      ownerId,
+      home,
+      simId,
+      objectiveForEngine,
+      engineInput,
+      engineConstraints,
+      constraints,
+      knowledgeUsed,
+      learnedPreferences,
+      createdAt,
+      version,
+      lineageId,
+      parent,
+    } = args;
+
     const plan = await planner.createPlan({
       goal: objectiveForEngine,
       workspace: { id: home.workspace.id },
@@ -603,6 +666,43 @@ export class WorkspaceService {
         [simId]: output.timeline,
       },
     });
+  }
+
+  /**
+   * Failure recovery: flip a stranded "running" record to "failed" so it can
+   * never persist indefinitely (locally or in the cloud). Best-effort — the
+   * original engine error is what callers surface.
+   */
+  private async markSimulationFailed(
+    ownerId: string,
+    simulationId: string,
+    err: unknown
+  ): Promise<void> {
+    try {
+      const home = await this.require(ownerId);
+      const message = err instanceof Error ? err.message : "Simulation runtime failed.";
+      let changed = false;
+      const recentSimulations = home.recentSimulations.map((s) => {
+        if (s.id !== simulationId || s.status !== "running") return s;
+        changed = true;
+        return {
+          ...s,
+          status: "failed" as const,
+          result: {
+            ...s.result,
+            recommendation: `Simulation failed: ${message}`,
+            tasks: (s.result.tasks ?? []).map((t) =>
+              t.status === "completed" ? t : { ...t, status: "failed" as const }
+            ),
+          },
+        };
+      });
+      if (changed) {
+        await this.persist(ownerId, { ...home, recentSimulations });
+      }
+    } catch {
+      // Recovery is best-effort; never mask the original failure.
+    }
   }
 
   async rerunSimulation(

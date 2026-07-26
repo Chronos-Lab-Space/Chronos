@@ -1,6 +1,45 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { runtime } from "../../core/runtime";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
 import { WorkspaceService } from "./WorkspaceService";
+
+describe("simulation failure recovery", () => {
+  const ownerId = "user-fail-1";
+  let store: LocalWorkspaceStore;
+  let service: WorkspaceService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    store = new LocalWorkspaceStore();
+    service = new WorkspaceService({ local: store, remote: null });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("marks the simulation record failed when the agent runtime fails", async () => {
+    await service.createWorkspace(ownerId, "Fail Lab", "");
+    vi.spyOn(runtime, "run").mockResolvedValueOnce({
+      ok: false,
+      capability: "simulation.execute",
+      agent: "simulation",
+      data: {},
+      error: "engine exploded",
+    });
+
+    await expect(service.runSimulation(ownerId, "Will this survive a crash?", [])).rejects.toThrow(
+      /engine exploded/
+    );
+
+    // The phantom "running" record must not survive the failure.
+    const home = await service.load(ownerId);
+    const sim = home?.recentSimulations[0];
+    expect(sim).toBeDefined();
+    expect(sim?.status).toBe("failed");
+    expect(sim?.result.tasks?.some((t) => t.status === "running")).toBe(false);
+  });
+});
 
 describe("WorkspaceService success metric", () => {
   const ownerId = "user-test-1";
