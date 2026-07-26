@@ -151,8 +151,17 @@ create policy "events_insert_authenticated" on public.events
     or user_id = (select auth.uid())
   );
 
+-- Deliberately keeps the "Users read own events" name rather than
+-- renaming it to match the events_insert_* pair above.
+-- 20260726124858_tighten_events_read_policy.sql (merged to main from
+-- PR #31) drops and recreates a policy under this exact name with an
+-- identical predicate, and its timestamp sorts after this file. Renaming
+-- here would leave both policies standing — two permissive SELECT
+-- policies on events for authenticated — which is the duplication this
+-- migration set exists to remove. Same name, so the later migration
+-- replaces this one instead of stacking on top of it.
 drop policy if exists "Users read own events" on public.events;
-create policy "events_select_own" on public.events
+create policy "Users read own events" on public.events
   for select to authenticated
   using (user_id = (select auth.uid()));
 
