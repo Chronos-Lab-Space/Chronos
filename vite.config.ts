@@ -49,6 +49,22 @@ function productionCsp(): Plugin {
   };
 }
 
+/**
+ * Split long-lived vendor code into content-hashed chunks so a change to
+ * app code doesn't invalidate the framework or the Supabase SDK in browser
+ * caches (and vice-versa). Sentry is already dynamically imported, so it
+ * splits on its own; these are the two large always-loaded dependencies.
+ */
+function vendorChunk(id: string): string | undefined {
+  if (!id.includes("node_modules")) return undefined;
+  if (/[\\/]node_modules[\\/]@supabase[\\/]/.test(id)) return "vendor-supabase";
+  if (
+    /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)
+  )
+    return "vendor-react";
+  return undefined;
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   base: "/",
@@ -56,6 +72,13 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: vendorChunk,
+      },
     },
   },
 });
