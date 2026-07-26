@@ -27,8 +27,8 @@ export function MemoryPage() {
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Memory
         </div>
-        <h1 className="mt-2 font-serif text-3xl text-ink">History</h1>
-        <p className="mt-2 max-w-xl text-sm text-ink-dim">
+        <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">History</h1>
+        <p className="mt-3 max-w-xl font-serif text-lg leading-relaxed text-ink-dim">
           Chronos keeps durable memory across sessions: goals, simulations, decisions, knowledge,
           outcomes, and learned preferences from ranked futures.
         </p>
@@ -308,8 +308,10 @@ export function ComparePage() {
       <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
         Memory · Compare
       </div>
-      <h1 className="mt-2 font-serif text-3xl text-ink">Compare versions</h1>
-      <p className="mt-2 max-w-xl text-sm text-ink-dim">
+      <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">
+        Compare versions
+      </h1>
+      <p className="mt-3 max-w-xl font-serif text-lg leading-relaxed text-ink-dim">
         See how confidence and recommended paths shifted between runs.
       </p>
 

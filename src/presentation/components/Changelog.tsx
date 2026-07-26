@@ -12,6 +12,20 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.4.1",
+    date: "2026-07-26",
+    tag: "patch",
+    title: "Editorial pass on the inner pages",
+    summary:
+      "Knowledge, Notes, Timeline, Memory, and Compare now open with the same editorial voice as the Decision Brief — display-scale serif headlines and serif ledes. Styling only; no copy or behavior changes.",
+    highlights: [
+      {
+        label: "Type scale",
+        detail: "Page headlines at display size · ledes in the serif voice · labels unchanged",
+      },
+    ],
+  },
+  {
     version: "5.4.0",
     date: "2026-07-26",
     tag: "minor",

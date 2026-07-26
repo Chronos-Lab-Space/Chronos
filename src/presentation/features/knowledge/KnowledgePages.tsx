@@ -100,8 +100,8 @@ export function KnowledgePage() {
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Knowledge
           </div>
-          <h1 className="mt-2 font-serif text-3xl text-ink">Library</h1>
-          <p className="mt-2 max-w-lg text-sm text-ink-dim">
+          <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">Library</h1>
+          <p className="mt-3 max-w-lg font-serif text-lg leading-relaxed text-ink-dim">
             RAG-lite context for simulations — files, URLs, and notes. Search by keyword across
             title and content.
           </p>
@@ -367,7 +367,9 @@ export function NotesPage() {
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Notes
           </div>
-          <h1 className="mt-2 font-serif text-3xl text-ink">Working notes</h1>
+          <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">
+            Working notes
+          </h1>
         </div>
         {!isNew && (
           <button

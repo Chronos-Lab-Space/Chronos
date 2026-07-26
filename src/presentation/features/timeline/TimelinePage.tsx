@@ -43,8 +43,10 @@ export function TimelinePage() {
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
           Timeline
         </div>
-        <h1 className="mt-2 font-serif text-3xl text-ink">Decision history</h1>
-        <p className="mt-2 text-sm text-ink-dim">
+        <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">
+          Decision history
+        </h1>
+        <p className="mt-3 font-serif text-lg leading-relaxed text-ink-dim">
           Workspace → knowledge → simulations → recommendation → decision → outcome.
         </p>
       </div>
