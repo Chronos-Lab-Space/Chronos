@@ -572,8 +572,12 @@ export class WorkspaceService {
 
     const failed = output.tasks.some((t) => t.status === "failed");
 
-    // Evaluation agent ranks futures by expected value (deterministic).
+    // Evaluation agent annotates the engine's ranking with expected value.
+    // preserveOrder keeps ONE ranking across the product: what the user
+    // sees (engine collapse order) is what DecisionRanked publishes and
+    // what the learning memory records.
     const evaluation = await runtime.run("outcome.evaluate", {
+      preserveOrder: true,
       futures: output.futures.map((f) => ({
         id: f.id,
         name: f.name,
