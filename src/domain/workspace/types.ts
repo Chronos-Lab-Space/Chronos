@@ -38,6 +38,12 @@ export type SimulationTaskRecord = {
 /** Did the user follow Chronos' recommendation after choosing a path? */
 export type OutcomeFollowed = "yes" | "partially" | "no";
 
+/**
+ * How the real outcome compared to what Chronos predicted.
+ * The only honest hit/miss signal — free-text results are not interpreted.
+ */
+export type OutcomeVerdict = "better" | "as_expected" | "worse";
+
 export type SimulationResultPayload = {
   best_future?: string;
   futures_count?: number;
@@ -61,6 +67,8 @@ export type SimulationResultPayload = {
   outcome_followed_at?: string | null;
   outcome_result?: string | null;
   outcome_result_at?: string | null;
+  /** Optional: did it beat, match, or miss the prediction? Weights future priors. */
+  outcome_verdict?: OutcomeVerdict | null;
   [key: string]: unknown;
 };
 

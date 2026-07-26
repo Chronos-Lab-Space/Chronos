@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { OutcomeFollowed } from "../../../../domain/workspace/types";
+import type { OutcomeFollowed, OutcomeVerdict } from "../../../../domain/workspace/types";
 
 type Props = {
   pathSaved: boolean;
@@ -7,15 +7,23 @@ type Props = {
   followedAt: string | null;
   result: string | null;
   resultAt: string | null;
+  verdict?: OutcomeVerdict | null;
   recommendedName: string;
   onFollowed: (followed: OutcomeFollowed) => Promise<void>;
-  onResult: (note: string) => Promise<void>;
+  onResult: (note: string, verdict: OutcomeVerdict | null) => Promise<void>;
 };
 
 const OPTIONS: { value: OutcomeFollowed; label: string }[] = [
   { value: "yes", label: "Yes" },
   { value: "partially", label: "Partially" },
   { value: "no", label: "No" },
+];
+
+/** Optional hit/miss signal — the only thing that re-weights future priors. */
+const VERDICTS: { value: OutcomeVerdict; label: string }[] = [
+  { value: "better", label: "Better than predicted" },
+  { value: "as_expected", label: "As predicted" },
+  { value: "worse", label: "Worse than predicted" },
 ];
 
 /**
@@ -28,12 +36,14 @@ export function OutcomeTracking({
   followedAt,
   result,
   resultAt,
+  verdict,
   recommendedName,
   onFollowed,
   onResult,
 }: Props) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState(result ?? "");
+  const [pickedVerdict, setPickedVerdict] = useState<OutcomeVerdict | null>(verdict ?? null);
   const [error, setError] = useState<string | null>(null);
 
   if (!pathSaved) {
@@ -66,7 +76,7 @@ export function OutcomeTracking({
     setBusy(true);
     setError(null);
     try {
-      await onResult(note);
+      await onResult(note, pickedVerdict);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -139,6 +149,33 @@ export function OutcomeTracking({
                 placeholder="What happened? Metrics, surprises, would you choose this path again…"
                 className="w-full rounded-xl border border-line bg-bg px-3 py-2 text-sm text-ink focus:border-chronos focus:outline-none"
               />
+              <fieldset>
+                <legend className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                  Against the prediction — optional
+                </legend>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {VERDICTS.map((v) => (
+                    <button
+                      key={v.value}
+                      type="button"
+                      aria-pressed={pickedVerdict === v.value}
+                      onClick={() =>
+                        setPickedVerdict((current) => (current === v.value ? null : v.value))
+                      }
+                      className={`rounded-full border px-3 py-1.5 text-[13px] transition ${
+                        pickedVerdict === v.value
+                          ? "border-chronos bg-chronos/15 text-chronos"
+                          : "border-line text-ink-dim hover:border-chronos/40 hover:text-ink"
+                      }`}
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[12px] text-ink-faint">
+                  A miss stops this run's priors from steering the next simulation.
+                </p>
+              </fieldset>
               <button
                 type="submit"
                 disabled={busy || !note.trim()}

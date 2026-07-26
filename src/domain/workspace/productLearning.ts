@@ -74,7 +74,9 @@ export function deriveProductLearning(input: {
       workspaceId: input.workspaceId,
       simulationId: input.simulationId,
       kind: "outcome",
-      content: `Successful future: ${top.name} (score ${top.score.toFixed(3)}${
+      // Written at prediction time — nothing has happened yet, so this must not
+      // claim success. Real results come from deriveOutcomeLearning.
+      content: `Predicted best future: ${top.name} (score ${top.score.toFixed(3)}${
         typeof top.expectedValue === "number" ? `, EV ${top.expectedValue.toFixed(3)}` : ""
       }).`,
       metadata: {

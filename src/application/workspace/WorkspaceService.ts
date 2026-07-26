@@ -7,6 +7,11 @@ import { sanitizeWorkspaceHomeIds } from "../../domain/workspace/persistedIds";
 
 // Side effects (analytics, memory) attach via the event bus once per process.
 registerProductEventSubscribers();
+import {
+  deriveOutcomeLearning,
+  type OutcomeSignal,
+  selectWeightedPreferences,
+} from "../../domain/workspace/outcomeLearning";
 import { snapshotKnowledgeUsed } from "../../domain/workspace/simulationReport";
 import { archiveGoalIfChanged } from "../../domain/workspace/workspaceMemory";
 import type {
@@ -15,6 +20,7 @@ import type {
   KnowledgeType,
   NoteRecord,
   OutcomeFollowed,
+  OutcomeVerdict,
   SimulationRecord,
   WorkspaceHome,
   WorkspaceRecord,
@@ -470,10 +476,21 @@ export class WorkspaceService {
 
     const knowledgeUsed = snapshotKnowledgeUsed(home.knowledge, home.notes);
 
-    // Feed prior learning preferences into planner + soft constraints (cap + dedupe).
-    const learnedPreferences = [
-      ...new Set(learningMemoryStore.listPreferences(home.workspace.id, 8)),
-    ].slice(0, 3);
+    // Feed prior learning preferences into planner + soft constraints.
+    // Weighted by each prior's real outcome: a run whose prediction missed no
+    // longer steers the next one; proven priors rank first.
+    const outcomeBySimulationId: Record<string, OutcomeSignal> = {};
+    for (const past of home.recentSimulations) {
+      outcomeBySimulationId[past.id] = {
+        followed: past.result.outcome_followed ?? null,
+        verdict: past.result.outcome_verdict ?? null,
+      };
+    }
+    const learnedPreferences = selectWeightedPreferences(
+      learningMemoryStore.list(home.workspace.id),
+      outcomeBySimulationId,
+      3
+    );
     const learnedSoftConstraints = learnedPreferences.map((text, index) => ({
       id: `learn-pref-${index}`,
       text,
@@ -819,6 +836,19 @@ export class WorkspaceService {
       },
     };
 
+    // Observed reality becomes memory — this is what re-weights future priors.
+    learningMemoryStore.append(
+      home.workspace.id,
+      deriveOutcomeLearning({
+        workspaceId: home.workspace.id,
+        simulationId: sim.id,
+        followed,
+        verdict: sim.result.outcome_verdict ?? null,
+        pathName: sim.result.chosen_future_name ?? sim.result.best_future ?? null,
+        now: at,
+      })
+    );
+
     const note: NoteRecord = {
       id: uuid(),
       workspace_id: home.workspace.id,
@@ -850,7 +880,8 @@ export class WorkspaceService {
   async recordOutcomeResult(
     ownerId: string,
     simulationId: string,
-    resultNote: string
+    resultNote: string,
+    verdict?: OutcomeVerdict | null
   ): Promise<WorkspaceHome> {
     const text = resultNote.trim();
     if (!text) throw new Error("Describe how it turned out.");
@@ -871,8 +902,22 @@ export class WorkspaceService {
         ...sim.result,
         outcome_result: text,
         outcome_result_at: at,
+        ...(verdict ? { outcome_verdict: verdict } : {}),
       },
     };
+
+    learningMemoryStore.append(
+      home.workspace.id,
+      deriveOutcomeLearning({
+        workspaceId: home.workspace.id,
+        simulationId: sim.id,
+        followed: sim.result.outcome_followed ?? null,
+        verdict: verdict ?? sim.result.outcome_verdict ?? null,
+        resultNote: text,
+        pathName: sim.result.chosen_future_name ?? sim.result.best_future ?? null,
+        now: at,
+      })
+    );
 
     const note: NoteRecord = {
       id: uuid(),

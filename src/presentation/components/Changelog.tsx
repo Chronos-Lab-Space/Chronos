@@ -12,6 +12,35 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.5.0",
+    date: "2026-07-26",
+    tag: "minor",
+    title: "Outcomes close the loop",
+    summary:
+      'Logging a real outcome now changes what Chronos recommends next. Before this, outcomes were stored and never read back: priors from a run whose prediction missed kept steering later simulations, and the memory record labelled a future "Successful" at prediction time — before anything had happened. Outcomes are now recorded as observed memory and weight the priors fed into the next run.',
+    highlights: [
+      {
+        label: "Observed memory",
+        detail:
+          "Logging follow-through or a result writes learning records from what actually happened — separate from prediction-time priors",
+      },
+      {
+        label: "Re-weighted priors",
+        detail:
+          "A run whose outcome missed no longer steers the next simulation; proven priors rank first · un-logged runs behave exactly as before",
+      },
+      {
+        label: "Verdict signal",
+        detail:
+          "Optional Better / As predicted / Worse when logging an outcome — the only honest hit-miss source; free-text results are never interpreted",
+      },
+      {
+        label: "Honest wording",
+        detail: '"Successful future" at prediction time is now "Predicted best future"',
+      },
+    ],
+  },
+  {
     version: "5.4.1",
     date: "2026-07-26",
     tag: "patch",

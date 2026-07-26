@@ -14,6 +14,7 @@ import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
 import type {
   KnowledgeType,
   OutcomeFollowed,
+  OutcomeVerdict,
   WorkspaceHome,
   WorkspaceRecord,
 } from "../../../domain/workspace/types";
@@ -61,7 +62,11 @@ type WorkspaceContextValue = {
   rerunSimulation: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
   chooseBestPath: (simulationId: string, futureId: string) => Promise<void>;
   recordOutcomeFollowed: (simulationId: string, followed: OutcomeFollowed) => Promise<void>;
-  recordOutcomeResult: (simulationId: string, resultNote: string) => Promise<void>;
+  recordOutcomeResult: (
+    simulationId: string,
+    resultNote: string,
+    verdict?: OutcomeVerdict | null
+  ) => Promise<void>;
   preferences: UserPreferences;
   updatePreferences: (patch: Partial<UserPreferences>) => void;
   markShareAcknowledged: () => void;
@@ -307,8 +312,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         await withOwner((id) => workspaceService.recordOutcomeFollowed(id, simulationId, followed));
         trackProductEvent("outcome_followed", { simulationId, followed });
       },
-      recordOutcomeResult: async (simulationId, resultNote) => {
-        await withOwner((id) => workspaceService.recordOutcomeResult(id, simulationId, resultNote));
+      recordOutcomeResult: async (simulationId, resultNote, verdict) => {
+        await withOwner((id) =>
+          workspaceService.recordOutcomeResult(id, simulationId, resultNote, verdict)
+        );
         trackProductEvent("outcome_result", {
           simulationId,
           noteLength: resultNote.trim().length,

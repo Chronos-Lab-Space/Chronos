@@ -398,9 +398,10 @@ export function SimulationDetailPage() {
               followedAt={decisionReport.outcomeFollowedAt}
               result={decisionReport.outcomeResult}
               resultAt={decisionReport.outcomeResultAt}
+              verdict={sim.result.outcome_verdict ?? null}
               recommendedName={decisionReport.recommended}
               onFollowed={(followed) => recordOutcomeFollowed(sim.id, followed)}
-              onResult={(note) => recordOutcomeResult(sim.id, note)}
+              onResult={(note, verdict) => recordOutcomeResult(sim.id, note, verdict)}
             />
           }
         />
