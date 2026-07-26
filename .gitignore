@@ -10,3 +10,4 @@ test-results/
 .DS_Store
 # Local Supabase CLI state (never commit)
 supabase/.temp/
+coverage/
