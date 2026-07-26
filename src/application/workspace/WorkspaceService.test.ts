@@ -117,7 +117,10 @@ describe("WorkspaceService success metric", () => {
     expect(resumed?.recentSimulations).toHaveLength(2);
     expect(resumed?.recentSimulations[0].id).toBe(v2.id);
     expect(resumed?.futuresBySimulation[sim.id]?.[0].name).toBeTruthy();
-    expect(resumed?.futuresBySimulation[v2.id]?.length).toBe(5);
+    // Resume returns the complete futures set for v2 (engine contract:
+    // up to 5, fewer when the category catalog is thin).
+    expect(resumed?.futuresBySimulation[v2.id]?.length).toBe(v2.result.futures_count);
+    expect(resumed?.futuresBySimulation[v2.id]?.length).toBeGreaterThanOrEqual(3);
   });
 
   it("rejects empty names and requires a workspace before mutations", async () => {
