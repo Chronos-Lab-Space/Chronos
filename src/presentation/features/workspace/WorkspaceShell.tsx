@@ -12,6 +12,7 @@ type NavItem = { to: string; label: string; short: string; end?: boolean; icon: 
 /** Desktop sidebar — matches docs/images/workspace-desktop-mock.png */
 const navItems: NavItem[] = [
   { to: "/workspace", label: "Current Decision", short: "Home", end: true, icon: "⌂" },
+  { to: "/workspace/decision", label: "Decision Brief", short: "Brief", icon: "≡" },
   { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
   { to: "/workspace/simulations", label: "Simulations", short: "Sims", icon: "⬡" },
   { to: "/workspace/timeline", label: "Timeline", short: "Time", icon: "▤" },
@@ -187,8 +188,7 @@ function WorkspaceShellInner() {
                     </span>
                   </div>
                   <NavLink
-                    to="/workspace"
-                    end
+                    to="/workspace/decision"
                     className="mt-3 inline-flex font-mono text-[10px] uppercase tracking-[0.12em] text-chronos"
                   >
                     View decision brief →

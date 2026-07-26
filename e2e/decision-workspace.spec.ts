@@ -144,6 +144,15 @@ test.describe("Decision Workspace (authenticated)", () => {
       timeout: 10_000,
     });
 
+    // --- Decision Brief: lifecycle reflects the logged outcome ---
+    await page.goto("/workspace/decision");
+    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("Launch CLAB public beta").first()).toBeVisible();
+    await expect(page.getByText(/^recommendation$/i).first()).toBeVisible();
+    // Outcome was logged above → the band's current stage is Learned
+    const currentStage = page.locator('[aria-current="step"]');
+    await expect(currentStage).toContainText(/learned/i);
+
     // --- Memory retains decision ---
     await page.goto("/workspace/memory");
     await expect(page.getByRole("heading", { name: /history/i })).toBeVisible({

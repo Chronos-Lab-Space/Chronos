@@ -1,51 +1,47 @@
 /**
- * Brand loading art (chronos_loading.webp).
- * Use fullScreen only for sign-in → workspace entry (AuthCallback).
- * Elsewhere prefer compact / inline loading.
+ * Brand loading art (chronos_loading.webp), full viewport.
+ * Only surface: sign-in → workspace entry (AuthCallbackPage).
+ * Everywhere else use QuietLoading.
  */
 export function WorkspaceLoadingScreen({
   message = "Opening decision workspace",
-  fullScreen = false,
 }: {
   message?: string;
-  /** Full viewport — only for auth / workspace entry. */
-  fullScreen?: boolean;
 }) {
   return (
-    <div
-      className={
-        fullScreen
-          ? "workspace-loading-screen workspace-loading-screen--full"
-          : "workspace-loading-screen"
-      }
-      role="status"
-      aria-live="polite"
-      aria-busy="true"
-    >
+    <div className="workspace-loading-screen" role="status" aria-live="polite" aria-busy="true">
       <div className="workspace-loading-art-wrap" aria-hidden>
-        <img
-          src="/chronos_loading.webp"
-          alt=""
-          className="workspace-loading-art"
-          width={1536}
-          height={1024}
-          decoding="async"
-          fetchPriority={fullScreen ? "high" : "auto"}
-        />
+        {/* Portrait phones get a taller crop of the same art — the landscape
+            frame's wordmark is wider than `cover` leaves visible there. */}
+        <picture className="workspace-loading-art-picture">
+          <source
+            media="(orientation: portrait)"
+            srcSet="/chronos_loading_portrait.webp"
+            width={576}
+            height={1280}
+          />
+          <img
+            src="/chronos_loading.webp"
+            alt=""
+            className="workspace-loading-art"
+            width={1536}
+            height={1024}
+            decoding="async"
+            fetchPriority="high"
+          />
+        </picture>
         <div className="workspace-loading-art-shine" />
       </div>
 
       <div className="workspace-loading-footer">
         <p className="workspace-loading-sub">{message}</p>
-        {fullScreen ? (
-          <div className="workspace-loading-phases" aria-hidden>
-            <span>Branch</span>
-            <span className="workspace-loading-phase-dot" />
-            <span>Simulate</span>
-            <span className="workspace-loading-phase-dot" />
-            <span>Evaluate</span>
-          </div>
-        ) : null}
+        <div className="workspace-loading-phases" aria-hidden>
+          <span>Branch</span>
+          <span className="workspace-loading-phase-dot" />
+          <span>Simulate</span>
+          <span className="workspace-loading-phase-dot" />
+          <span>Evaluate</span>
+        </div>
       </div>
     </div>
   );

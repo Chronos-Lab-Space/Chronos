@@ -43,6 +43,9 @@ const WorkspaceShell = lazy(async () => ({
 const DashboardPage = lazy(async () => ({
   default: (await import("./features/dashboard/DashboardPage")).DashboardPage,
 }));
+const DecisionBriefPage = lazy(async () => ({
+  default: (await import("./features/workspace/DecisionBriefPage")).DecisionBriefPage,
+}));
 const KnowledgePage = lazy(async () => ({
   default: (await import("./features/knowledge/KnowledgePages")).KnowledgePage,
 }));
@@ -115,6 +118,7 @@ function App() {
           )}
         >
           <Route index element={lazyRoute(<DashboardPage />)} />
+          <Route path="decision" element={lazyRoute(<DecisionBriefPage />)} />
           <Route path="knowledge" element={lazyRoute(<KnowledgePage />)} />
           <Route path="simulations" element={lazyRoute(<SimulationsPage />)} />
           <Route path="simulations/:simulationId" element={lazyRoute(<SimulationDetailPage />)} />
