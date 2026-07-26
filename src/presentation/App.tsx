@@ -29,6 +29,9 @@ const PrivacyPage = lazy(async () => ({ default: (await import("./pages")).Priva
 const TermsPage = lazy(async () => ({ default: (await import("./pages")).TermsPage }));
 const SecurityPage = lazy(async () => ({ default: (await import("./pages")).SecurityPage }));
 const AccessPage = lazy(async () => ({ default: (await import("./pages")).AccessPage }));
+const WhitepaperPage = lazy(async () => ({
+  default: (await import("./pages/WhitepaperPage")).WhitepaperPage,
+}));
 const Docs = lazy(async () => ({ default: (await import("./components/Docs")).Docs }));
 const ChangelogPage = lazy(async () => ({
   default: (await import("./components/Changelog")).ChangelogPage,
@@ -146,6 +149,7 @@ function App() {
           <Route path="/about" element={lazyRoute(<AboutPage />)} />
           <Route path="/faq" element={lazyRoute(<FaqPage />)} />
           <Route path="/docs" element={lazyRoute(<Docs />)} />
+          <Route path="/whitepaper" element={lazyRoute(<WhitepaperPage />)} />
           <Route path="/changelog" element={lazyRoute(<ChangelogPage />)} />
           <Route path="/contact" element={lazyRoute(<ContactPage />)} />
           <Route path="/privacy" element={lazyRoute(<PrivacyPage />)} />
