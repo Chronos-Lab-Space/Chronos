@@ -1,0 +1,67 @@
+@import 'tailwindcss';
+
+/* Chronos Lab brand tokens — canonical values from the product's src/index.css,
+   recorded in the design bundle's CLAUDE.md. */
+@theme {
+  --color-void: #111111;
+  --color-panel: #141414;
+  --color-chronos: #60899b;
+  --color-chronos-hi: #7aa6b6;
+  --color-muted: #989898;
+  --color-faint: rgba(152, 152, 152, 0.75);
+  --color-sand: #c4c2aa;
+  --color-paper: #f2edea;
+
+  --color-line-soft: rgba(242, 237, 234, 0.08);
+  --color-line: rgba(242, 237, 234, 0.12);
+  --color-line-strong: rgba(242, 237, 234, 0.2);
+  --color-line-mid: rgba(242, 237, 234, 0.3);
+
+  /* deep field #2A4D5F, only ever used as a low-alpha panel tint */
+  --color-field: rgba(42, 77, 95, 0.16);
+  --color-field-mid: rgba(42, 77, 95, 0.25);
+  --color-field-hi: rgba(42, 77, 95, 0.28);
+  --color-field-deep: rgba(42, 77, 95, 0.55);
+
+  --color-accent-soft: rgba(96, 137, 155, 0.15);
+  --color-accent-line: rgba(96, 137, 155, 0.45);
+
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-wordmark: 'Cormorant Garamond', 'Instrument Serif', serif;
+
+  --animate-chpulse: chpulse 2.6s ease-in-out infinite;
+
+  @keyframes chpulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--color-void);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    color: var(--color-paper);
+  }
+
+  ::selection {
+    background: rgba(96, 137, 155, 0.28);
+  }
+
+  a {
+    color: var(--color-chronos);
+    text-decoration: none;
+  }
+}
