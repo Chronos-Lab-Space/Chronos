@@ -19,9 +19,19 @@
 -- This migration is the single authority. It drops every legacy policy by
 -- name, then creates exactly one policy per table per command.
 --
--- Model: MEMBER-BASED. A workspace's rows are reachable by anyone in
--- public.workspace_members for that workspace, plus the workspace owner.
--- Membership changes and workspace mutation require owner/admin rights.
+-- Model: MEMBER-BASED, with roles that actually differ. The role check
+-- constraint on workspace_members allows owner / admin / member / viewer.
+--
+--   capability            | owner | admin | member | viewer
+--   ----------------------+-------+-------+--------+-------
+--   read workspace rows   |  yes  |  yes  |  yes   |  yes
+--   write workspace rows  |  yes  |  yes  |  yes   |  NO
+--   manage membership     |  yes  |  yes  |  no    |  no
+--   rename/delete the ws  |  yes  |  no   |  no    |  no
+--
+-- Enforced by three predicates: is_workspace_member (read),
+-- is_workspace_editor (write, excludes viewer), is_workspace_admin
+-- (membership). Workspace rename/delete is owner_id only.
 --
 -- At the time of writing all membership rows are owners (15 rows, 15
 -- workspaces, 0 non-owner members), so this grants no one new access
@@ -111,6 +121,52 @@ $$;
 comment on function public.is_simulation_member(uuid) is
   'True when the caller is a member of the workspace owning the simulation.';
 
+-- Write rights. The role check constraint on workspace_members allows
+-- owner / admin / member / viewer; this is the predicate that makes
+-- viewer mean anything, by admitting the first three and excluding it.
+create or replace function public.is_workspace_editor(target_workspace_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.workspaces w
+    where w.id = target_workspace_id
+      and w.owner_id = (select auth.uid())
+  )
+  or exists (
+    select 1
+    from public.workspace_members m
+    where m.workspace_id = target_workspace_id
+      and m.user_id = (select auth.uid())
+      and m.role in ('owner', 'admin', 'member')
+  );
+$$;
+
+comment on function public.is_workspace_editor(uuid) is
+  'True when the caller may write to the workspace: owner, admin or member. Viewers are excluded.';
+
+create or replace function public.is_simulation_editor(target_simulation_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.simulations s
+    where s.id = target_simulation_id
+      and public.is_workspace_editor(s.workspace_id)
+  );
+$$;
+
+comment on function public.is_simulation_editor(uuid) is
+  'True when the caller may write to the workspace owning the simulation. Viewers are excluded.';
+
 create or replace function public.workspace_role(target_workspace_id uuid)
 returns text
 language sql
@@ -143,12 +199,16 @@ comment on function public.workspace_role(uuid) is
 -- every new function, which would expose these at /rest/v1/rpc/*.
 revoke all on function public.is_workspace_member(uuid) from public;
 revoke all on function public.is_workspace_admin(uuid) from public;
+revoke all on function public.is_workspace_editor(uuid) from public;
 revoke all on function public.is_simulation_member(uuid) from public;
+revoke all on function public.is_simulation_editor(uuid) from public;
 revoke all on function public.workspace_role(uuid) from public;
 
 grant execute on function public.is_workspace_member(uuid) to authenticated;
 grant execute on function public.is_workspace_admin(uuid) to authenticated;
+grant execute on function public.is_workspace_editor(uuid) to authenticated;
 grant execute on function public.is_simulation_member(uuid) to authenticated;
+grant execute on function public.is_simulation_editor(uuid) to authenticated;
 grant execute on function public.workspace_role(uuid) to authenticated;
 
 -- ------------------------------------------------------------
@@ -252,51 +312,93 @@ create policy "workspace_members_delete" on public.workspace_members
   );
 
 -- Workspace-scoped child tables -------------------------------
--- Uniform predicate on both sides, so a single FOR ALL policy is honest
--- here. workspace_id is not in the WITH CHECK escape hatch: moving a row
--- to another workspace requires membership in the destination too.
+-- Split per command rather than one FOR ALL policy, because reads and
+-- writes no longer share a predicate: reads admit any member (including
+-- viewers), writes require an editor. A single FOR ALL policy cannot
+-- express that difference.
+--
+-- workspace_id is not a WITH CHECK escape hatch: moving a row into
+-- another workspace requires editor rights on the destination too, since
+-- the predicate is evaluated against the new row.
+--
+-- Generated in a loop so all six tables cannot drift apart by hand-edit.
+-- The drops cover both the previous FOR ALL name and the new per-command
+-- names, keeping this re-runnable.
+do $do$
+declare
+  t text;
+begin
+  foreach t in array array[
+    'goals', 'workspace_goals', 'simulations', 'knowledge', 'notes', 'decisions'
+  ]
+  loop
+    execute format('drop policy if exists %I on public.%I', t || '_members_all', t);
+    execute format('drop policy if exists %I on public.%I', t || '_select', t);
+    execute format('drop policy if exists %I on public.%I', t || '_insert', t);
+    execute format('drop policy if exists %I on public.%I', t || '_update', t);
+    execute format('drop policy if exists %I on public.%I', t || '_delete', t);
 
-create policy "goals_members_all" on public.goals
-  for all to authenticated
-  using (public.is_workspace_member(workspace_id))
-  with check (public.is_workspace_member(workspace_id));
-
-create policy "workspace_goals_members_all" on public.workspace_goals
-  for all to authenticated
-  using (public.is_workspace_member(workspace_id))
-  with check (public.is_workspace_member(workspace_id));
-
-create policy "simulations_members_all" on public.simulations
-  for all to authenticated
-  using (public.is_workspace_member(workspace_id))
-  with check (public.is_workspace_member(workspace_id));
-
-create policy "knowledge_members_all" on public.knowledge
-  for all to authenticated
-  using (public.is_workspace_member(workspace_id))
-  with check (public.is_workspace_member(workspace_id));
-
-create policy "notes_members_all" on public.notes
-  for all to authenticated
-  using (public.is_workspace_member(workspace_id))
-  with check (public.is_workspace_member(workspace_id));
-
-create policy "decisions_members_all" on public.decisions
-  for all to authenticated
-  using (public.is_workspace_member(workspace_id))
-  with check (public.is_workspace_member(workspace_id));
+    execute format(
+      'create policy %I on public.%I for select to authenticated
+         using (public.is_workspace_member(workspace_id))',
+      t || '_select', t
+    );
+    execute format(
+      'create policy %I on public.%I for insert to authenticated
+         with check (public.is_workspace_editor(workspace_id))',
+      t || '_insert', t
+    );
+    execute format(
+      'create policy %I on public.%I for update to authenticated
+         using (public.is_workspace_editor(workspace_id))
+         with check (public.is_workspace_editor(workspace_id))',
+      t || '_update', t
+    );
+    execute format(
+      'create policy %I on public.%I for delete to authenticated
+         using (public.is_workspace_editor(workspace_id))',
+      t || '_delete', t
+    );
+  end loop;
+end $do$;
 
 -- Simulation-scoped child tables ------------------------------
+-- Same split, resolved through the simulation's workspace.
+do $do$
+declare
+  t text;
+begin
+  foreach t in array array['futures', 'timeline_nodes']
+  loop
+    execute format('drop policy if exists %I on public.%I', t || '_members_all', t);
+    execute format('drop policy if exists %I on public.%I', t || '_select', t);
+    execute format('drop policy if exists %I on public.%I', t || '_insert', t);
+    execute format('drop policy if exists %I on public.%I', t || '_update', t);
+    execute format('drop policy if exists %I on public.%I', t || '_delete', t);
 
-create policy "futures_members_all" on public.futures
-  for all to authenticated
-  using (public.is_simulation_member(simulation_id))
-  with check (public.is_simulation_member(simulation_id));
-
-create policy "timeline_nodes_members_all" on public.timeline_nodes
-  for all to authenticated
-  using (public.is_simulation_member(simulation_id))
-  with check (public.is_simulation_member(simulation_id));
+    execute format(
+      'create policy %I on public.%I for select to authenticated
+         using (public.is_simulation_member(simulation_id))',
+      t || '_select', t
+    );
+    execute format(
+      'create policy %I on public.%I for insert to authenticated
+         with check (public.is_simulation_editor(simulation_id))',
+      t || '_insert', t
+    );
+    execute format(
+      'create policy %I on public.%I for update to authenticated
+         using (public.is_simulation_editor(simulation_id))
+         with check (public.is_simulation_editor(simulation_id))',
+      t || '_update', t
+    );
+    execute format(
+      'create policy %I on public.%I for delete to authenticated
+         using (public.is_simulation_editor(simulation_id))',
+      t || '_delete', t
+    );
+  end loop;
+end $do$;
 
 -- ------------------------------------------------------------
 -- 4. Table privileges

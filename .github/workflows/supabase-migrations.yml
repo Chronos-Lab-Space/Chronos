@@ -58,11 +58,22 @@ jobs:
       - name: Apply all migrations from scratch
         run: npm run supabase:reset
 
+      # Shape of the policies: no duplicates, no stray grants, no bare
+      # auth.uid(), retired helpers stay retired.
       - name: Assert RLS invariants
         run: |
           psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
             -v ON_ERROR_STOP=1 \
             -f supabase/tests/rls_invariants.sql
+
+      # Behaviour of the policies: impersonates an owner, member, viewer
+      # and outsider and checks which statements actually succeed. Rolls
+      # back, so it leaves no rows behind.
+      - name: Assert RLS access matrix
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/tests/rls_access_matrix.sql
 
       - name: Dump policies and grants on failure
         if: failure()
