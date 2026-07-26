@@ -212,43 +212,55 @@ export class SupabaseWorkspaceRepository {
       if (error) throw error;
     }
 
-    // Futures + timeline: upsert by id (safer than delete-all under concurrent tabs)
-    for (const sim of home.recentSimulations) {
-      const futures = home.futuresBySimulation[sim.id] ?? [];
-      const nodes = home.timelineBySimulation[sim.id] ?? [];
+    // Futures + timeline: upsert by id (safer than delete-all under concurrent tabs).
+    // One batched call each across every simulation rather than a pair per
+    // simulation — both rows carry simulation_id, so there was never anything
+    // per-simulation about the write itself, and looping cost two round-trips
+    // per simulation (~100 on a 50-simulation workspace, on every save).
+    const allFutures = home.recentSimulations.flatMap(
+      (sim) => home.futuresBySimulation[sim.id] ?? []
+    );
 
-      if (futures.length > 0) {
-        const { error } = await this.client.from("futures").upsert(
-          futures.map((f) => ({
-            id: f.id,
-            simulation_id: f.simulation_id,
-            name: f.name,
-            score: f.score,
-            risk: f.risk,
-            confidence: f.confidence,
-            summary: f.summary ?? "",
-          })),
-          { onConflict: "id" }
-        );
-        if (error) throw error;
-      }
+    if (allFutures.length > 0) {
+      const { error } = await this.client.from("futures").upsert(
+        allFutures.map((f) => ({
+          id: f.id,
+          simulation_id: f.simulation_id,
+          name: f.name,
+          score: f.score,
+          risk: f.risk,
+          confidence: f.confidence,
+          summary: f.summary ?? "",
+        })),
+        { onConflict: "id" }
+      );
+      if (error) throw error;
+    }
 
-      if (nodes.length > 0) {
-        // Parents before children by depth so self-FK inserts stay valid
-        const ordered = [...nodes].sort((a, b) => a.depth - b.depth);
-        const { error } = await this.client.from("timeline_nodes").upsert(
-          ordered.map((n) => ({
-            id: n.id,
-            simulation_id: n.simulation_id,
-            parent_id: n.parent_id,
-            title: n.title,
-            depth: n.depth,
-            score: n.score,
-          })),
-          { onConflict: "id" }
-        );
-        if (error) throw error;
-      }
+    const allNodes = home.recentSimulations.flatMap(
+      (sim) => home.timelineBySimulation[sim.id] ?? []
+    );
+
+    if (allNodes.length > 0) {
+      // Parents before children by depth so self-FK inserts stay valid.
+      // Sorting the combined array is still correct: parent_id never crosses
+      // simulations and a parent always sits at a lower depth than its child,
+      // so ordering globally by depth still places every parent ahead of its
+      // children. Interleaving rows from other simulations between them is
+      // harmless.
+      const ordered = orderTimelineNodesForUpsert(allNodes);
+      const { error } = await this.client.from("timeline_nodes").upsert(
+        ordered.map((n) => ({
+          id: n.id,
+          simulation_id: n.simulation_id,
+          parent_id: n.parent_id,
+          title: n.title,
+          depth: n.depth,
+          score: n.score,
+        })),
+        { onConflict: "id" }
+      );
+      if (error) throw error;
     }
   }
 
@@ -288,6 +300,23 @@ export function orderSimulationsForUpsert(sims: readonly SimulationRecord[]): Si
   const roots = [...sims].sort((a, b) => a.created_at.localeCompare(b.created_at));
   for (const s of roots) visit(s.id);
   return out;
+}
+
+/**
+ * Shallowest first, so a self-referencing parent_id is always already inserted
+ * by the time its children are.
+ *
+ * Safe to run across simulations at once: parent_id never crosses a simulation
+ * boundary, and a parent always sits at a lower depth than its children, so a
+ * single depth sort keeps every parent ahead of its own children regardless of
+ * how many simulations are interleaved.
+ *
+ * Ties break on id purely to keep the batch order deterministic between runs.
+ */
+export function orderTimelineNodesForUpsert(
+  nodes: readonly TimelineNodeRecord[]
+): TimelineNodeRecord[] {
+  return [...nodes].sort((a, b) => a.depth - b.depth || a.id.localeCompare(b.id));
 }
 
 function mapWorkspace(row: Record<string, unknown>): WorkspaceRecord {
