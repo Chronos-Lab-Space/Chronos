@@ -73,7 +73,7 @@ export function DecisionBriefPage() {
           recommendation, evidence, and ranked futures.
         </p>
         <Link
-          to="/workspace"
+          to="/workspace/hq"
           className="mt-8 inline-flex rounded-full bg-chronos px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos/85"
         >
           Set your decision →

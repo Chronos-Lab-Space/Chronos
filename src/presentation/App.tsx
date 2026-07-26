@@ -120,8 +120,10 @@ function App() {
             </ProtectedRoute>
           )}
         >
-          <Route index element={lazyRoute(<DashboardPage />)} />
-          <Route path="decision" element={lazyRoute(<DecisionBriefPage />)} />
+          {/* Decision Brief is the workspace home; the HQ dashboard moved to /workspace/hq */}
+          <Route index element={lazyRoute(<DecisionBriefPage />)} />
+          <Route path="hq" element={lazyRoute(<DashboardPage />)} />
+          <Route path="decision" element={<Navigate to="/workspace" replace />} />
           <Route path="knowledge" element={lazyRoute(<KnowledgePage />)} />
           <Route path="simulations" element={lazyRoute(<SimulationsPage />)} />
           <Route path="simulations/:simulationId" element={lazyRoute(<SimulationDetailPage />)} />

@@ -66,9 +66,14 @@ test.describe("Decision Workspace (authenticated)", () => {
     await page.locator("textarea").fill("Small team, limited runway, prefer bootstrap path.");
     await page.getByRole("button", { name: /add knowledge/i }).click();
 
-    // --- Dashboard HQ: Decision Card + demoted goal ---
-    await expect(page.getByTestId("decision-card")).toBeVisible({ timeout: 15_000 });
+    // --- Workspace home is the Decision Brief (draft stage, no run yet) ---
+    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText("Launch CLAB public beta").first()).toBeVisible();
+    await expect(page.getByText(/no recommendation available/i)).toBeVisible();
+
+    // HQ dashboard moved to /workspace/hq and keeps the Decision Card
+    await page.goto("/workspace/hq");
+    await expect(page.getByTestId("decision-card")).toBeVisible({ timeout: 15_000 });
 
     // --- Generate futures ---
     await page
@@ -130,28 +135,33 @@ test.describe("Decision Workspace (authenticated)", () => {
       timeout: 8_000,
     });
 
-    // --- HQ Decision Card: review deep-link (no Accept commit on dashboard) ---
+    // --- Decision Brief (workspace home): lifecycle reflects the logged outcome ---
     await page.goto("/workspace");
-    await expect(page.getByTestId("decision-card")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByTestId("decision-card-recommendation")).toBeVisible();
-    const hqCta = page.getByTestId("decision-card-cta");
-    await expect(hqCta).toBeVisible();
-    await expect(hqCta).not.toHaveText(/accept/i);
-    await expect(page.getByTestId("decision-timeline-preview")).toBeVisible();
-    // Primary CTA deep-links to simulation (review / log outcome)
-    await hqCta.click();
-    await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i, {
-      timeout: 10_000,
-    });
-
-    // --- Decision Brief: lifecycle reflects the logged outcome ---
-    await page.goto("/workspace/decision");
     await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText("Launch CLAB public beta").first()).toBeVisible();
     await expect(page.getByText(/^recommendation$/i).first()).toBeVisible();
     // Outcome was logged above → the band's current stage is Learned
     const currentStage = page.locator('[aria-current="step"]');
     await expect(currentStage).toContainText(/learned/i);
+    // Recommendation deep-links to the simulation report
+    await page.getByRole("link", { name: /review in simulation/i }).click();
+    await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i, {
+      timeout: 10_000,
+    });
+
+    // Legacy /workspace/decision deep-links redirect to the workspace home
+    await page.goto("/workspace/decision");
+    await expect(page).toHaveURL(/\/workspace\/?$/, { timeout: 10_000 });
+    await expect(page.getByTestId("decision-brief")).toBeVisible();
+
+    // --- HQ Decision Card still lives at /workspace/hq (review-only CTA) ---
+    await page.goto("/workspace/hq");
+    await expect(page.getByTestId("decision-card")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("decision-card-recommendation")).toBeVisible();
+    const hqCta = page.getByTestId("decision-card-cta");
+    await expect(hqCta).toBeVisible();
+    await expect(hqCta).not.toHaveText(/accept/i);
+    await expect(page.getByTestId("decision-timeline-preview")).toBeVisible();
 
     // --- Memory retains decision ---
     await page.goto("/workspace/memory");

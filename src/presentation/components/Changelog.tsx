@@ -12,6 +12,25 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.2.1",
+    date: "2026-07-26",
+    tag: "patch",
+    title: "Decision Brief becomes the workspace home",
+    summary:
+      "Opening the workspace now lands on the Decision Brief — the editorial read of your current decision. The HQ dashboard moved to /workspace/hq (sidebar: Workspace HQ), old /workspace/decision links redirect, and the brief is reachable from the mobile More menu.",
+    highlights: [
+      {
+        label: "Default route",
+        detail:
+          "/workspace → Decision Brief · HQ dashboard at /workspace/hq · legacy links redirect",
+      },
+      {
+        label: "Mobile nav",
+        detail: "Decision Brief reachable on phones (More menu gained the missing entry)",
+      },
+    ],
+  },
+  {
     version: "5.2.0",
     date: "2026-07-26",
     tag: "minor",
