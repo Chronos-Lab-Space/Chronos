@@ -1,0 +1,94 @@
+name: Supabase Migrations
+
+# Applies every migration to a throwaway local Postgres and asserts the
+# resulting policies and grants. Runs on the free plan, unlike Supabase
+# branching (preview environments), which needs the Pro plan.
+#
+# The Playwright job does not cover this: it runs with VITE_E2E_AUTH set,
+# which short-circuits Supabase entirely, so it never executes any SQL.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase-migrations.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/**"
+      - ".github/workflows/supabase-migrations.yml"
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20.x
+
+      # Pulls the pinned supabase CLI from devDependencies, so the local
+      # stack matches what developers run.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure psql is available
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+
+      # Starts db, auth, rest, storage and realtime. auth matters: the
+      # migrations reference auth.users and auth.uid(), so excluding
+      # GoTrue would fail them for the wrong reason.
+      - name: Start Supabase stack
+        run: npm run supabase:start
+
+      # The real check. db reset drops the database and replays every
+      # migration in order against an empty Postgres, so anything that
+      # only works because it was applied incrementally fails here.
+      - name: Apply all migrations from scratch
+        run: npm run supabase:reset
+
+      # Shape of the policies: no duplicates, no stray grants, no bare
+      # auth.uid(), retired helpers stay retired.
+      - name: Assert RLS invariants
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/tests/rls_invariants.sql
+
+      # Behaviour of the policies: impersonates an owner, member, viewer
+      # and outsider and checks which statements actually succeed. Rolls
+      # back, so it leaves no rows behind.
+      - name: Assert RLS access matrix
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/tests/rls_access_matrix.sql
+
+      - name: Dump policies and grants on failure
+        if: failure()
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -c "
+            select tablename, policyname, cmd, roles::text, permissive
+            from pg_policies where schemaname='public'
+            order by tablename, policyname;"
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -c "
+            select grantee, table_name,
+                   string_agg(privilege_type, ',' order by privilege_type) as privs
+            from information_schema.role_table_grants
+            where table_schema='public' and grantee in ('anon','authenticated')
+            group by grantee, table_name order by grantee, table_name;"
+
+      - name: Stop Supabase stack
+        if: always()
+        run: npm run supabase:stop

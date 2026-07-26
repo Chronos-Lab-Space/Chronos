@@ -1,4 +1,19 @@
 -- ============================================================
+-- SUPERSEDED — DO NOT RUN
+-- ============================================================
+-- Replaced by supabase/migrations/20260726120000_consolidate_workspace_rls.sql,
+-- which is now the single authority on workspace RLS and grants.
+--
+-- Running this file again would undo that consolidation: it recreates
+-- is_workspace_owner() / is_simulation_owner() (dropped in favour of
+-- is_workspace_admin() / is_simulation_member()) and reintroduces the
+-- overlapping "Members manage …" policies that the consolidation removed.
+--
+-- Kept only as a record of the 2026-07-22 incident. If grants break again,
+-- re-run the consolidation migration instead.
+-- ============================================================
+
+-- ============================================================
 -- ONE-SHOT REPAIR — run in Supabase Dashboard → SQL Editor
 -- Project: gkyhqnjgwxlyzptpiiob
 --

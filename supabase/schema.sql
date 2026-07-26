@@ -3,6 +3,16 @@
 -- Run this in your Supabase project's SQL editor once.
 -- Project: chronoslab.space
 -- ============================================================
+--
+-- NOTE: table definitions here are current, but the RLS policy and GRANT
+-- sections at the bottom of this file are a historical snapshot. Authority
+-- for those now lives in:
+--   migrations/20260726120000_consolidate_workspace_rls.sql  (workspace tables)
+--   migrations/20260726120500_security_hardening.sql         (everything else)
+-- Bootstrapping a fresh project? Run the migrations, not this file's
+-- policy/grant sections, or you will reintroduce the retired
+-- owner-only policies and the over-broad anon grants.
+-- ============================================================
 
 -- Enable required extensions
 create extension if not exists "pgcrypto";
