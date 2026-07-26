@@ -811,22 +811,34 @@ export class SimulationEngine {
         violations.push(`Hard constraint violated: ${c.text}`);
       }
 
-      if (
-        /(budget|runway|cash|capital)/i.test(ct) &&
-        isAggressivePath(path) &&
-        (signals.runwayMonths != null ? signals.runwayMonths < 10 : true)
-      ) {
-        // If user named a runway floor, enforce burn vs runway
-        if (/(12|twelve)\s*month/i.test(ct) && path.burn > 0) {
-          const impliedRunway =
-            signals.mrr != null && signals.mrr > 0
-              ? // rough cash proxy: treat mrr*runway as buffer; high burn paths need more
-                (signals.runwayMonths ?? 12) * (signals.mrr / path.burn)
-              : (signals.runwayMonths ?? 12);
-          if (impliedRunway < 10 || path.burn > 100000) {
-            violations.push(`Hard constraint violated: ${c.text} (path burn too high)`);
+      if (/(budget|runway|cash|capital)/i.test(ct) && isAggressivePath(path)) {
+        // Runway math uses real dimensions only: cash ≈ current runway ×
+        // current burn, and months-a-path-sustains = cash / path burn.
+        // Applies regardless of how much runway remains — a stated floor
+        // is a stated floor. When cash cannot be derived, this is NEVER a
+        // hard kill: evaluatePath applies a soft penalty instead.
+        const floorMatch =
+          ct.match(/(\d+)\s*[- ]?month/) ?? (/twelve\s*[- ]?month/.test(ct) ? [ct, "12"] : null);
+        const floorMonths = floorMatch ? Number(floorMatch[1]) : null;
+        const { runwayMonths, burnMonthly } = signals;
+        if (
+          floorMonths != null &&
+          runwayMonths != null &&
+          burnMonthly != null &&
+          burnMonthly > 0 &&
+          path.burn > 0
+        ) {
+          const cashOnHand = runwayMonths * burnMonthly;
+          const impliedMonths = cashOnHand / path.burn;
+          // Only paths that burn faster than today can violate the floor —
+          // the constraint must not nuke capital-efficient alternatives.
+          if (impliedMonths < floorMonths && path.burn > burnMonthly) {
+            violations.push(
+              `Hard constraint violated: ${c.text} (path burn cannot sustain the stated runway floor)`
+            );
           }
-        } else if (isAggressivePath(path) && /must|keep|require/i.test(ct)) {
+        } else if (runwayMonths != null && burnMonthly != null && /must|keep|require/i.test(ct)) {
+          // Imperative budget constraint without a parsable floor, cash known.
           violations.push(`Hard constraint violated: ${c.text}`);
         }
       }
@@ -963,6 +975,20 @@ export class SimulationEngine {
       if (/(compliance|hipaa|soc\s*2|security)/i.test(ct) && isAggressivePath(path)) {
         score = clamp01(score - 0.05);
       }
+    }
+
+    // Hard budget constraints whose cash math is unverifiable (runway or
+    // burn unknown) demote to a score penalty on aggressive paths — never
+    // a fantasy-math disqualification.
+    if (
+      (signals.runwayMonths == null || signals.burnMonthly == null) &&
+      isAggressivePath(path) &&
+      input.constraints.some(
+        (c) => c.kind === "hard" && /(budget|runway|cash|capital)/i.test(c.text)
+      )
+    ) {
+      score = clamp01(score - 0.06);
+      risk = clamp01(risk + 0.03);
     }
 
     // Knowledge title overlap small boost (exclude learning dual-write noise)

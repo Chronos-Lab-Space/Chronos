@@ -113,6 +113,47 @@ describe("beta sanity: SimulationEngine invariants", () => {
     expect(clinical?.score ?? 0).toBeGreaterThan(0);
   });
 
+  it("never hard-disqualifies on runway math it cannot verify", () => {
+    // Burn is unknown, so cash on hand is unknowable — the old formula
+    // multiplied months by an MRR/burn ratio and hard-killed high-burn paths.
+    const out = engine.run({
+      ...input("Expand our B2B SaaS. 8 months runway, $40k MRR"),
+      constraints: [{ id: "c0", text: "12 month runway floor", kind: "hard" }],
+    });
+    expect(out.futures.every((f) => f.score > 0)).toBe(true);
+  });
+
+  it("softly penalizes aggressive paths for unverifiable runway constraints", () => {
+    const base = input("Expand our B2B SaaS into enterprise accounts");
+    const without = engine.run(base);
+    const withConstraint = engine.run({
+      ...base,
+      constraints: [{ id: "c0", text: "12 month runway floor", kind: "hard" }],
+    });
+    const pick = (out: typeof without) => out.futures.find((f) => /top-down/i.test(f.name));
+    const before = pick(without);
+    const after = pick(withConstraint);
+    expect(before).toBeDefined();
+    expect(after).toBeDefined();
+    expect(after?.score ?? 0).toBeGreaterThan(0);
+    expect(after?.score ?? 0).toBeLessThan(before?.score ?? 0);
+  });
+
+  it("enforces a stated runway floor with real cash math, even at 10+ months runway", () => {
+    // Old code skipped enforcement entirely when parsed runway was >= 10.
+    // Cash = 10mo × $20k = $200k; an aggressive path burning far above the
+    // current $20k cannot sustain the stated 12-month floor.
+    const out = engine.run({
+      ...input("Scale our B2B SaaS. 10 months runway, burn: $20k monthly, $30k MRR"),
+      constraints: [{ id: "c0", text: "must keep 12 months of runway", kind: "hard" }],
+    });
+    const infeasible = out.futures.filter((f) => f.score === 0);
+    expect(infeasible.length).toBeGreaterThanOrEqual(1);
+    // The floor must not nuke the whole catalog — capital-efficient paths survive.
+    expect(out.futures.filter((f) => f.score > 0).length).toBeGreaterThanOrEqual(1);
+    expect(out.best.score).toBeGreaterThan(0);
+  });
+
   it("fails cleanly on empty objective and survives adversarial input", () => {
     const empty = engine.run(input("   "));
     expect(empty.tasks.some((t) => t.status === "failed")).toBe(true);

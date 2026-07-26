@@ -65,6 +65,13 @@ function emptyRelations(): Pick<WorkspaceHome, "futuresBySimulation" | "timeline
   return { futuresBySimulation: {}, timelineBySimulation: {} };
 }
 
+/**
+ * Whole-workspace dual-writes grow with history; cap retained simulations so
+ * localStorage quota and cloud upsert latency stay bounded during beta.
+ * Oldest simulations (and their futures/timeline relations) fall off first.
+ */
+export const MAX_RETAINED_SIMULATIONS = 40;
+
 export type WorkspaceServiceOptions = {
   local?: LocalWorkspaceStore;
   /** Pass null to disable remote (unit tests). */
@@ -943,15 +950,31 @@ export class WorkspaceService {
         description: home.workspace.description ?? "",
       },
     });
-    return {
-      ...repaired,
-      recentSimulations: (repaired.recentSimulations ?? []).map((sim) => ({
+    const recentSimulations = (repaired.recentSimulations ?? [])
+      .map((sim) => ({
         ...sim,
         version: sim.version ?? 1,
         lineage_id: sim.lineage_id || sim.id,
         parent_simulation_id: sim.parent_simulation_id ?? null,
         result: sim.result ?? {},
-      })),
+      }))
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, MAX_RETAINED_SIMULATIONS);
+
+    // Prune relation maps to retained simulations (also drops orphans).
+    const keptIds = new Set(recentSimulations.map((sim) => sim.id));
+    const futuresBySimulation = Object.fromEntries(
+      Object.entries(repaired.futuresBySimulation ?? {}).filter(([id]) => keptIds.has(id))
+    );
+    const timelineBySimulation = Object.fromEntries(
+      Object.entries(repaired.timelineBySimulation ?? {}).filter(([id]) => keptIds.has(id))
+    );
+
+    return {
+      ...repaired,
+      recentSimulations,
+      futuresBySimulation,
+      timelineBySimulation,
     };
   }
 }
