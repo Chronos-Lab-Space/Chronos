@@ -1,7 +1,71 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventBus, runtime } from "../../core/runtime";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
-import { WorkspaceService } from "./WorkspaceService";
+import { MAX_RETAINED_SIMULATIONS, WorkspaceService } from "./WorkspaceService";
+
+describe("workspace payload bounds", () => {
+  const ownerId = "user-cap-1";
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("caps retained simulations and prunes orphaned relations on load", async () => {
+    const store = new LocalWorkspaceStore();
+    const service = new WorkspaceService({ local: store, remote: null });
+    const created = await service.createWorkspace(ownerId, "Cap Lab", "");
+
+    const total = MAX_RETAINED_SIMULATIONS + 5;
+    const sims = Array.from({ length: total }, (_, i) => ({
+      id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+      workspace_id: created.workspace.id,
+      goal_id: null,
+      title: `Sim ${i}`,
+      status: "completed" as const,
+      confidence: 0.5,
+      result: {},
+      created_at: new Date(Date.UTC(2026, 0, 1) + i * 60_000).toISOString(),
+      version: 1,
+      lineage_id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+      parent_simulation_id: null,
+    }));
+    const futuresBySimulation = Object.fromEntries(
+      sims.map((s) => [
+        s.id,
+        [
+          {
+            id: `${s.id.slice(0, -1)}f`,
+            simulation_id: s.id,
+            name: "F",
+            score: 0.5,
+            risk: 0.3,
+            confidence: 0.5,
+            summary: "s",
+          },
+        ],
+      ])
+    );
+    // Orphaned relation: no matching simulation record
+    futuresBySimulation["99999999-9999-4999-8999-999999999999"] = [];
+
+    store.save(ownerId, {
+      ...created,
+      // newest-last on purpose: the cap must keep the NEWEST records
+      recentSimulations: sims,
+      futuresBySimulation,
+    });
+
+    const loaded = await service.load(ownerId);
+    expect(loaded?.recentSimulations).toHaveLength(MAX_RETAINED_SIMULATIONS);
+    // Newest survive (highest created_at → the last `total` minus cap dropped)
+    expect(loaded?.recentSimulations.some((s) => s.title === `Sim ${total - 1}`)).toBe(true);
+    expect(loaded?.recentSimulations.some((s) => s.title === "Sim 0")).toBe(false);
+    const keptIds = new Set(loaded?.recentSimulations.map((s) => s.id));
+    for (const key of Object.keys(loaded?.futuresBySimulation ?? {})) {
+      expect(keptIds.has(key)).toBe(true);
+    }
+  });
+});
 
 describe("decision ranking consistency", () => {
   const ownerId = "user-rank-1";
