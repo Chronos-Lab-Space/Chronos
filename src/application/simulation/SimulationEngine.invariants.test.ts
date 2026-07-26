@@ -21,7 +21,9 @@ describe("beta sanity: SimulationEngine invariants", () => {
   const engine = new SimulationEngine();
 
   it("produces ranked futures with sane bounds", () => {
-    const out = engine.run(input("Should we launch the public beta with a small team? 12 months runway, $8k MRR"));
+    const out = engine.run(
+      input("Should we launch the public beta with a small team? 12 months runway, $8k MRR")
+    );
     expect(out.futures.length).toBeGreaterThanOrEqual(3);
     expect(out.best.id).toBe(out.futures[0].id);
     for (const f of out.futures) {
@@ -72,6 +74,43 @@ describe("beta sanity: SimulationEngine invariants", () => {
     );
     expect(a.recommendation).toBe(b.recommendation);
     expect(a.confidence).toBe(b.confidence);
+  });
+
+  it("keeps bootstrap-friendly paths eligible under a hard bootstrap constraint", () => {
+    const out = engine.run({
+      ...input("How should we grow our B2B SaaS to $50k MRR?"),
+      constraints: [{ id: "c0", text: "No raise, must bootstrap", kind: "hard" }],
+    });
+    const byName = (re: RegExp) => out.futures.find((f) => re.test(f.name));
+    const wedge = byName(/bootstrap wedge/i);
+    const bottomUp = byName(/bottom-up/i);
+    const topDown = byName(/top-down/i);
+    // The paths that SATISFY the constraint must stay eligible…
+    expect(wedge?.score ?? 0).toBeGreaterThan(0);
+    expect(bottomUp?.score ?? 0).toBeGreaterThan(0);
+    // …while genuinely raise-heavy paths are the ones disqualified.
+    if (topDown) expect(topDown.score).toBe(0);
+    expect(out.disqualifiedCount).toBeLessThan(out.futures.length - 1);
+  });
+
+  it("does not kill a growth objective under a bootstrap constraint", () => {
+    const out = engine.run({
+      ...input("Aggressively scale our product and win the market this year"),
+      constraints: [{ id: "c0", text: "No raise, must bootstrap", kind: "hard" }],
+    });
+    expect(out.futures.some((f) => f.score > 0)).toBe(true);
+    expect(out.confidence).toBeGreaterThan(0);
+    expect(out.recommendation.toLowerCase()).not.toContain("violated hard constraints");
+  });
+
+  it("does not disqualify the compliance-ready health path under a HIPAA constraint", () => {
+    const out = engine.run({
+      ...input("Patient documentation platform for medical clinics"),
+      constraints: [{ id: "c0", text: "Must be HIPAA compliant from day one", kind: "hard" }],
+    });
+    const clinical = out.futures.find((f) => /clinical/i.test(f.name));
+    // The health archetype's own milestones include "HIPAA + SOC 2".
+    expect(clinical?.score ?? 0).toBeGreaterThan(0);
   });
 
   it("fails cleanly on empty objective and survives adversarial input", () => {

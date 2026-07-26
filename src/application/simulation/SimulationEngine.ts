@@ -212,19 +212,41 @@ function pathText(path: Path): string {
   return `${path.name} ${path.thesis} ${path.highlights.join(" ")} ${path.risks.join(" ")}`.toLowerCase();
 }
 
-function isRaiseHeavyPath(path: Path): boolean {
-  return /(fund|raise|series|venture|dilution|enterprise\s+sales|top-down)/i.test(pathText(path));
-}
-
-function isAggressivePath(path: Path): boolean {
-  return (
-    /(aggressive|scale|blitz|subsid|capital-intensive|top-down)/i.test(pathText(path)) ||
-    path.burn > 90000
-  );
+/**
+ * Text used for POLICY classification. Deliberately excludes `risks`:
+ * risks describe what could go wrong on a path, so matching policy words
+ * there inverts meaning — a bottom-up path whose risk is "Slow enterprise
+ * sales" is not an enterprise-sales path.
+ */
+function policyText(path: Path): string {
+  return `${path.name} ${path.thesis} ${path.highlights.join(" ")}`.toLowerCase();
 }
 
 function isConservativePath(path: Path): boolean {
-  return /(conserv|hold|bootstrap|bottom-up|wedge|hunker|extend\s+runway)/i.test(pathText(path));
+  return /(conserv|hold|bootstrap|bottom-up|wedge|hunker|extend\s+runway|no\s+dilution|runway-first)/i.test(
+    policyText(path)
+  );
+}
+
+function isRaiseHeavyPath(path: Path): boolean {
+  // A capital-efficient path is never raise-heavy, even when its thesis
+  // mentions raising in the negative ("extend runway without a raise").
+  if (isConservativePath(path)) return false;
+  const text = policyText(path).replace(
+    /without\s+(a\s+)?raise|no\s+(raise|dilution|funding)/g,
+    ""
+  );
+  return /(fund|raise|series|venture|dilution|enterprise\s+sales|top-down)/i.test(text);
+}
+
+function isAggressivePath(path: Path): boolean {
+  // Bare /scale/ over-matches ("Scale through practices"); require an
+  // aggressive context around it.
+  return (
+    /(aggressive|blitz|subsid|capital-intensive|top-down|scale\s+(fast|hard|aggressively|quickly)|hire\s+ahead)/i.test(
+      policyText(path)
+    ) || path.burn > 90000
+  );
 }
 
 /** True when the port (or router default) cannot produce model text. */
@@ -781,7 +803,11 @@ export class SimulationEngine {
     for (const c of constraints.filter((x) => x.kind === "hard")) {
       const ct = c.text.toLowerCase();
 
-      if (/(no\s+raise|bootstrap|no\s+funding|no\s+seed)/i.test(ct) && isRaiseHeavyPath(path)) {
+      if (
+        /(no\s+raise|bootstrap|no\s+funding|no\s+seed)/i.test(ct) &&
+        isRaiseHeavyPath(path) &&
+        !isConservativePath(path)
+      ) {
         violations.push(`Hard constraint violated: ${c.text}`);
       }
 
@@ -805,10 +831,15 @@ export class SimulationEngine {
         }
       }
 
+      // Compliance evidence often lives in milestones ("HIPAA + SOC 2"),
+      // which pathText() excludes — include them before disqualifying.
+      const complianceEvidence = `${text} ${path.milestones
+        .map((m) => `${m.title} ${m.description}`)
+        .join(" ")}`.toLowerCase();
       if (
         /(compliance|hipaa|security|legal|soc\s*2|gdpr)/i.test(ct) &&
         isAggressivePath(path) &&
-        !/(compliance|trust|hipaa|soc)/i.test(text)
+        !/(compliance|trust|hipaa|soc)/i.test(complianceEvidence)
       ) {
         violations.push(
           `Hard constraint violated: ${c.text} (aggressive path skips compliance sequencing)`
