@@ -20,7 +20,15 @@ revoke all on function public.ensure_workspace_owner_membership()   from public,
 revoke all on function public.handle_new_user()                     from public, anon, authenticated;
 revoke all on function public.refresh_updated_at()                  from public, anon, authenticated;
 revoke all on function public.refresh_updated_at_if_column_exists() from public, anon, authenticated;
-revoke all on function public.rls_auto_enable()                     from public, anon, authenticated;
+
+-- rls_auto_enable exists only on the hosted project (created directly,
+-- not by any repo migration) — guard so fresh local replays don't fail.
+do $$
+begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    revoke all on function public.rls_auto_enable() from public, anon, authenticated;
+  end if;
+end $$;
 
 -- RLS helper predicates: authenticated only.
 revoke all on function public.is_workspace_member(uuid)  from public, anon;
