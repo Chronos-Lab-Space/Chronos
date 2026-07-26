@@ -29,6 +29,7 @@ const mobilePrimary = [
 const mobileSecondary = [{ to: "/workspace/timeline", label: "Timeline", icon: "▤" }] as const;
 
 const moreMenuItems: NavItem[] = [
+  { to: "/workspace/decision", label: "Decision Brief", short: "Brief", icon: "≡" },
   { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
   { to: "/workspace/memory", label: "Memory", short: "Mem", icon: "▣" },
   { to: "/workspace/settings", label: "Settings", short: "Set", icon: "⚙" },
