@@ -225,9 +225,7 @@ export function buildSavePayload(home: WorkspaceHome): Record<string, unknown> {
   const w = home.workspace;
   const sims = orderSimulationsForUpsert(home.recentSimulations);
 
-  const futures = home.recentSimulations.flatMap(
-    (sim) => home.futuresBySimulation[sim.id] ?? []
-  );
+  const futures = home.recentSimulations.flatMap((sim) => home.futuresBySimulation[sim.id] ?? []);
   const timelineNodes = orderTimelineNodesForUpsert(
     home.recentSimulations.flatMap((sim) => home.timelineBySimulation[sim.id] ?? [])
   );

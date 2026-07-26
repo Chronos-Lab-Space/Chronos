@@ -93,11 +93,7 @@ describe("buildSavePayload", () => {
     const payload = buildSavePayload(home()) as Record<string, { id: string }[]>;
 
     expect(payload.futures.map((f) => f.id).sort()).toEqual(["f-child", "f-parent"]);
-    expect(payload.timeline_nodes.map((n) => n.id).sort()).toEqual([
-      "t-c0",
-      "t-p0",
-      "t-p1",
-    ]);
+    expect(payload.timeline_nodes.map((n) => n.id).sort()).toEqual(["t-c0", "t-p0", "t-p1"]);
   });
 
   it("orders simulations parents-first and timeline nodes shallowest-first", () => {
@@ -105,9 +101,7 @@ describe("buildSavePayload", () => {
 
     expect(payload.simulations.map((s) => s.id)).toEqual(["s-parent", "s-child"]);
 
-    const depths = (payload.timeline_nodes as unknown as TimelineNodeRecord[]).map(
-      (n) => n.depth
-    );
+    const depths = (payload.timeline_nodes as unknown as TimelineNodeRecord[]).map((n) => n.depth);
     expect(depths).toEqual([...depths].sort((a, b) => a - b));
   });
 
