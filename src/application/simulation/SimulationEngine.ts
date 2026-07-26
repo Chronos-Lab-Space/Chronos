@@ -147,27 +147,28 @@ export function extractDecisionSignals(
     /(\d+(?:\.\d+)?)\s*mo(?:nth)?s?\s+runway/,
   ]);
 
-  const mrr = parseNumberNear(corpus, [
+  // k-denominated patterns first: if one matches, the value is in thousands.
+  // Anchoring the "k" to the captured number avoids inflating "$500 MRR"
+  // when an unrelated "80k" sits elsewhere in the corpus.
+  const mrrK = parseNumberNear(corpus, [
     /\$?\s*(\d+(?:\.\d+)?)\s*k\s*mrr/,
     /mrr[:\s]+\$?\s*(\d+(?:\.\d+)?)\s*k/,
-    /\$?\s*(\d+(?:\.\d+)?)\s*(?:k\s+)?mrr/,
+  ]);
+  const mrrRaw = parseNumberNear(corpus, [
+    /\$?\s*(\d+(?:\.\d+)?)\s*mrr/,
     /mrr[:\s]+\$?\s*(\d{2,})/,
   ]);
-  // Normalize "40k MRR" style (already k) vs raw dollars
-  let mrrNorm = mrr;
-  if (mrrNorm != null && mrrNorm < 1000 && /k\s*mrr|mrr.*k\b/.test(corpus)) {
-    mrrNorm = mrrNorm * 1000;
-  }
+  const mrrNorm = mrrK != null ? mrrK * 1000 : mrrRaw;
 
-  const burnMonthly = parseNumberNear(corpus, [
+  const burnK = parseNumberNear(corpus, [
     /burn[:\s]+\$?\s*(\d+(?:\.\d+)?)\s*k/,
     /\$?\s*(\d+(?:\.\d+)?)\s*k\s*(?:\/\s*mo(?:nth)?|per\s+month)?\s*burn/,
-    /monthly\s+burn[:\s]+\$?\s*(\d+(?:\.\d+)?)/,
   ]);
-  let burnNorm = burnMonthly;
-  if (burnNorm != null && burnNorm < 1000 && /k.*burn|burn.*k\b/.test(corpus)) {
-    burnNorm = burnNorm * 1000;
-  }
+  const burnRaw = parseNumberNear(corpus, [
+    /monthly\s+burn[:\s]+\$?\s*(\d+(?:\.\d+)?)/,
+    /burn[:\s]+\$?\s*(\d{3,})/,
+  ]);
+  const burnNorm = burnK != null ? burnK * 1000 : burnRaw;
 
   const raiseForbidden =
     constraints.some(
@@ -181,9 +182,14 @@ export function extractDecisionSignals(
     constraints.some((c) => /bootstrap|self[- ]fund/i.test(c.text)) ||
     /bootstrap|self[- ]fund/i.test(corpus);
 
+  // A question ("Should we raise…?") states no intent — only a declarative
+  // objective or an explicit soft constraint counts as a raise preference.
+  const objectiveIsQuestion =
+    /\?/.test(objective) ||
+    /^\s*(should|shall|do|does|is|are|can|could|would|which|what|whether)\b/i.test(objective);
   const raisePreferred =
     !raiseForbidden &&
-    (/(raise|seed|series\s*[abc]|fundraise)/i.test(objective) ||
+    ((!objectiveIsQuestion && /(raise|seed|series\s*[abc]|fundraise)/i.test(objective)) ||
       constraints.some((c) => /raise|fund/i.test(c.text) && c.kind === "soft"));
 
   const complianceHeavy =

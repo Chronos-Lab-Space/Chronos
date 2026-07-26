@@ -334,24 +334,39 @@ export function evaluate(engine: Engine): Engine {
 // ---- Collapse ----
 // Selects the winning branch by strategy, prunes the rest, commits world state.
 
-function selectWinner(scored: readonly Branch[], strategy: CollapseStrategy): Branch {
+/**
+ * Deterministic winner selection. Every strategy breaks ties on actionId so
+ * the same evaluated branch set always collapses to the same path.
+ */
+export function selectWinner(scored: readonly Branch[], strategy: CollapseStrategy): Branch {
+  const tieBreak = (a: Branch, b: Branch) => (a.actionId.localeCompare(b.actionId) <= 0 ? a : b);
+
   if (strategy === "min-risk") {
-    return scored.reduce((best, b) => (b.risk < best.risk ? b : best));
-  }
-  if (strategy === "balanced") {
     return scored.reduce((best, b) => {
-      const bScore = (b.reward ?? 0) - (b.risk ?? 0) / 2;
-      const bestScore = (best.reward ?? 0) - (best.risk ?? 0) / 2;
-      return bScore > bestScore ? b : best;
+      if (b.risk < best.risk) return b;
+      if (b.risk > best.risk) return best;
+      return tieBreak(best, b);
     });
   }
-  // max-utility (default): highest evaluated score; stable tie-break on action id
+  if (strategy === "balanced") {
+    // Balance the engine's holistic evaluated score against risk — not raw
+    // reward, which ignores everything evaluate() weighed in.
+    const balanced = (b: Branch) => (b.score ?? 0) - (b.risk ?? 0) / 2;
+    return scored.reduce((best, b) => {
+      const bb = balanced(b);
+      const bestb = balanced(best);
+      if (bb > bestb) return b;
+      if (bb < bestb) return best;
+      return tieBreak(best, b);
+    });
+  }
+  // max-utility (default): highest evaluated score.
   return scored.reduce((best, b) => {
     const bs = b.score ?? 0;
     const bests = best.score ?? 0;
     if (bs > bests) return b;
     if (bs < bests) return best;
-    return b.actionId.localeCompare(best.actionId) < 0 ? b : best;
+    return tieBreak(best, b);
   });
 }
 
