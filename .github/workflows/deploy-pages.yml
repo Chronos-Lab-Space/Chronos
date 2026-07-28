@@ -48,6 +48,7 @@ jobs:
           SECRET_SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SECRET_SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SECRET_SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SECRET_SENTRY_URL: ${{ secrets.SENTRY_URL }}
           VITE_SENTRY_RELEASE: ${{ github.sha }}
         run: |
           if [ -n "$SECRET_SUPABASE_URL" ]; then
@@ -72,7 +73,9 @@ jobs:
             export SENTRY_AUTH_TOKEN="$SECRET_SENTRY_AUTH_TOKEN"
             export SENTRY_ORG="$SECRET_SENTRY_ORG"
             export SENTRY_PROJECT="$SECRET_SENTRY_PROJECT"
-            echo "Sentry source-map upload enabled (org=$SENTRY_ORG project=$SENTRY_PROJECT release=$VITE_SENTRY_RELEASE)"
+            # US data residency (ingest.us.sentry.io). Override with secret SENTRY_URL if needed.
+            export SENTRY_URL="${SECRET_SENTRY_URL:-https://us.sentry.io}"
+            echo "Sentry source-map upload enabled (url=$SENTRY_URL org=$SENTRY_ORG project=$SENTRY_PROJECT release=$VITE_SENTRY_RELEASE)"
           else
             echo "::notice::Sentry upload skipped — set SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT for readable stack traces"
           fi
