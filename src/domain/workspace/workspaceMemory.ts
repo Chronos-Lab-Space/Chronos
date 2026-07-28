@@ -2,6 +2,7 @@
  * Persistent memory helpers — leave and come back to goals, sims,
  * decision history, knowledge, and past outcomes.
  */
+import { summarizeSimulationGraph } from "./decisionGraph";
 import type { GoalRecord, OutcomeFollowed, SimulationRecord, WorkspaceHome } from "./types";
 
 export type PendingDecision = {
@@ -22,6 +23,10 @@ export type DecisionHistoryItem = {
   followed: OutcomeFollowed | null;
   outcomeResult: string | null;
   href: string;
+  /** Open → N branches → collapsed (decision graph stamp). */
+  graphSummary: string;
+  /** rebranch_from_open | collapse | … when stamped on the run */
+  graphOp: string | null;
 };
 
 export type ActivityItem = {
@@ -120,6 +125,8 @@ export function listDecisionHistory(home: WorkspaceHome): DecisionHistoryItem[] 
       outcomeResult:
         typeof sim.result.outcome_result === "string" ? sim.result.outcome_result : null,
       href: `/workspace/simulations/${sim.id}`,
+      graphSummary: summarizeSimulationGraph(sim),
+      graphOp: typeof sim.result.graph_op === "string" ? sim.result.graph_op : null,
     });
   }
   return items.sort((a, b) => b.chosenAt.localeCompare(a.chosenAt));

@@ -12,6 +12,28 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.8.2",
+    date: "2026-07-28",
+    tag: "patch",
+    title: "Decision graph polish: compare · Memory stamps · collapse",
+    summary:
+      "The graph panel now side-by-sides branches with score bars, rank, and deltas vs best. Choosing a path stamps graph_shape collapsed. Memory decision history and simulation lineages show Open → N branches → collapsed structure lines so the graph survives after you leave the sim page.",
+    highlights: [
+      {
+        label: "Compare",
+        detail: "Branch cards: rank, summary, score bar, score/risk delta vs recommended",
+      },
+      {
+        label: "Collapse stamp",
+        detail: "chooseBestPath sets graph_shape collapsed + N2 active node",
+      },
+      {
+        label: "Memory",
+        detail: "graphSummary on decision history + lineage cards; E2E covers panel + collapse",
+      },
+    ],
+  },
+  {
     version: "5.8.1",
     date: "2026-07-28",
     tag: "patch",

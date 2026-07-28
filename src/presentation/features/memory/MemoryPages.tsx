@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { compareSimulations, groupByLineage, versionLabel } from "../../../domain/workspace/memory";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
+import { summarizeSimulationGraph } from "../../../domain/workspace/decisionGraph";
 import { listDecisionHistory } from "../../../domain/workspace/workspaceMemory";
 import { learningMemoryStore } from "../../../infrastructure/memory/LearningMemoryStore";
 import { useWorkspace } from "../workspace/WorkspaceContext";
@@ -147,6 +148,12 @@ export function MemoryPage() {
                         {d.title}
                       </div>
                       <div className="mt-1 font-serif text-xl text-ink">{d.pathName}</div>
+                      <div
+                        className="mt-1.5 font-mono text-[11px] text-chronos/90"
+                        data-testid="memory-graph-summary"
+                      >
+                        {d.graphSummary}
+                      </div>
                     </div>
                     <div className="text-right font-mono text-[11px] text-ink-faint">
                       <div>{formatCreatedAt(d.chosenAt)}</div>
@@ -163,6 +170,16 @@ export function MemoryPage() {
                     ) : (
                       <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase text-ink-faint">
                         Outcome pending
+                      </span>
+                    )}
+                    {d.graphOp === "rebranch_from_open" && (
+                      <span className="rounded-full border border-chronos/30 px-2.5 py-0.5 font-mono text-[10px] uppercase text-chronos">
+                        Re-branched
+                      </span>
+                    )}
+                    {d.graphOp === "collapse" && (
+                      <span className="rounded-full border border-line px-2.5 py-0.5 font-mono text-[10px] uppercase text-ink-faint">
+                        Collapsed
                       </span>
                     )}
                     {d.outcomeResult && <span className="text-ink-dim">{d.outcomeResult}</span>}
@@ -226,6 +243,9 @@ export function MemoryPage() {
                       Latest {versionLabel(line.latest)} ·{" "}
                       {confidencePercent(line.latest.confidence)} ·{" "}
                       {formatCreatedAt(line.latest.created_at)}
+                    </p>
+                    <p className="mt-1 font-mono text-[11px] text-chronos/80">
+                      {summarizeSimulationGraph(line.latest)}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
