@@ -2,10 +2,12 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
+import { buildDecisionGraph } from "../../../domain/workspace/decisionGraph";
 import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
 import { groupSimulationsByHistory } from "../../../domain/workspace/simulationHistory";
 import { FutureTimelineCards } from "../timeline/FutureTimelineCards";
 import { useWorkspace } from "../workspace/WorkspaceContext";
+import { DecisionGraphPanel } from "./components/DecisionGraphPanel";
 import { DecisionPipelineStrip } from "./components/DecisionPipelineStrip";
 import { DecisionReportCard } from "./components/DecisionReportCard";
 import { FutureComparison } from "./components/FutureComparison";
@@ -232,14 +234,21 @@ function SimulationHistoryList({
 }
 
 export function SimulationDetailPage() {
-  const { home, rerunSimulation, chooseBestPath, recordOutcomeFollowed, recordOutcomeResult } =
-    useWorkspace();
+  const {
+    home,
+    rerunSimulation,
+    rebranchFromOpen,
+    chooseBestPath,
+    recordOutcomeFollowed,
+    recordOutcomeResult,
+  } = useWorkspace();
   const { simulationId } = useParams();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const sim = home?.recentSimulations.find((s) => s.id === simulationId);
   const futures = simulationId ? (home?.futuresBySimulation[simulationId] ?? []) : [];
   const [rerunning, setRerunning] = useState(false);
+  const [rebranching, setRebranching] = useState(false);
   const [selectedFutureId, setSelectedFutureId] = useState<string | null>(null);
 
   const tasks = useMemo(() => {
@@ -281,12 +290,27 @@ export function SimulationDetailPage() {
     }
   };
 
+  const handleRebranch = async () => {
+    setRebranching(true);
+    try {
+      const newId = await rebranchFromOpen(sim.id);
+      setParams({});
+      if (newId) navigate(`/workspace/simulations/${newId}`);
+    } finally {
+      setRebranching(false);
+    }
+  };
+
   const wantsRerun = params.get("rerun") === "1";
   const decisionReport =
     sim.status === "completed" ? buildDecisionReport(home, sim, futures) : null;
   const chosenId =
     typeof sim.result.chosen_future_id === "string" ? sim.result.chosen_future_id : null;
   const activeFutureId = selectedFutureId ?? chosenId ?? futures[0]?.id ?? null;
+  const decisionGraph =
+    sim.status === "completed" && futures.length > 0
+      ? buildDecisionGraph(sim, futures)
+      : null;
 
   return (
     <div className="space-y-10">
@@ -296,7 +320,8 @@ export function SimulationDetailPage() {
         </div>
         <h1 className="mt-2 font-serif text-3xl text-ink">{sim.title}</h1>
         <p className="mt-2 max-w-2xl text-sm text-ink-dim">
-          Simulation → decision report (keepable artifact) → save a path → log the outcome.
+          Decision graph: open → branches → compare → collapse. Re-branch from open to explore
+          again without losing prior branches in Memory.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <StatusPill status={sim.status} />
@@ -312,9 +337,17 @@ export function SimulationDetailPage() {
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             type="button"
+            onClick={handleRebranch}
+            disabled={rebranching || sim.status !== "completed"}
+            className="rounded-full bg-ink px-4 py-2 text-sm text-bg transition hover:bg-chronos disabled:opacity-50"
+          >
+            {rebranching ? "Re-branching…" : "Re-branch from open"}
+          </button>
+          <button
+            type="button"
             onClick={handleRerun}
             disabled={rerunning}
-            className="rounded-full bg-ink px-4 py-2 text-sm text-bg transition hover:bg-chronos disabled:opacity-50"
+            className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-chronos/50 hover:text-chronos disabled:opacity-50"
           >
             {rerunning ? "Re-running…" : "Re-run"}
           </button>
@@ -331,6 +364,12 @@ export function SimulationDetailPage() {
             className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-chronos/50 hover:text-chronos"
           >
             Timeline
+          </Link>
+          <Link
+            to="/workspace/memory"
+            className="rounded-full border border-line px-4 py-2 text-sm text-ink hover:border-chronos/50 hover:text-chronos"
+          >
+            Memory
           </Link>
         </div>
 
@@ -370,6 +409,17 @@ export function SimulationDetailPage() {
         chosenFutureId={chosenId}
         replay={sim.status === "completed"}
       />
+
+      {/* Decision graph MVP: open → branches → collapse · re-branch */}
+      {decisionGraph && (
+        <DecisionGraphPanel
+          graph={decisionGraph}
+          selectedFutureId={activeFutureId}
+          onSelectBranch={setSelectedFutureId}
+          onRebranch={() => void handleRebranch()}
+          rebranching={rebranching}
+        />
+      )}
 
       {/* Decision report — product contract layout */}
       {decisionReport && (

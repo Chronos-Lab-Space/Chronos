@@ -674,6 +674,10 @@ export class WorkspaceService {
         paths_evaluated: output.pathsEvaluated,
         path_archetypes: output.pathArchetypes,
         disqualified_count: output.disqualifiedCount,
+        // Decision graph MVP: open + peer branches (collapse happens on chooseBestPath)
+        graph_shape: "open_branches",
+        graph_active_node: "n0-open",
+        graph_branch_ids: output.futures.map((f) => f.id),
       },
       created_at: createdAt,
       version,
@@ -750,8 +754,55 @@ export class WorkspaceService {
   }
 
   /**
+   * Decision-graph rollback: stand at N0 Open again and generate a new set of
+   * peer branches (next lineage version). Prior branches stay in Memory.
+   */
+  async rebranchFromOpen(
+    ownerId: string,
+    parentSimulationId: string,
+    constraintLines?: string[]
+  ): Promise<WorkspaceHome> {
+    const home = await this.require(ownerId);
+    const parent = home.recentSimulations.find((s) => s.id === parentSimulationId);
+    if (!parent) throw new Error("Simulation not found in memory.");
+    // Mark parent so UI/history can show the graph op
+    const stamped: SimulationRecord = {
+      ...parent,
+      result: {
+        ...parent.result,
+        graph_active_node: "n0-open",
+        graph_last_op: "rollback_to_open",
+      },
+    };
+    await this.persist(ownerId, {
+      ...home,
+      recentSimulations: home.recentSimulations.map((s) =>
+        s.id === parentSimulationId ? stamped : s
+      ),
+    });
+    const next = await this.rerunSimulation(ownerId, parentSimulationId, constraintLines);
+    // Tag the new sim as a re-branch
+    const head = next.recentSimulations[0];
+    if (!head) return next;
+    const tagged: SimulationRecord = {
+      ...head,
+      result: {
+        ...head.result,
+        graph_op: "rebranch_from_open",
+        graph_from_simulation_id: parentSimulationId,
+        graph_active_node: "n0-open",
+      },
+    };
+    return this.persist(ownerId, {
+      ...next,
+      recentSimulations: next.recentSimulations.map((s) => (s.id === head.id ? tagged : s)),
+    });
+  }
+
+  /**
    * Product loop close: user chooses a future path and saves the decision.
    * Persists chosen_future_* on the simulation and logs a decision note.
+   * Graph: branch → collapse (N2).
    */
   async chooseBestPath(
     ownerId: string,
@@ -776,6 +827,9 @@ export class WorkspaceService {
         chosen_at: chosenAt,
         // Keep engine ranking; user choice is explicit
         best_future: future.name,
+        graph_op: "collapse",
+        graph_active_node: "n2-collapsed",
+        graph_collapsed_future_id: future.id,
       },
     };
 
