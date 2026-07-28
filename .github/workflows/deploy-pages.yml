@@ -37,11 +37,18 @@ jobs:
 
       # Vite prefers process env over .env.production. Empty Actions secrets become
       # "" and would wipe committed public client keys — only export non-empty values.
+      #
+      # Sentry source maps (optional): set SENTRY_AUTH_TOKEN + SENTRY_ORG + SENTRY_PROJECT.
+      # Without them the build still succeeds; maps are not generated or uploaded.
       - name: Build
         env:
           SECRET_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SECRET_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           SECRET_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          SECRET_SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SECRET_SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SECRET_SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          VITE_SENTRY_RELEASE: ${{ github.sha }}
         run: |
           if [ -n "$SECRET_SUPABASE_URL" ]; then
             export VITE_SUPABASE_URL="$SECRET_SUPABASE_URL"
@@ -60,6 +67,14 @@ jobs:
             echo "Using VITE_SENTRY_DSN from Actions secrets"
           else
             echo "::notice::VITE_SENTRY_DSN secret unset — Vite will use .env.production if present"
+          fi
+          if [ -n "$SECRET_SENTRY_AUTH_TOKEN" ] && [ -n "$SECRET_SENTRY_ORG" ] && [ -n "$SECRET_SENTRY_PROJECT" ]; then
+            export SENTRY_AUTH_TOKEN="$SECRET_SENTRY_AUTH_TOKEN"
+            export SENTRY_ORG="$SECRET_SENTRY_ORG"
+            export SENTRY_PROJECT="$SECRET_SENTRY_PROJECT"
+            echo "Sentry source-map upload enabled (org=$SENTRY_ORG project=$SENTRY_PROJECT release=$VITE_SENTRY_RELEASE)"
+          else
+            echo "::notice::Sentry upload skipped — set SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT for readable stack traces"
           fi
           npm run build
 

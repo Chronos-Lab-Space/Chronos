@@ -1,12 +1,14 @@
 /**
- * Error monitoring scaffold for public beta.
+ * Error monitoring for public beta.
  *
  * - Always safe: never throws, never blocks UX
  * - When VITE_SENTRY_DSN is set, lazily loads @sentry/react
  * - Without DSN: console.error only (dev visibility)
+ * - Production builds may upload source maps via `@sentry/vite-plugin`
+ *   when SENTRY_AUTH_TOKEN + SENTRY_ORG + SENTRY_PROJECT are set at build time
  *
- * Install: npm i @sentry/react
- * Configure: VITE_SENTRY_DSN=https://...@o....ingest.sentry.io/...
+ * Runtime: VITE_SENTRY_DSN (public)
+ * Build:   SENTRY_AUTH_TOKEN (secret), SENTRY_ORG, SENTRY_PROJECT, VITE_SENTRY_RELEASE
  */
 
 type Severity = "fatal" | "error" | "warning" | "info";
@@ -50,9 +52,15 @@ export async function initErrorMonitoring(): Promise<void> {
 
   try {
     const mod = await import("@sentry/react");
+    const release =
+      typeof import.meta.env.VITE_SENTRY_RELEASE === "string" &&
+      import.meta.env.VITE_SENTRY_RELEASE.trim()
+        ? import.meta.env.VITE_SENTRY_RELEASE.trim()
+        : undefined;
     mod.init({
       dsn,
       environment: import.meta.env.MODE,
+      release,
       // Low sample rate for beta noise control; raise after launch ops stabilizes
       tracesSampleRate: 0.1,
       sendDefaultPii: false,
