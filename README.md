@@ -95,7 +95,10 @@ To point the SPA at a **hosted** project instead: copy [`.env.example`](./.env.e
 |----------|---------|
 | `VITE_SUPABASE_URL` | Supabase project URL |
 | `VITE_SUPABASE_ANON_KEY` | Supabase anon / publishable key (browser) |
-| `VITE_SENTRY_DSN` | Optional — client error monitoring (production) |
+| `VITE_SENTRY_DSN` | Optional — client error monitoring (public DSN) |
+| `VITE_SENTRY_RELEASE` | Optional — release name (CI: git SHA); matches uploaded source maps |
+| `SENTRY_AUTH_TOKEN` | Build-only secret — `@sentry/vite-plugin` source map upload |
+| `SENTRY_ORG` / `SENTRY_PROJECT` | Build-only — required with auth token for map upload |
 | `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` / `SUPABASE_SECRET_KEY` | Server / `@supabase/server` (never `VITE_` for secret) |
 
 See [`.env.example`](./.env.example).
@@ -109,6 +112,8 @@ See [`.env.example`](./.env.example).
 
 # 2) Hosting env (Vercel / GH Pages build)
 #    VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_SENTRY_DSN
+#    Optional source maps: SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT
+#    (upload via @sentry/vite-plugin; maps deleted after upload)
 
 # 3) Auth → URL config: https://chronoslab.space/auth/callback
 #    Providers: Google + GitHub enabled

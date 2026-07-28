@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",
+    "@sentry/vite-plugin": "^5.4.0",
     "@tailwindcss/vite": "4.1.17",
     "@types/node": "22.19.17",
     "@types/react": "19.2.7",

@@ -12,6 +12,8 @@ interface ImportMetaEnv {
   readonly VITE_E2E_AUTH?: string;
   /** Optional Sentry DSN for client error monitoring */
   readonly VITE_SENTRY_DSN?: string;
+  /** Optional release name (git SHA) — matches source maps uploaded by @sentry/vite-plugin */
+  readonly VITE_SENTRY_RELEASE?: string;
 
   /**
    * Platform AI provider: noop (default) | ollama | anthropic

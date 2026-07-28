@@ -1,8 +1,9 @@
 import path from "path";
 import { fileURLToPath } from "url";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig, loadEnv, type PluginOption } from "vite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +19,7 @@ const __dirname = path.dirname(__filename);
  *   <script> and inline handlers even if HTML escaping ever regresses.
  * - connect-src allows any https origin because the knowledge library
  *   imports user-supplied URLs from the browser; ws/wss pinned to Supabase
- *   realtime. http: stays blocked.
+ *   realtime. http: stays blocked. Sentry ingest is covered by https:.
  * - style attr/inline needed by React inline styles and the fonts CSS.
  * - frame-ancestors is header-only (ignored in meta); framebusting for the
  *   workspace lives in src/main.tsx.
@@ -36,7 +37,7 @@ const PRODUCTION_CSP = [
   "worker-src 'self' blob:",
 ].join("; ");
 
-function productionCsp(): Plugin {
+function productionCsp(): PluginOption {
   return {
     name: "chronos:production-csp",
     apply: "build",
@@ -65,20 +66,71 @@ function vendorChunk(id: string): string | undefined {
   return undefined;
 }
 
+function nonEmpty(value: string | undefined): string | undefined {
+  const v = value?.trim();
+  return v ? v : undefined;
+}
+
 // https://vite.dev/config/
-export default defineConfig({
-  base: "/",
-  plugins: [react(), tailwindcss(), productionCsp()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "src"),
-    },
-  },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: vendorChunk,
+export default defineConfig(({ mode }) => {
+  // loadEnv with "" prefix so we can read SENTRY_* (no VITE_ required for build secrets).
+  const env = loadEnv(mode, process.cwd(), "");
+
+  const sentryAuthToken = nonEmpty(env.SENTRY_AUTH_TOKEN ?? process.env.SENTRY_AUTH_TOKEN);
+  const sentryOrg = nonEmpty(env.SENTRY_ORG ?? process.env.SENTRY_ORG);
+  const sentryProject = nonEmpty(env.SENTRY_PROJECT ?? process.env.SENTRY_PROJECT);
+  const sentryRelease = nonEmpty(
+    env.VITE_SENTRY_RELEASE ?? process.env.VITE_SENTRY_RELEASE ?? process.env.GITHUB_SHA
+  );
+
+  const uploadSourceMaps = Boolean(sentryAuthToken && sentryOrg && sentryProject);
+
+  const plugins: PluginOption[] = [react(), tailwindcss(), productionCsp()];
+
+  // Sentry Vite plugin last — creates release + uploads maps only when fully configured.
+  // Local/CI builds without SENTRY_AUTH_TOKEN stay offline-safe (no maps published).
+  if (uploadSourceMaps) {
+    plugins.push(
+      sentryVitePlugin({
+        org: sentryOrg,
+        project: sentryProject,
+        authToken: sentryAuthToken,
+        release: sentryRelease
+          ? {
+              name: sentryRelease,
+            }
+          : undefined,
+        sourcemaps: {
+          filesToDeleteAfterUpload: ["./dist/**/*.map"],
+        },
+        // Silent when token missing is N/A — we gate the whole plugin.
+        telemetry: false,
+      })
+    );
+  }
+
+  return {
+    base: "/",
+    plugins,
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "src"),
       },
     },
-  },
+    build: {
+      // Hidden maps only when we will upload + delete them. Never ship .map on GH Pages.
+      sourcemap: uploadSourceMaps ? "hidden" : false,
+      rollupOptions: {
+        output: {
+          manualChunks: vendorChunk,
+        },
+      },
+    },
+    // Bake release into the client when provided (matches source map release).
+    define: sentryRelease
+      ? {
+          "import.meta.env.VITE_SENTRY_RELEASE": JSON.stringify(sentryRelease),
+        }
+      : undefined,
+  };
 });

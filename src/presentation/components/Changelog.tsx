@@ -12,6 +12,28 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.8.3",
+    date: "2026-07-28",
+    tag: "patch",
+    title: "Sentry Vite plugin for production source maps",
+    summary:
+      "Production builds can upload hidden source maps to Sentry via @sentry/vite-plugin when SENTRY_AUTH_TOKEN, SENTRY_ORG, and SENTRY_PROJECT are set. Maps are deleted after upload so GitHub Pages never serves them. Client init tags events with VITE_SENTRY_RELEASE (CI: git SHA). Without those secrets the build still succeeds offline.",
+    highlights: [
+      {
+        label: "Plugin",
+        detail: "@sentry/vite-plugin gated on auth token + org + project",
+      },
+      {
+        label: "CI",
+        detail: "Deploy workflow wires SENTRY_* secrets and VITE_SENTRY_RELEASE=github.sha",
+      },
+      {
+        label: "Safety",
+        detail: "No maps when unconfigured; filesToDeleteAfterUpload on dist/**/*.map",
+      },
+    ],
+  },
+  {
     version: "5.8.1",
     date: "2026-07-28",
     tag: "patch",

@@ -5,6 +5,8 @@ dist/
 !.env.example
 # Public client DSN only — never put service_role or private keys here
 !.env.production
+# Sentry build plugin auth (local source-map upload)
+.env.sentry-build-plugin
 playwright-report/
 test-results/
 .DS_Store
