@@ -827,6 +827,8 @@ export class WorkspaceService {
         chosen_at: chosenAt,
         // Keep engine ranking; user choice is explicit
         best_future: future.name,
+        // Decision graph: N1 → N2 collapse
+        graph_shape: "collapsed",
         graph_op: "collapse",
         graph_active_node: "n2-collapsed",
         graph_collapsed_future_id: future.id,

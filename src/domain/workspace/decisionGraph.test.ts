@@ -3,9 +3,11 @@ import {
   buildDecisionGraph,
   compareBranches,
   describeDecisionGraph,
+  graphShapeForSimulation,
   OPEN_NODE_ID,
   rebranchIntent,
   rollbackToOpen,
+  summarizeSimulationGraph,
 } from "./decisionGraph";
 import type { FutureRecord, SimulationRecord } from "./types";
 
@@ -130,5 +132,48 @@ describe("decisionGraph MVP", () => {
     const open = buildDecisionGraph(sim(), futures);
     expect(describeDecisionGraph(open)).toMatch(/3 branches/);
     expect(describeDecisionGraph(open)).toMatch(/not yet collapsed/);
+  });
+
+  it("compareBranches includes rank and deltas vs best", () => {
+    const g = buildDecisionGraph(sim(), futures);
+    const rows = compareBranches(g);
+    expect(rows[0]!.rank).toBe(1);
+    expect(rows[0]!.scoreDelta).toBe(0);
+    expect(rows[1]!.scoreDelta).toBeLessThan(0);
+    expect(rows[1]!.riskDelta).not.toBeUndefined();
+  });
+
+  it("summarizeSimulationGraph reflects collapse and re-branch stamps", () => {
+    expect(summarizeSimulationGraph(sim({ result: { futures_count: 3 } }))).toMatch(
+      /not yet collapsed/
+    );
+    expect(
+      summarizeSimulationGraph(
+        sim({
+          result: {
+            futures_count: 3,
+            chosen_future_name: "Invite-only",
+            chosen_future_id: "f-a",
+            graph_shape: "collapsed",
+          },
+        })
+      )
+    ).toMatch(/collapsed to “Invite-only”/);
+    expect(
+      summarizeSimulationGraph(
+        sim({
+          result: { futures_count: 2, graph_op: "rebranch_from_open" },
+        })
+      )
+    ).toMatch(/re-branched/);
+  });
+
+  it("graphShapeForSimulation tracks open vs collapsed", () => {
+    expect(graphShapeForSimulation(sim())).toBe("open_branches");
+    expect(
+      graphShapeForSimulation(
+        sim({ result: { chosen_future_id: "f-a", graph_shape: "collapsed" } })
+      )
+    ).toBe("collapsed");
   });
 });
