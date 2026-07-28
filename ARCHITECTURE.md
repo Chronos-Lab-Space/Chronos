@@ -221,6 +221,19 @@ Timeline ranking
 task-oriented: a research capability, financial model, or risk evaluator can be
 replaced without changing the planner or temporal engine.
 
+### Implementation status (public beta — keep claims honest)
+
+| Surface | What the code does today |
+|---|---|
+| **Public `/simulate` + home demo** | Deterministic Monte Carlo over category path templates (`domain/chronos/startup-sim.ts`). `pathsEvaluated` is the real sample budget. **No LLM.** |
+| **Workspace `SimulationEngine`** | Deterministic plan → futures → EV scoring → collapse. Optional `AIPort` **prose polish only** (`maybeEnrichRecommendation`); scores/futures never change. Default provider: **noop**. |
+| **Forge / Oracle / Atlas** (`domain/chronos/agents.ts`) | Hand-authored scenarios for the temporal playground. `AgentSimulationRunner` is pure in-process (no I/O). |
+| **Specialist agents** (`src/agents/*`) | Evaluation + memory + simulation are real pure/domain logic. Research uses `AIPort` when configured, else a structured stub (fail-open). Coding / execution / knowledge remain stubs. |
+| **Capability registry** | Live composition root: `createDefaultCapabilityRegistry` + `runTaskGraph`. Product UI “workloads” under `capabilities.ts` are **demo metadata**, not the OS registry. |
+| **Repository ports** (`TaskGraphRepository`, `CapabilityRepository`, …) | Interface contracts; in-memory / Supabase adapters exist where tables do — ports are not proof that every OS table is product-wired. |
+
+When writing docs or marketing: prefer “deterministic multi-future engine; optional LLM for prose/research” over “AI agents decide for you.”
+
 ## Temporal Versioning
 
 Every decision is versioned as a replayable temporal lifecycle:

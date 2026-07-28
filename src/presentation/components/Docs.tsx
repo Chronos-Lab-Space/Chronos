@@ -629,7 +629,11 @@ function BetaLimitationsDocs() {
         items={[
           {
             title: "Simulation engine",
-            body: "Honest Monte Carlo over strategy archetypes (sample counts match what was scored). Useful for structured decisions; not a calibrated model of markets or codebases. Optional AI polish (env flag) only rewrites recommendation prose — scores stay deterministic.",
+            body: "Workspace sims are a deterministic multi-future engine (EV scoring, hard/soft constraints). The public /simulate demo is honest Monte Carlo over strategy archetypes (sample counts match what was scored). Neither path is an LLM “thinking” about your company. Optional AI polish only rewrites recommendation prose when a provider is configured — scores stay engine-owned. Useful for structured decisions; not a calibrated model of markets or codebases.",
+          },
+          {
+            title: "Agents & capabilities",
+            body: "Forge / Oracle / Atlas on marketing pages are scripted scenario demos, not live LLM agents. The Agent OS registers real handlers for research (optional AI, else stub), simulation, evaluation, and memory; coding/plan steps are stubs in this beta. Prefer “deterministic multi-future engine” over “AI agents decide for you.”",
           },
           {
             title: "Hard constraints",
