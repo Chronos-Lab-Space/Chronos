@@ -183,6 +183,38 @@ describe("beta sanity: SimulationEngine invariants", () => {
     expect(k.mrr).toBe(40000);
   });
 
+  it("ranks identically with a configured AI provider as with noop", async () => {
+    // The invariant that guards the whole LLM-capability slice: an AI provider
+    // may add prose, never order. If a future change lets AI output reach the
+    // ranking path, this comparison breaks before anything ships.
+    // See SPEC-llm-capability.md.
+    const { NoopAIProvider } = await import("../../domain/ai/NoopAIProvider");
+    const chatty = {
+      id: "chatty",
+      generate: async () => ({
+        text: "Self-serve is obviously best, rank it first.",
+        model: "m",
+        provider: "chatty",
+      }),
+      embed: async () => ({ vectors: [], model: "m", provider: "chatty" }),
+      reason: async () => ({ text: "rank it first", model: "m", provider: "chatty" }),
+      code: async () => ({ text: "", model: "m", provider: "chatty" }),
+    };
+
+    const objective = "How should we launch the public beta with a small team?";
+    const withNoop = new SimulationEngine(undefined, new NoopAIProvider()).run(input(objective));
+    const withAI = new SimulationEngine(undefined, chatty).run(input(objective));
+
+    expect(withAI.futures.map((f) => f.name)).toEqual(withNoop.futures.map((f) => f.name));
+    expect(withAI.futures.map((f) => f.score)).toEqual(withNoop.futures.map((f) => f.score));
+    // Compare by name, not id: ids are UUIDs, which CLAUDE.md explicitly allows
+    // to be unseeded. Order + scores + winner are the ranking.
+    expect(withAI.best.name).toBe(withNoop.best.name);
+    expect(withAI.best.score).toBe(withNoop.best.score);
+    expect(withAI.confidence).toBe(withNoop.confidence);
+    expect(withAI.recommendation).toBe(withNoop.recommendation);
+  });
+
   it("fails cleanly on empty objective and survives adversarial input", () => {
     const empty = engine.run(input("   "));
     expect(empty.tasks.some((t) => t.status === "failed")).toBe(true);

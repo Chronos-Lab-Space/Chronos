@@ -12,6 +12,7 @@
 import {
   codingAgent,
   evaluationAgent,
+  ExecutionAgent,
   executionAgent,
   memoryAgent,
   researchAgent,
@@ -72,6 +73,7 @@ export function createDefaultCapabilityRegistry(
 ): CapabilityRegistry {
   const registry = new CapabilityRegistry();
   const research = options.ai ? new ResearchAgent(options.ai) : researchAgent;
+  const execution = options.ai ? new ExecutionAgent(options.ai) : executionAgent;
 
   registry.register(
     registration({
@@ -133,9 +135,10 @@ export function createDefaultCapabilityRegistry(
       providerId: "chronos-plan",
       name: "Plan / execution",
       taskKinds: ["plan"],
-      description: "Acknowledges plan tasks (stub executor — no external side effects).",
+      description:
+        "Turns a chosen objective into execution steps. Uses AIPort when configured; otherwise a structured stub (source: stub).",
     }),
-    handlerFromAgent(executionAgent)
+    handlerFromAgent(execution)
   );
 
   registry.register(
