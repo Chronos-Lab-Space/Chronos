@@ -27,6 +27,11 @@ const faqs: FaqItem[] = [
     ),
   },
   {
+    question: "Does Chronos use an LLM to score futures?",
+    answer:
+      "No. Ranking and expected-value scoring are deterministic by default. Optional AI (when a provider is configured) may polish recommendation wording or research prose — it does not invent scores, confidence, or which path wins. The public /simulate demo is pure Monte Carlo over strategy templates.",
+  },
+  {
     question: "What does branch → simulate → collapse mean?",
     answer:
       "Branch generates alternative futures. Simulate scores each against your goal and constraints. Collapse ranks them into a recommendation and Decision Report — you still choose which path to save.",

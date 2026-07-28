@@ -211,11 +211,12 @@ Persistence is **local-first with cloud dual-write**:
 
 The home live demo and `/simulate` share `publicStartupSimulator`:
 
-1. Decompose the objective into a **task graph**  
+1. Decompose the objective into a **task graph** (planner metadata)  
 2. Monte Carlo samples over strategy archetypes (honest `pathsEvaluated` count)  
 3. Collapse to best path + alternatives (ARR × probability EV, roadmap)  
 
-Deterministic for a given prompt + sample budget (cacheable).
+**Fully deterministic** for a given prompt + sample budget (hash-seeded RNG, cacheable).  
+**No LLM calls** on this path. Workspace simulations are also engine-scored; optional AI only polishes recommendation prose when `VITE_AI_PROVIDER` is set (default: noop).
 
 ---
 
@@ -244,12 +245,15 @@ Timeline → Branch → Evaluate → Prune → Collapse → Memory
 
 Chronos executes **tasks and capabilities**, not fixed agent personas. Planners build dependency graphs; the runtime forks futures, scores them, and keeps lineage for audit and re-runs.
 
-Agent OS sketch:
+Agent OS (beta):
 
 ```text
-Planner → Task Graph → Scheduler → Execution
-        → Memory → Evaluation → Timeline ranking
+Planner → Task Graph → Scheduler → ExecutionRuntime
+        → registered capabilities (createDefaultCapabilityRegistry)
+        → Memory / Evaluation / ranking
 ```
+
+Capabilities may be deterministic programs, stubs, or AI-backed research — the engine only sees tasks. See `ARCHITECTURE.md` → *Implementation status* for what is live vs sketched.
 
 ---
 

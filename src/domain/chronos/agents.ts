@@ -1,5 +1,11 @@
 // Chronos Agents — Domain-specific decision makers that use Chronos Core.
 //
+// IMPORTANT (beta honesty): these are **scripted scenarios**, not LLM agents.
+// Forge / Oracle / Atlas are hand-authored world models + candidate actions with
+// fixed baseRisk/baseReward. AgentSimulationRunner runs the temporal engine over
+// them with zero network I/O. Live product specialists live in `src/agents/*`
+// and register via `createDefaultCapabilityRegistry`.
+//
 // Each agent brings:
 //   - a narrative (what it does, what decisions it faces)
 //   - a world model (what reality looks like from its perspective)

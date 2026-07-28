@@ -12,6 +12,31 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.8.1",
+    date: "2026-07-28",
+    tag: "patch",
+    title: "Honest agents: live capability registry · docs match the code",
+    summary:
+      "The Agent OS now ships a real default capability registry (research, simulation, evaluation, memory, plan/roadmap stubs) and can run planner task graphs end-to-end. Research uses AIPort when configured and fails open to a structured stub. Docs, FAQ, README, and ARCHITECTURE now state plainly: public simulate and ranking are deterministic; LLM is optional prose only; Forge/Oracle/Atlas are scripted demos.",
+    highlights: [
+      {
+        label: "Registry",
+        detail:
+          "createDefaultCapabilityRegistry + runTaskGraph wire specialist agents as TaskKind handlers",
+      },
+      {
+        label: "Research",
+        detail:
+          "Optional AI summary via AIPort; noop/errors → source: stub (same fail-open contract as sim enrich)",
+      },
+      {
+        label: "Honesty",
+        detail:
+          "ARCHITECTURE implementation status table; FAQ + beta limitations; no more implied LLM scoring on /simulate",
+      },
+    ],
+  },
+  {
     version: "5.8.0",
     date: "2026-07-27",
     tag: "minor",

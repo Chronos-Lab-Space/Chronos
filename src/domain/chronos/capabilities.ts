@@ -54,8 +54,15 @@ const workloadMetadata = {
 } as const;
 
 /**
- * Demo workloads are capability registrations, not engine-owned agents.
- * The engine receives tasks; providers can change without changing task state.
+ * Marketing / Product demo workloads (Forge · Oracle · Atlas).
+ *
+ * These are **illustrative** CapabilityRegistration records for the Product UI.
+ * They are not the live Agent OS registry. Product task handlers are wired in
+ * `application/agent-os/createDefaultCapabilityRegistry.ts` (research, simulation,
+ * evaluation, memory, plan stub, roadmap stub).
+ *
+ * Demo scenarios in `agents.ts` are hand-authored world models for the temporal
+ * engine playground — not LLM agents.
  */
 export const capabilityWorkloads: readonly CapabilityWorkload[] = agents.map((agent) => {
   const metadata =

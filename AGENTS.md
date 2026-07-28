@@ -52,11 +52,18 @@ Start ambiguous sessions with `using-agent-skills` to map work to the right work
 | Layer | Location |
 |-------|----------|
 | Temporal engine | `src/application/chronos/engine.ts` — `fork` / `evaluate` / `collapse` / `run` |
-| Agent run orchestration | `src/application/chronos/AgentSimulationRunner.ts` |
-| Product decision sims | `src/application/simulation/SimulationEngine.ts` |
-| Agents (Forge / Oracle / Atlas) | `src/domain/chronos/agents.ts` |
+| Agent run orchestration | `src/application/chronos/AgentSimulationRunner.ts` (pure; no LLM) |
+| Product decision sims | `src/application/simulation/SimulationEngine.ts` (deterministic; optional AI prose enrich) |
+| Public Monte Carlo demo | `src/domain/chronos/startup-sim.ts` + `publicStartupSimulator` (no LLM) |
+| Scenario demos (Forge / Oracle / Atlas) | `src/domain/chronos/agents.ts` — **scripted world models**, not LLM agents |
+| Specialist agents | `src/agents/*` — real eval/memory/sim; research optional AI; others stubs |
+| Capability registry (live) | `src/application/agent-os/createDefaultCapabilityRegistry.ts` |
+| Task graph execution | `src/application/agent-os/runTaskGraph.ts` |
 | Workspace dual-write | `src/application/workspace/WorkspaceService.ts` |
+| AI port (default noop) | `src/infrastructure/ai/createAIPort.ts` |
 | Supabase client | `src/infrastructure/supabase/client.ts` |
+
+Do not claim that Forge/Oracle/Atlas or the public simulator call an LLM. Ranking is engine-owned.
 
 ## Quality bar
 
