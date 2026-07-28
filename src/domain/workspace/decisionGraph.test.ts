@@ -134,6 +134,31 @@ describe("decisionGraph MVP", () => {
     expect(describeDecisionGraph(open)).toMatch(/not yet collapsed/);
   });
 
+  it("carries re-branch provenance into the graph, not just the memory summary", () => {
+    // A fork is stamped graph_op on the *new* simulation. The panel renders from
+    // DecisionGraph, so provenance has to survive buildDecisionGraph or the
+    // sim page you land on after forking cannot tell you it is a fork.
+    const fork = sim({
+      id: "s2",
+      version: 2,
+      parent_simulation_id: "s1",
+      result: {
+        best_future: "Invite-only",
+        graph_op: "rebranch_from_open",
+        graph_from_simulation_id: "s1",
+      },
+    });
+    const g = buildDecisionGraph(fork, futures);
+    expect(g.rebranchedFromSimulationId).toBe("s1");
+    expect(describeDecisionGraph(g)).toMatch(/re-branched/i);
+  });
+
+  it("leaves a first-run graph unmarked", () => {
+    const g = buildDecisionGraph(sim(), futures);
+    expect(g.rebranchedFromSimulationId).toBeNull();
+    expect(describeDecisionGraph(g)).not.toMatch(/re-branched/i);
+  });
+
   it("compareBranches includes rank and deltas vs best", () => {
     const g = buildDecisionGraph(sim(), futures);
     const rows = compareBranches(g);

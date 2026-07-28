@@ -219,8 +219,10 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page).not.toHaveURL(firstSimUrl, { timeout: 20_000 });
     await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i);
     await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 15_000 });
-    // "not yet collapsed" — the fork stands at N0 with fresh peers, uncommitted
+    // "not yet collapsed" — the fork stands at N0 with fresh peers, uncommitted,
+    // and is marked as a fork *immediately*, before it has chosen anything.
     await expect(page.getByTestId("graph-describe")).toContainText(/not yet collapsed/i);
+    await expect(page.getByTestId("graph-rebranched-badge")).toBeVisible();
 
     // Memory keeps the prior version. Decision history lists *decided* runs only
     // (listDecisionHistory skips sims with no chosen path), so the uncommitted
