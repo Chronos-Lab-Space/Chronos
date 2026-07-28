@@ -165,6 +165,16 @@ Two checks before the upstream call, both single `count` queries against the ind
 
 At the per-call cost derived below, 200 calls/user/month is roughly **$1–2 per user per month** at the ceiling. The global cap is the thing that stops a bad month; set it to a number you are willing to see on an invoice.
 
+> **Deploy order — apply the migration before the function.**
+> `20260726190000_ai_usage.sql` is merged but **not applied to production**
+> (verified against `supabase_migrations.schema_migrations`), and no Edge
+> Functions are deployed yet, so the two are consistent today. They stop being
+> consistent the moment `ai-generate` ships first: every quota check above is a
+> count against `ai_usage`, so without the table the function cannot refuse work
+> before it spends money — the caps become unenforceable on a function that
+> bills the project owner. Apply the migration, confirm the table exists, then
+> deploy.
+
 ### Upstream selection
 
 Chosen from secrets alone; the client has no say. An explicit `AI_UPSTREAM` wins, so having both key sets present while comparing them is never resolved by accident. Otherwise the upstream is inferred from whichever keys exist. Misconfiguration returns `503` with the specific missing secret named — the client turns that into a fail-open, so a half-configured deploy degrades to deterministic prose rather than breaking simulations.
