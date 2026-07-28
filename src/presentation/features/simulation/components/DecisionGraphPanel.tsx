@@ -116,8 +116,18 @@ export function DecisionGraphPanel({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
-            Decision graph
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
+              Decision graph
+            </div>
+            {graph.rebranchedFromSimulationId && (
+              <span
+                data-testid="graph-rebranched-badge"
+                className="rounded-full border border-chronos/30 px-2.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.16em] text-chronos"
+              >
+                Re-branched
+              </span>
+            )}
           </div>
           <p className="mt-1 max-w-xl text-sm text-ink-dim">
             One decision point, peer branches, compare, commit — then re-branch from open. Inside a

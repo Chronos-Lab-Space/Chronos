@@ -48,6 +48,12 @@ export type DecisionGraph = {
   edges: DecisionGraphEdge[];
   /** Active tip: collapsed if chosen, else open (you stand at the decision point) */
   activeNodeId: string;
+  /**
+   * Parent simulation this graph was forked from, when it is a re-branch.
+   * Provenance lives on the graph so the simulation page can mark a fresh fork
+   * immediately — decision history only lists runs that already chose a path.
+   */
+  rebranchedFromSimulationId: string | null;
 };
 
 export const OPEN_NODE_ID = "n0-open";
@@ -119,6 +125,12 @@ export function buildDecisionGraph(
     });
   }
 
+  const rebranchedFromSimulationId =
+    simulation.result.graph_op === "rebranch_from_open" &&
+    typeof simulation.result.graph_from_simulation_id === "string"
+      ? simulation.result.graph_from_simulation_id
+      : null;
+
   return {
     id: simulation.id,
     objective,
@@ -127,6 +139,7 @@ export function buildDecisionGraph(
     collapsed,
     edges,
     activeNodeId: collapsed?.id ?? OPEN_NODE_ID,
+    rebranchedFromSimulationId,
   };
 }
 
@@ -287,6 +300,9 @@ export function describeDecisionGraph(graph: DecisionGraph): string {
   const n = graph.branches.length;
   if (graph.collapsed) {
     return `Open → ${n} branch${n === 1 ? "" : "es"} → collapsed to “${graph.collapsed.title}”`;
+  }
+  if (graph.rebranchedFromSimulationId) {
+    return `Open → ${n} branch${n === 1 ? "" : "es"} · re-branched, not yet collapsed (stand at decision point)`;
   }
   return `Open → ${n} branch${n === 1 ? "" : "es"} · not yet collapsed (stand at decision point)`;
 }
