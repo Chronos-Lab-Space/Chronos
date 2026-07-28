@@ -141,23 +141,85 @@ export type BranchCompareRow = {
   recommended: boolean;
   chosen: boolean;
   summary: string;
+  /** score − best score (0 for the recommended branch). */
+  scoreDelta: number;
+  /** risk − recommended risk (negative = safer than best). */
+  riskDelta: number;
+  rank: number;
 };
 
 export function compareBranches(graph: DecisionGraph): BranchCompareRow[] {
   const chosenFutureId = graph.collapsed?.futureId ?? null;
-  return [...graph.branches]
-    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
-    .map((b) => ({
+  const ranked = [...graph.branches].sort(
+    (a, b) =>
+      (b.score ?? 0) - (a.score ?? 0) || (a.risk ?? 0) - (b.risk ?? 0) || a.id.localeCompare(b.id)
+  );
+  const bestScore = ranked[0]?.score ?? 0;
+  const bestRisk = ranked[0]?.risk ?? 0;
+
+  return ranked.map((b, index) => {
+    const score = b.score ?? 0;
+    const risk = b.risk ?? 0;
+    return {
       futureId: b.futureId ?? b.id,
       nodeId: b.id,
       name: b.title,
       confidence: b.confidence ?? 0,
-      risk: b.risk ?? 0,
-      score: b.score ?? 0,
+      risk,
+      score,
       recommended: Boolean(b.recommended),
       chosen: chosenFutureId != null && b.futureId === chosenFutureId,
       summary: b.summary ?? "",
-    }));
+      scoreDelta: Math.round((score - bestScore) * 1000) / 1000,
+      riskDelta: Math.round((risk - bestRisk) * 1000) / 1000,
+      rank: index + 1,
+    };
+  });
+}
+
+/** Compact structure line for Memory / list cards. */
+export function summarizeSimulationGraph(
+  simulation: SimulationRecord,
+  branchCount?: number
+): string {
+  const n =
+    branchCount ??
+    (Array.isArray(simulation.result.graph_branch_ids)
+      ? simulation.result.graph_branch_ids.length
+      : typeof simulation.result.futures_count === "number"
+        ? simulation.result.futures_count
+        : null);
+
+  const branchLabel = n != null && n > 0 ? `${n} branch${n === 1 ? "" : "es"}` : "branches";
+
+  const collapsedName =
+    (typeof simulation.result.chosen_future_name === "string" &&
+      simulation.result.chosen_future_name) ||
+    (typeof simulation.result.graph_collapsed_future_id === "string" ? "chosen path" : null);
+
+  if (collapsedName) {
+    return `Open → ${branchLabel} → collapsed to “${collapsedName}”`;
+  }
+
+  const op = simulation.result.graph_op;
+  if (op === "rebranch_from_open") {
+    return `Open → ${branchLabel} · re-branched (stand at decision point)`;
+  }
+
+  return `Open → ${branchLabel} · not yet collapsed`;
+}
+
+/** Persistable shape labels stamped on simulation.result. */
+export type GraphShapeStamp = "open_branches" | "collapsed";
+
+export function graphShapeForSimulation(simulation: SimulationRecord): GraphShapeStamp {
+  if (
+    typeof simulation.result.chosen_future_id === "string" ||
+    simulation.result.graph_shape === "collapsed"
+  ) {
+    return "collapsed";
+  }
+  return "open_branches";
 }
 
 /**

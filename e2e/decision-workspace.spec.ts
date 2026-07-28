@@ -99,6 +99,16 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByTestId("decision-pipeline")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId("decision-report")).toBeVisible();
 
+    // --- Decision graph MVP: open → branches → compare ---
+    await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByTestId("graph-structure")).toBeVisible();
+    await expect(page.getByTestId("graph-describe")).toContainText(/branch/i);
+    await expect(page.getByTestId("graph-compare")).toBeVisible();
+    const branchCards = page.getByTestId("graph-branch-card");
+    expect(await branchCards.count()).toBeGreaterThan(0);
+    await branchCards.last().click();
+    await expect(page.getByTestId("graph-rebranch")).toBeVisible();
+
     // --- Future graph: branches render and are clickable ---
     await expect(page.getByTestId("future-graph")).toBeVisible();
     const graphNodes = page.getByTestId("future-graph-node");
@@ -129,6 +139,11 @@ test.describe("Decision Workspace (authenticated)", () => {
       timeout: 10_000,
     });
     await expect(page.getByText(/path saved/i).first()).toBeVisible({ timeout: 10_000 });
+
+    // Graph collapses after choose
+    await expect(page.getByTestId("graph-describe")).toContainText(/collapsed/i, {
+      timeout: 10_000,
+    });
 
     // --- Outcome tracking ---
     await expect(page.getByText(/did you follow this recommendation/i)).toBeVisible();
@@ -180,7 +195,7 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(hqCta).not.toHaveText(/accept/i);
     await expect(page.getByTestId("decision-timeline-preview")).toBeVisible();
 
-    // --- Memory retains decision ---
+    // --- Memory retains decision + graph structure ---
     await page.goto("/workspace/memory");
     await expect(page.getByRole("heading", { name: /history/i })).toBeVisible({
       timeout: 15_000,
@@ -189,6 +204,7 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(
       page.getByText(/launch clab public beta|how should we launch/i).first()
     ).toBeVisible();
+    await expect(page.getByTestId("memory-graph-summary").first()).toContainText(/collapsed|open/i);
   });
 
   test("without e2e flag, workspace still requires login", async ({ page }) => {

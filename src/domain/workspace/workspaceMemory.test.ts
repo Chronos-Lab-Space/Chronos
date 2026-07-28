@@ -94,6 +94,7 @@ describe("workspaceMemory", () => {
     expect(hist).toHaveLength(1);
     expect(hist[0].pathName).toBe("Beta First");
     expect(hist[0].followed).toBe("yes");
+    expect(hist[0].graphSummary).toMatch(/collapsed to “Beta First”/);
   });
 
   it("builds activity feed with knowledge and sims", () => {
