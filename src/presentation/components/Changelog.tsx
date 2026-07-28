@@ -12,6 +12,31 @@ export type Release = {
 
 const releases: Release[] = [
   {
+    version: "5.8.0",
+    date: "2026-07-27",
+    tag: "minor",
+    title: "Decision graph MVP: open → branches → collapse · re-branch",
+    summary:
+      "Chronos is a decision graph, not a smarter loop. One open decision point, peer branches (futures), compare outcomes, collapse to a chosen path, and re-branch from open without losing prior branches in Memory. Inside a node may still loop; the product is the branch structure.",
+    highlights: [
+      {
+        label: "Contract",
+        detail:
+          "domain/decisionGraph — N0 open, N1* branches, N2 collapsed; compareBranches; rollbackToOpen; rebranchIntent",
+      },
+      {
+        label: "Re-branch",
+        detail:
+          "rebranchFromOpen forks the next lineage version from the open node (graph rollback that keeps history)",
+      },
+      {
+        label: "UI",
+        detail:
+          "DecisionGraphPanel on simulation detail — structure, compare outcomes, re-branch action",
+      },
+    ],
+  },
+  {
     version: "5.7.0",
     date: "2026-07-26",
     tag: "minor",

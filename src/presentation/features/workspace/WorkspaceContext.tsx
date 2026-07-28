@@ -60,6 +60,8 @@ type WorkspaceContextValue = {
   /** Returns the new simulation id so the UI can open Compare → Report → Save. */
   runSimulation: (objective: string, constraints?: string[]) => Promise<string | null>;
   rerunSimulation: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
+  /** Decision-graph rollback: fork next version from N0 Open. */
+  rebranchFromOpen: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
   chooseBestPath: (simulationId: string, futureId: string) => Promise<void>;
   recordOutcomeFollowed: (simulationId: string, followed: OutcomeFollowed) => Promise<void>;
   recordOutcomeResult: (
@@ -300,6 +302,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       rerunSimulation: async (parentSimulationId, constraints) => {
         const next = await withOwner((id) =>
           workspaceService.rerunSimulation(id, parentSimulationId, constraints)
+        );
+        const sim = next.recentSimulations[0];
+        return sim?.id ?? null;
+      },
+      rebranchFromOpen: async (parentSimulationId, constraints) => {
+        const next = await withOwner((id) =>
+          workspaceService.rebranchFromOpen(id, parentSimulationId, constraints)
         );
         const sim = next.recentSimulations[0];
         return sim?.id ?? null;
