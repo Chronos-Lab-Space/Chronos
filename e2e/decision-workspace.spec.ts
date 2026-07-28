@@ -32,7 +32,7 @@ async function enableE2EAuth(page: Page) {
 }
 
 test.describe("Decision Workspace (authenticated)", () => {
-  test("idea → decision: onboard, generate futures, report, choose path, outcome", async ({
+  test("idea → decision: onboard, generate futures, report, choose path, outcome, re-branch", async ({
     page,
   }) => {
     await enableE2EAuth(page);
@@ -94,6 +94,7 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i, {
       timeout: 20_000,
     });
+    const firstSimUrl = page.url();
 
     // --- Decision pipeline + report contract ---
     await expect(page.getByTestId("decision-pipeline")).toBeVisible({ timeout: 10_000 });
@@ -205,6 +206,36 @@ test.describe("Decision Workspace (authenticated)", () => {
       page.getByText(/launch clab public beta|how should we launch/i).first()
     ).toBeVisible();
     await expect(page.getByTestId("memory-graph-summary").first()).toContainText(/collapsed|open/i);
+
+    // --- Re-branch from open: fork a new version, keep the prior one in Memory ---
+    // Collapsing is not the end of the loop — standing back at N0 and forking
+    // again is the product. The prior version must survive the fork.
+    await page.goto(firstSimUrl);
+    const rebranch = page.getByTestId("graph-rebranch");
+    await expect(rebranch).toBeVisible({ timeout: 15_000 });
+    await rebranch.click();
+
+    // Lands on a *different* simulation, standing at open again (not collapsed)
+    await expect(page).not.toHaveURL(firstSimUrl, { timeout: 20_000 });
+    await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i);
+    await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 15_000 });
+    // "not yet collapsed" — the fork stands at N0 with fresh peers, uncommitted
+    await expect(page.getByTestId("graph-describe")).toContainText(/not yet collapsed/i);
+
+    // Memory keeps the prior version. Decision history lists *decided* runs only
+    // (listDecisionHistory skips sims with no chosen path), so the uncommitted
+    // fork is correctly absent — what must survive is the collapsed original.
+    await page.goto("/workspace/memory");
+    await expect(page.getByRole("heading", { name: /history/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByTestId("memory-graph-summary").first()).toContainText(/collapsed/i);
+
+    // ...and the prior version is still openable, still collapsed, not overwritten
+    await page.goto(firstSimUrl);
+    await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("graph-describe")).toContainText(/collapsed/i);
+    await expect(page.getByTestId("graph-describe")).not.toContainText(/not yet collapsed/i);
   });
 
   test("without e2e flag, workspace still requires login", async ({ page }) => {
