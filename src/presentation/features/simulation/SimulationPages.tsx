@@ -308,9 +308,7 @@ export function SimulationDetailPage() {
     typeof sim.result.chosen_future_id === "string" ? sim.result.chosen_future_id : null;
   const activeFutureId = selectedFutureId ?? chosenId ?? futures[0]?.id ?? null;
   const decisionGraph =
-    sim.status === "completed" && futures.length > 0
-      ? buildDecisionGraph(sim, futures)
-      : null;
+    sim.status === "completed" && futures.length > 0 ? buildDecisionGraph(sim, futures) : null;
 
   return (
     <div className="space-y-10">
@@ -320,8 +318,8 @@ export function SimulationDetailPage() {
         </div>
         <h1 className="mt-2 font-serif text-3xl text-ink">{sim.title}</h1>
         <p className="mt-2 max-w-2xl text-sm text-ink-dim">
-          Decision graph: open → branches → compare → collapse. Re-branch from open to explore
-          again without losing prior branches in Memory.
+          Decision graph: open → branches → compare → collapse. Re-branch from open to explore again
+          without losing prior branches in Memory.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <StatusPill status={sim.status} />

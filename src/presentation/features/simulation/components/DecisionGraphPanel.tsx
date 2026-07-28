@@ -37,8 +37,8 @@ export function DecisionGraphPanel({
             Decision graph
           </div>
           <p className="mt-1 max-w-xl text-sm text-ink-dim">
-            One decision point, peer branches, compare, commit — then re-branch from open.
-            Inside a node you can loop; the product is the graph.
+            One decision point, peer branches, compare, commit — then re-branch from open. Inside a
+            node you can loop; the product is the graph.
           </p>
         </div>
         {onRebranch && (
