@@ -82,6 +82,10 @@ export default defineConfig(({ mode }) => {
   const sentryRelease = nonEmpty(
     env.VITE_SENTRY_RELEASE ?? process.env.VITE_SENTRY_RELEASE ?? process.env.GITHUB_SHA
   );
+  // US-hosted orgs (ingest.us.sentry.io) need the US API host — default sentry.io
+  // returns "Project not found" even when org/project slugs are correct.
+  // Override with SENTRY_URL if you are on eu.sentry.io or self-hosted.
+  const sentryUrl = nonEmpty(env.SENTRY_URL ?? process.env.SENTRY_URL) ?? "https://us.sentry.io";
 
   const uploadSourceMaps = Boolean(sentryAuthToken && sentryOrg && sentryProject);
 
@@ -90,11 +94,14 @@ export default defineConfig(({ mode }) => {
   // Sentry Vite plugin last — creates release + uploads maps only when fully configured.
   // Local/CI builds without SENTRY_AUTH_TOKEN stay offline-safe (no maps published).
   if (uploadSourceMaps) {
+    // Ensure CLI child processes hit the same regional API.
+    process.env.SENTRY_URL = sentryUrl;
     plugins.push(
       sentryVitePlugin({
         org: sentryOrg,
         project: sentryProject,
         authToken: sentryAuthToken,
+        url: sentryUrl,
         release: sentryRelease
           ? {
               name: sentryRelease,
