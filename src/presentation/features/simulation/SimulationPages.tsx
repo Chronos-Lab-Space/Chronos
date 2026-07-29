@@ -14,6 +14,7 @@ import { FutureComparison } from "./components/FutureComparison";
 import { FutureGraph } from "./FutureGraph";
 import { OutcomeTracking } from "./components/OutcomeTracking";
 import { SurfaceLoading } from "../workspace/SurfaceLoading";
+import { isSampleSimulation } from "../../../domain/workspace/sampleDecision";
 
 export function SimulationsPage() {
   const { home, runSimulation, error } = useWorkspace();
@@ -239,6 +240,7 @@ export function SimulationDetailPage() {
     home,
     rerunSimulation,
     rebranchFromOpen,
+    removeSampleDecision,
     chooseBestPath,
     recordOutcomeFollowed,
     recordOutcomeResult,
@@ -457,6 +459,32 @@ export function SimulationDetailPage() {
             />
           }
         />
+      )}
+
+      {/* Sample banner — a worked example must never read as the user's own run */}
+      {isSampleSimulation(sim) && (
+        <section
+          data-testid="sample-banner"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-chronos/30 bg-chronos/5 px-5 py-4"
+        >
+          <div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
+              Sample decision
+            </div>
+            <p className="mt-1 text-sm text-ink-dim">
+              A worked example, ranked by the same engine your own runs use. It disappears when you
+              run your first simulation.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="remove-sample"
+            onClick={() => void removeSampleDecision()}
+            className="shrink-0 rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-dim transition hover:border-chronos/40 hover:text-chronos"
+          >
+            Remove sample
+          </button>
+        </section>
       )}
 
       {/* Execution plan — steps for the path already committed to */}
