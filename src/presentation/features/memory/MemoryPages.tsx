@@ -6,6 +6,7 @@ import { summarizeSimulationGraph } from "../../../domain/workspace/decisionGrap
 import { listDecisionHistory } from "../../../domain/workspace/workspaceMemory";
 import { learningMemoryStore } from "../../../infrastructure/memory/LearningMemoryStore";
 import { useWorkspace } from "../workspace/WorkspaceContext";
+import { SurfaceLoading } from "../workspace/SurfaceLoading";
 
 /**
  * Persistent memory — leave and come back to:
@@ -17,26 +18,7 @@ export function MemoryPage() {
   const decisions = useMemo(() => (home ? listDecisionHistory(home) : []), [home]);
   const learning = useMemo(() => (home ? learningMemoryStore.list(home.workspace.id) : []), [home]);
 
-  // Render the page identity while the workspace hydrates rather than a blank
-  // screen. `home` is null both before the first load resolves and when there
-  // is genuinely no workspace, and returning null for either made the page
-  // appear to not exist — bad on a slow connection, and enough to make anything
-  // navigating straight here race the load.
-  if (!home) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-            Memory
-          </div>
-          <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">History</h1>
-        </div>
-        <p className="text-sm text-ink-dim" data-testid="memory-loading">
-          Loading your workspace…
-        </p>
-      </div>
-    );
-  }
+  if (!home) return <SurfaceLoading eyebrow="Memory" title="History" size="lg" />;
 
   const previousGoals = home.goalHistory ?? [];
   const learningFromKnowledge = home.knowledge.filter((k) => k.metadata?.source === "learning");
@@ -323,7 +305,8 @@ export function ComparePage() {
   const [pickA, setPickA] = useState(aId);
   const [pickB, setPickB] = useState(bId);
 
-  if (!home) return null;
+  if (!home)
+    return <SurfaceLoading eyebrow="Memory · Compare" title="Compare versions" size="lg" />;
 
   const a = home.recentSimulations.find((s) => s.id === pickA || s.id === aId);
   const b = home.recentSimulations.find((s) => s.id === pickB || s.id === bId);

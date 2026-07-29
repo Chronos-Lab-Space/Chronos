@@ -28,7 +28,7 @@ describe("MemoryPage during hydration", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { name: /history/i })).toBeInTheDocument();
-    expect(screen.getByTestId("memory-loading")).toBeInTheDocument();
+    expect(screen.getByTestId("surface-loading")).toBeInTheDocument();
   });
 
   it("drops the loading line once the workspace arrives", () => {
@@ -47,6 +47,6 @@ describe("MemoryPage during hydration", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { name: /history/i })).toBeInTheDocument();
-    expect(screen.queryByTestId("memory-loading")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("surface-loading")).not.toBeInTheDocument();
   });
 });

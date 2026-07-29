@@ -4,6 +4,7 @@ import {
   getProductAnalyticsSnapshot,
 } from "../../../infrastructure/analytics/productAnalytics";
 import { useWorkspace } from "./WorkspaceContext";
+import { SurfaceLoading } from "./SurfaceLoading";
 
 /** Workspace settings — switch, create, inspect, share. */
 export function WorkspaceSettingsPage() {
@@ -24,7 +25,7 @@ export function WorkspaceSettingsPage() {
   // biome-ignore lint/correctness/useExhaustiveDependencies(home): re-read the local analytics snapshot whenever workspace data changes
   const analytics = useMemo(() => getProductAnalyticsSnapshot(), [home]);
 
-  if (!home) return null;
+  if (!home) return <SurfaceLoading eyebrow="Workspace" title="Workspaces" size="md" />;
 
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
