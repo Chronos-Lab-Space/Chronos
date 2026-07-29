@@ -48,6 +48,27 @@ Re-evaluate each when its precondition changes.
 Configured in the Supabase dashboard, not in this repository:
 
 - **Leaked-password protection** (Auth → Providers → Email) — blocks
-  passwords found in HaveIBeenPwned.
+  passwords found in HaveIBeenPwned. **Currently disabled in production**
+  (`get_advisors`, 2026-07-29). Listing a control here is not the same as
+  applying it; enable before the beta takes real signups.
 - **Email confirmation** (Auth → Providers → Email) — decide whether public
   beta signups must verify their address.
+
+## Supabase advisor findings
+
+From `get_advisors` against the hosted project on 2026-07-29. Recorded so they
+stop resurfacing as unexplained warnings.
+
+- **`access_requests` allows unrestricted `anon` INSERT** (`WITH CHECK (true)`).
+  **Accepted, by design:** the public-beta request form must accept submissions
+  from people who have no account, so the policy cannot be narrowed by owner.
+  The residual risk is unbounded writes — an anonymous visitor can submit any
+  number of rows. **Revisit when:** the table shows spam, or before the beta is
+  publicly announced, whichever comes first. The fix is a rate limit at the
+  edge, not a tighter policy.
+- **`knowledge_edges` has RLS enabled with no policies.** Fail-closed, so it is
+  unreachable rather than exposed. It holds zero rows, and no reference to it
+  exists anywhere in this repository — not in `src/`, not in any migration. It
+  is **hosted-only schema**, the invisible-drift case `CLAUDE.md` warns about.
+  **Unresolved:** either commit a migration that owns it or drop it in
+  production. Not dropped here — deleting production schema is the owner\'s call.
