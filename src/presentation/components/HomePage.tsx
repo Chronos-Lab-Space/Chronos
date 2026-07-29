@@ -3,10 +3,8 @@ import { CTA } from "./CTA";
 import { BranchingAnimation } from "./BranchingAnimation";
 import { ScrollReveal } from "./ScrollReveal";
 import { HomeLiveDemo } from "../features/planner/HomeLiveDemo";
-import { useSignUpModal } from "../features/access/SignUpModal";
 
 export function HomePage() {
-  const { openSignUpModal } = useSignUpModal();
   return (
     <>
       {/* HERO: what it is, why it matters, and why it is different. */}
@@ -67,13 +65,12 @@ export function HomePage() {
                 >
                   Sign in
                 </Link>
-                <button
-                  type="button"
-                  onClick={openSignUpModal}
+                <Link
+                  to="/workspace"
                   className="inline-flex items-center gap-2 text-sm text-ink-faint transition hover:text-chronos"
                 >
                   Join public beta
-                </button>
+                </Link>
               </div>
             </div>
             <div className="relative min-w-0 overflow-hidden lg:col-span-6">

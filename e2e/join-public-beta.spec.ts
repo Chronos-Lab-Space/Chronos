@@ -1,20 +1,31 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Join public beta", () => {
-  test("opens signup modal from nav and shows OAuth + email options", async ({ page }) => {
+  test("takes a visitor straight into a workspace, no signup wall", async ({ page }) => {
+    // Deliberately replaces "opens signup modal from nav". The workspace runs
+    // without an account, so the front door should not be a signup form —
+    // signing in is how work is kept, not how it starts.
+    // See SPEC-anonymous-workspace.md.
     await page.goto("/");
 
-    const openBeta = page.locator('button:has-text("Join public beta")').first();
-    await expect(openBeta).toBeVisible();
-    await openBeta.click();
+    const joinBeta = page.getByRole("link", { name: /join public beta/i }).first();
+    await expect(joinBeta).toBeVisible();
+    await joinBeta.click();
 
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: /join the public beta/i })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /continue with google/i })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /continue with github/i })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /^sign up$/i })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /^sign in$/i })).toBeVisible();
-    await expect(dialog.getByRole("button", { name: /magic link/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/workspace/, { timeout: 15_000 });
+    await expect(page.getByTestId("sign-in-to-save")).toBeVisible({ timeout: 15_000 });
+  });
+
+  test("sign in is still one click away for people who want an account", async ({ page }) => {
+    // Removing the wall must not remove the door.
+    await page.goto("/");
+
+    await page
+      .getByRole("link", { name: /^sign in$/i })
+      .first()
+      .click();
+
+    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByRole("heading", { name: /welcome back|start deciding/i })).toBeVisible();
   });
 });

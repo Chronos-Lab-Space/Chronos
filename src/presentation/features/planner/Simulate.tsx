@@ -8,7 +8,6 @@ import {
   publicStartupSimulator,
 } from "../../../application/planner/publicStartupSimulator";
 import { StartupLaunchPlanner } from "../../../application/planner/StartupLaunchPlanner";
-import { useSignUpModal } from "../access/SignUpModal";
 import { ScrollReveal } from "../../components/ScrollReveal";
 
 const EXAMPLES = [
@@ -431,7 +430,6 @@ function ResultsPanel({
   source: "cache" | "computed" | null;
   onReset: () => void;
 }) {
-  const { openSignUpModal } = useSignUpModal();
   const ranked = useMemo(() => {
     const all = [result.bestPath, ...result.alternatives];
     const maxArr = Math.max(...all.map((p) => p.arr), 1);
@@ -677,13 +675,12 @@ function ResultsPanel({
           </svg>
           Simulate another idea
         </button>
-        <button
-          type="button"
-          onClick={openSignUpModal}
+        <Link
+          to="/workspace"
           className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-medium text-bg transition hover:bg-chronos"
         >
           Continue in workspace
-        </button>
+        </Link>
         <Link
           to="/docs?section=simulations"
           className="inline-flex items-center gap-2 rounded-full border border-line px-6 py-3 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink"

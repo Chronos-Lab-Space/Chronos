@@ -1,6 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "./PageHeader";
-import { useSignUpModal } from "../features/access/SignUpModal";
 
 type Section =
   | "introduction"
@@ -744,8 +743,6 @@ function DocsFaq() {
 // ============================================================
 
 function GettingStarted() {
-  const { openSignUpModal } = useSignUpModal();
-
   return (
     <div>
       <DocTitle>Getting started</DocTitle>
@@ -774,13 +771,12 @@ function GettingStarted() {
         membership automatically.
       </DocBody>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={openSignUpModal}
+        <Link
+          to="/workspace"
           className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-bg transition hover:bg-chronos"
         >
           Join public beta
-        </button>
+        </Link>
         <Link
           to="/login"
           className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[13px] font-medium text-ink-dim transition hover:border-line-strong hover:text-ink"

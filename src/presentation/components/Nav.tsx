@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChronosCMark } from "./ChronosCMark";
-import { useSignUpModal } from "../features/access/SignUpModal";
 
 export function Nav() {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { openSignUpModal } = useSignUpModal();
 
   const links = [
     { label: "Core", to: "/core" },
@@ -99,9 +97,10 @@ export function Nav() {
             Sign in
           </Link>
 
-          <button
-            type="button"
-            onClick={openSignUpModal}
+          {/* Straight into the workspace — it works without an account, and
+              signing in is how work is kept rather than how it starts. */}
+          <Link
+            to="/workspace"
             aria-label="Join public beta"
             className="group relative inline-flex min-h-9 items-center gap-2 overflow-hidden rounded-full bg-ink px-3 py-2 text-[13px] font-medium text-bg transition hover:bg-chronos sm:px-4"
           >
@@ -124,7 +123,7 @@ export function Nav() {
                 strokeLinejoin="round"
               />
             </svg>
-          </button>
+          </Link>
         </div>
       </div>
 
