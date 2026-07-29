@@ -54,6 +54,14 @@ Configured in the Supabase dashboard, not in this repository:
 - **Email confirmation** (Auth → Providers → Email) — decide whether public
   beta signups must verify their address.
 
+## Migration parity
+
+Verified 2026-07-29: repo and hosted migration histories are identical — 22
+versions, matching hash. `20260726190000_ai_usage` was applied to production
+under **its own repo version** rather than a fresh timestamp, so the two
+histories stay comparable. `apply_migration` generates its own version and
+would have introduced exactly the drift `CLAUDE.md` warns about.
+
 ## Supabase advisor findings
 
 From `get_advisors` against the hosted project on 2026-07-29. Recorded so they
@@ -66,9 +74,9 @@ stop resurfacing as unexplained warnings.
   number of rows. **Revisit when:** the table shows spam, or before the beta is
   publicly announced, whichever comes first. The fix is a rate limit at the
   edge, not a tighter policy.
-- **`knowledge_edges` has RLS enabled with no policies.** Fail-closed, so it is
-  unreachable rather than exposed. It holds zero rows, and no reference to it
-  exists anywhere in this repository — not in `src/`, not in any migration. It
-  is **hosted-only schema**, the invisible-drift case `CLAUDE.md` warns about.
-  **Unresolved:** either commit a migration that owns it or drop it in
-  production. Not dropped here — deleting production schema is the owner\'s call.
+- **`knowledge_edges` — resolved 2026-07-29.** Hosted-only schema for an
+  unbuilt knowledge-graph feature: zero rows, no primary key, no indexes, RLS
+  enabled with no policies, and no reference anywhere in this repository. It
+  accounted for three advisor findings on its own. Dropped via
+  `20260729120000_drop_knowledge_edges.sql`, which preserves the original DDL
+  in comments so the table can be recreated verbatim if the feature is built.

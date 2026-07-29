@@ -1,0 +1,32 @@
+-- ============================================================
+-- Drop public.knowledge_edges — hosted-only schema for an unbuilt feature
+--
+-- The table existed in the hosted project but in no migration and in no
+-- code path: `grep -r knowledge_edges` over the whole repository returned
+-- nothing. It held zero rows, had no primary key, no indexes, and RLS
+-- enabled with no policies (so it was fail-closed and unreachable rather
+-- than exposed). It accounted for three advisor findings on its own —
+-- one security, two performance.
+--
+-- This is the "hosted-only objects are invisible drift" case CLAUDE.md
+-- describes. Dropping it removes untracked schema rather than committing
+-- the repo to a knowledge-graph feature that does not exist.
+--
+-- Preserved verbatim so it can be recreated exactly if that feature is
+-- ever built:
+--
+--   create table public.knowledge_edges (
+--     source_id    uuid not null,
+--     target_id    uuid not null,
+--     edge_type    text not null,
+--     weight       numeric,
+--     workspace_id uuid not null references public.workspaces (id)
+--   );
+--   alter table public.knowledge_edges enable row level security;
+--
+-- Rebuild note: it would need a primary key and an index on workspace_id
+-- (both advisor findings), plus policies matching the workspace access
+-- model — the original had none.
+-- ============================================================
+
+drop table if exists public.knowledge_edges;
