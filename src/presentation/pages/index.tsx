@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { useSignUpModal } from "../features/access/SignUpModal";
 import { PageHeader } from "../components/PageHeader";
 import { Platform } from "../components/Platform";
 import { Features } from "../components/Features";
@@ -143,7 +142,6 @@ export function HomePage() {
 // ============================================================
 
 export function CorePage() {
-  const { openSignUpModal } = useSignUpModal();
   return (
     <>
       <PageHeader
@@ -269,13 +267,12 @@ export function CorePage() {
                 >
                   Language reference →
                 </Link>
-                <button
-                  type="button"
-                  onClick={openSignUpModal}
+                <Link
+                  to="/workspace"
                   className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-[12px] text-ink-dim transition hover:border-line-strong hover:text-ink"
                 >
                   Join public beta →
-                </button>
+                </Link>
               </div>
             </div>
             <div className="overflow-hidden rounded-2xl border border-line bg-bg-soft lg:col-span-7">
@@ -347,9 +344,8 @@ export function CorePage() {
               decisions.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={openSignUpModal}
+              <Link
+                to="/workspace"
                 className="group inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-medium text-bg transition hover:bg-chronos"
               >
                 Join public beta
@@ -368,7 +364,7 @@ export function CorePage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </button>
+              </Link>
               <Link
                 to="/simulate"
                 className="inline-flex items-center gap-2 rounded-full border border-line px-6 py-3 text-sm font-medium text-ink-dim transition hover:border-line-strong hover:text-ink"

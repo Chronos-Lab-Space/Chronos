@@ -1,7 +1,6 @@
-import { useSignUpModal } from "../features/access/SignUpModal";
+import { Link } from "react-router-dom";
 
 export function CTA() {
-  const { openSignUpModal } = useSignUpModal();
   return (
     <section className="relative py-24 lg:py-32">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -24,9 +23,8 @@ export function CTA() {
           Join the public beta and open a Decision Workspace — simulate futures, rank trade-offs,
           and keep the path in memory.
         </p>
-        <button
-          type="button"
-          onClick={openSignUpModal}
+        <Link
+          to="/workspace"
           className="group mx-auto mt-10 inline-flex items-center gap-3 rounded-full bg-ink px-7 py-4 text-sm font-medium text-bg transition hover:bg-chronos"
         >
           Join public beta
@@ -45,7 +43,7 @@ export function CTA() {
               strokeLinejoin="round"
             />
           </svg>
-        </button>
+        </Link>
       </div>
     </section>
   );

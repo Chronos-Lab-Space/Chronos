@@ -1,6 +1,6 @@
+import { Link } from "react-router-dom";
 import { PageHeader } from "./PageHeader";
 import { ScrollReveal } from "./ScrollReveal";
-import { useSignUpModal } from "../features/access/SignUpModal";
 
 type FaqItem = {
   question: string;
@@ -84,8 +84,6 @@ const faqs: FaqItem[] = [
 ];
 
 export function FaqPage() {
-  const { openSignUpModal } = useSignUpModal();
-
   return (
     <>
       <PageHeader
@@ -154,9 +152,8 @@ export function FaqPage() {
                 Chronos is in public beta. Create an account and explore simulations in your own
                 workspace.
               </p>
-              <button
-                type="button"
-                onClick={openSignUpModal}
+              <Link
+                to="/workspace"
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-bg transition hover:bg-chronos"
               >
                 Join public beta
@@ -170,7 +167,7 @@ export function FaqPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </button>
+              </Link>
             </div>
           </ScrollReveal>
         </div>
