@@ -32,6 +32,7 @@ function normalize(
     shareAcknowledged: Boolean(r.shareAcknowledged),
     preferredAuthProvider:
       typeof r.preferredAuthProvider === "string" ? r.preferredAuthProvider : null,
+    onboardingContextSkipped: Boolean(r.onboardingContextSkipped),
   };
 }
 

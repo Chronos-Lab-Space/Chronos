@@ -162,3 +162,39 @@ describe("onboarding domain", () => {
     expect(onboardingProgress(ready)).toBe(1);
   });
 });
+
+describe("skippable context step", () => {
+  const withGoal = () =>
+    baseHome({
+      goal: {
+        id: "g1",
+        title: "Launch the beta",
+        description: "",
+        status: "active",
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
+    } as Partial<WorkspaceHome>);
+
+  it("still asks for context by default", () => {
+    // Knowledge genuinely improves ranking, so the step is still offered.
+    expect(requiredOnboardingStep(withGoal())).toBe("context");
+    expect(isWorkspaceOnboarded(withGoal())).toBe(false);
+  });
+
+  it("unlocks the workspace when the visitor skips context", () => {
+    // The simulation form already tells users they can run without knowledge.
+    // Onboarding must not contradict it by refusing to let them through.
+    expect(requiredOnboardingStep(withGoal(), { contextSkipped: true })).toBe("dashboard");
+    expect(isWorkspaceOnboarded(withGoal(), { contextSkipped: true })).toBe(true);
+  });
+
+  it("does not let skipping stand in for a goal", () => {
+    // Skipping is about context only — the decision itself is the product.
+    expect(requiredOnboardingStep(baseHome(), { contextSkipped: true })).toBe("goal");
+    expect(isWorkspaceOnboarded(baseHome(), { contextSkipped: true })).toBe(false);
+  });
+
+  it("reports full progress once context is skipped", () => {
+    expect(onboardingProgress(withGoal(), { contextSkipped: true })).toBe(1);
+  });
+});
