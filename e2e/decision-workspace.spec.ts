@@ -146,6 +146,12 @@ test.describe("Decision Workspace (authenticated)", () => {
       timeout: 10_000,
     });
 
+    // Execution plan is best-effort. E2E runs with the noop provider, which
+    // returns no steps by design rather than inventing them — so the section
+    // must be absent, and the decision must have saved anyway. This is the
+    // fail-open guard: a plan never becomes a condition of a saved decision.
+    await expect(page.getByTestId("execution-plan")).toHaveCount(0);
+
     // --- Outcome tracking ---
     await expect(page.getByText(/did you follow this recommendation/i)).toBeVisible();
     await page.getByRole("button", { name: /^yes$/i }).click();

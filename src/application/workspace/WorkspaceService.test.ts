@@ -274,6 +274,42 @@ describe("WorkspaceService success metric", () => {
     expect(home.knowledge.find((k) => k.id === kid)).toBeUndefined();
   });
 
+  it("stores an execution plan for a chosen path, and writes nothing when there are no steps", async () => {
+    await service.createWorkspace(ownerId, "Plan Lab");
+    let home = await service.setGoal(ownerId, "Launch the beta");
+    home = await service.runSimulation(ownerId, "How should we launch?");
+    const sim = home.recentSimulations[0];
+    const future = home.futuresBySimulation[sim.id][0];
+    home = await service.chooseBestPath(ownerId, sim.id, future.id);
+
+    home = await service.saveExecutionPlan(
+      ownerId,
+      sim.id,
+      ["Freeze scope", "Invite 50 users"],
+      "ai"
+    );
+    expect(home.recentSimulations[0].result.plan_steps).toEqual([
+      "Freeze scope",
+      "Invite 50 users",
+    ]);
+    expect(home.recentSimulations[0].result.plan_source).toBe("ai");
+
+    // An unconfigured or failed provider must leave no trace — not an empty
+    // section, and not a wiped plan from a previous successful run.
+    home = await service.saveExecutionPlan(ownerId, sim.id, [], "stub");
+    expect(home.recentSimulations[0].result.plan_steps).toEqual([
+      "Freeze scope",
+      "Invite 50 users",
+    ]);
+
+    // Durable across a reload.
+    const resumed = await new WorkspaceService({ local: store, remote: null }).load(ownerId);
+    expect(resumed?.recentSimulations[0].result.plan_steps).toEqual([
+      "Freeze scope",
+      "Invite 50 users",
+    ]);
+  });
+
   it("archives previous goals and tracks outcomes after a chosen path", async () => {
     await service.createWorkspace(ownerId, "Outcome Lab");
     let home = await service.setGoal(ownerId, "First objective");

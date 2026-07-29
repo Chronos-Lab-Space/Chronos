@@ -864,6 +864,44 @@ export class WorkspaceService {
   }
 
   /**
+   * Store the execution plan for an already-chosen path.
+   *
+   * Deliberately separate from chooseBestPath: the plan is best-effort prose
+   * from a capability that may be unconfigured or down, and a saved decision
+   * must never depend on it. No steps → no write, so a failed plan leaves no
+   * trace rather than an empty section.
+   */
+  async saveExecutionPlan(
+    ownerId: string,
+    simulationId: string,
+    steps: readonly string[],
+    source: "ai" | "stub"
+  ): Promise<WorkspaceHome> {
+    const home = await this.require(ownerId);
+    if (steps.length === 0) return home;
+
+    const sim = home.recentSimulations.find((s) => s.id === simulationId);
+    if (!sim) throw new Error("Simulation not found.");
+
+    const updatedSim: SimulationRecord = {
+      ...sim,
+      result: {
+        ...sim.result,
+        plan_steps: [...steps],
+        plan_source: source,
+        plan_at: nowIso(),
+      },
+    };
+
+    return this.persist(ownerId, {
+      ...home,
+      recentSimulations: home.recentSimulations.map((s) =>
+        s.id === simulationId ? updatedSim : s
+      ),
+    });
+  }
+
+  /**
    * Outcome tracking step 1 — Did you follow this recommendation?
    * Requires a saved path (chooseBestPath first).
    */

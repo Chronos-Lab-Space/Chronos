@@ -7,6 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { getDefaultCapabilityRegistry } from "../../../application/agent-os/createDefaultCapabilityRegistry";
+import { planChosenPath } from "../../../application/agent-os/planChosenPath";
 import { accountBootstrapService } from "../../../application/workspace/AccountBootstrapService";
 import { workspaceService } from "../../../application/workspace/WorkspaceService";
 import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
@@ -314,8 +316,34 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         return sim?.id ?? null;
       },
       chooseBestPath: async (simulationId, futureId) => {
-        await withOwner((id) => workspaceService.chooseBestPath(id, simulationId, futureId));
+        const saved = await withOwner((id) =>
+          workspaceService.chooseBestPath(id, simulationId, futureId)
+        );
         trackProductEvent("path_chosen", { simulationId, futureId });
+
+        // Best-effort execution plan for the path just committed to. Runs after
+        // the decision is durable and swallows its own failures — a plan is a
+        // bonus on top of a saved decision, never a condition of one.
+        try {
+          const sim = saved.recentSimulations.find((s) => s.id === simulationId);
+          const future = (saved.futuresBySimulation[simulationId] ?? []).find(
+            (f) => f.id === futureId
+          );
+          if (!sim || !future) return;
+
+          const plan = await planChosenPath(getDefaultCapabilityRegistry(), {
+            objective: sim.title,
+            pathName: future.name,
+            pathSummary: future.summary,
+          });
+          if (plan.steps.length === 0) return;
+
+          await withOwner((id) =>
+            workspaceService.saveExecutionPlan(id, simulationId, plan.steps, plan.source)
+          );
+        } catch (err) {
+          console.warn("[chronos] execution plan skipped; decision stands.", err);
+        }
       },
       recordOutcomeFollowed: async (simulationId, followed) => {
         await withOwner((id) => workspaceService.recordOutcomeFollowed(id, simulationId, followed));
