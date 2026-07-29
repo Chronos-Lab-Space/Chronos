@@ -57,11 +57,17 @@ function WorkspaceShellInner() {
   const initials = (ownerId ?? "You").slice(0, 2).toUpperCase();
   const routeKey = location.pathname;
   const brief = deriveDecisionBrief(home);
+  // Simulation detail is where a decision is actually worked — compare futures,
+  // collapse, log the outcome — so it is the surface the rail's "don't navigate
+  // away for context" argument is really about.
+  const activeSimulationId =
+    location.pathname.match(/^\/workspace\/simulations\/([^/]+)$/)?.[1] ?? undefined;
   const showContextRail =
     ready &&
     (location.pathname === "/workspace" ||
       location.pathname === "/workspace/" ||
-      location.pathname === "/workspace/hq");
+      location.pathname === "/workspace/hq" ||
+      Boolean(activeSimulationId));
 
   // Live counts for the sidebar — same numbers the pages report.
   const sourcesCount = home ? home.knowledge.length + home.notes.length : null;
@@ -280,7 +286,9 @@ function WorkspaceShellInner() {
           )}
         </main>
 
-        {showContextRail && home ? <WorkspaceContextRail home={home} /> : null}
+        {showContextRail && home ? (
+          <WorkspaceContextRail home={home} activeSimulationId={activeSimulationId} />
+        ) : null}
       </div>
 
       {paletteOpen && ready ? (

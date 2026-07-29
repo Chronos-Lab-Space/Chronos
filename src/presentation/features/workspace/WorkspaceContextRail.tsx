@@ -7,15 +7,31 @@ import type { WorkspaceHome } from "../../../domain/workspace/types";
  * Right context rail — Details (objective, constraints, related sims, outcome)
  * and Notes (real workspace notes) as tabs, per the decision-workspace design.
  */
-export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
+export function WorkspaceContextRail({
+  home,
+  /**
+   * Simulation currently in view, when the route has one. Without it the rail
+   * describes the newest run — correct on dashboard routes, but on a detail
+   * page for an older run it would show a different simulation's constraints
+   * and link Log outcome at the wrong record.
+   */
+  activeSimulationId,
+}: {
+  home: WorkspaceHome;
+  activeSimulationId?: string;
+}) {
   const [tab, setTab] = useState<"details" | "notes">("details");
   const goal = home.goal;
   const knowledge = home.knowledge.slice(0, 6);
-  const related = home.recentSimulations.filter((s) => s.status === "completed").slice(0, 4);
-  const latest = home.recentSimulations[0];
+  const active =
+    (activeSimulationId ? home.recentSimulations.find((s) => s.id === activeSimulationId) : null) ??
+    home.recentSimulations[0];
+  const related = home.recentSimulations
+    .filter((s) => s.status === "completed" && s.id !== active?.id)
+    .slice(0, 4);
   const constraints =
-    latest && Array.isArray(latest.result.constraints)
-      ? (latest.result.constraints as string[]).slice(0, 6)
+    active && Array.isArray(active.result.constraints)
+      ? (active.result.constraints as string[]).slice(0, 6)
       : [];
 
   const tabClass = (active: boolean) =>
@@ -105,7 +121,7 @@ export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
                 </Link>
               </div>
               {constraints.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-faint">None on latest run.</p>
+                <p className="mt-2 text-sm text-ink-faint">None on this run.</p>
               ) : (
                 <ul className="mt-2 space-y-1.5 text-sm text-ink-dim">
                   {constraints.map((c) => (
@@ -147,7 +163,7 @@ export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
               ) : null}
             </section>
 
-            <section className="mt-5">
+            <section className="mt-5" data-testid="rail-related">
               <div className="flex items-center justify-between">
                 <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
                   Related simulations
@@ -183,23 +199,23 @@ export function WorkspaceContextRail({ home }: { home: WorkspaceHome }) {
                   Outcome tracking
                 </div>
                 <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[9px] uppercase text-ink-faint">
-                  {latest?.result.outcome_followed ? "In progress" : "Not started"}
+                  {active?.result.outcome_followed ? "In progress" : "Not started"}
                 </span>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-ink-dim">
                 Track real-world outcome once a path is chosen to improve future recommendations.
               </p>
-              {latest ? (
+              {active ? (
                 <Link
-                  to={`/workspace/simulations/${latest.id}`}
+                  to={`/workspace/simulations/${active.id}`}
                   className="mt-3 inline-flex rounded-full border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-dim transition hover:border-chronos/40 hover:text-chronos"
                 >
                   Log outcome
                 </Link>
               ) : null}
-              {latest ? (
+              {active ? (
                 <p className="mt-2 font-mono text-[10px] text-ink-faint">
-                  Latest {formatCreatedAt(latest.created_at)}
+                  Latest {formatCreatedAt(active.created_at)}
                 </p>
               ) : null}
             </section>
