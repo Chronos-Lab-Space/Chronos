@@ -17,19 +17,22 @@ test.describe("Chronos user workflows", () => {
     await expect(page.getByText(/best path/i).first()).toBeVisible({ timeout: 8_000 });
   });
 
-  test("an unauthenticated workspace visitor is redirected to login", async ({ page }) => {
+  test("an unauthenticated visitor gets a local workspace instead of a login wall", async ({
+    page,
+  }) => {
+    // Deliberate inversion of the previous "redirected to login" contract:
+    // the workspace is local-first and an account is how work is kept, not how
+    // it starts. See SPEC-anonymous-workspace.md.
     await page.goto("/workspace");
 
-    // Private workspace requires a session
-    await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole("heading", { name: /welcome back|start deciding/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page.getByTestId("sign-in-to-save")).toBeVisible({ timeout: 15_000 });
   });
 
-  test("legacy dashboard URL redirects unauthenticated users to login", async ({ page }) => {
+  test("legacy dashboard URL still lands on the workspace", async ({ page }) => {
     await page.goto("/dashboard");
 
-    await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole("heading", { name: /welcome back|start deciding/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/workspace$/);
   });
 
   test("login page leads with OAuth and email password", async ({ page }) => {

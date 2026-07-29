@@ -10,7 +10,14 @@ import {
 import { getDefaultCapabilityRegistry } from "../../../application/agent-os/createDefaultCapabilityRegistry";
 import { planChosenPath } from "../../../application/agent-os/planChosenPath";
 import { accountBootstrapService } from "../../../application/workspace/AccountBootstrapService";
-import { workspaceService } from "../../../application/workspace/WorkspaceService";
+import {
+  anonymousWorkspaceService,
+  workspaceService,
+} from "../../../application/workspace/WorkspaceService";
+import {
+  getOrCreateAnonymousOwnerId,
+  isAnonymousOwnerId,
+} from "../../../domain/workspace/anonymousOwner";
 import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
 import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
 import type {
@@ -79,6 +86,15 @@ type WorkspaceContextValue = {
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
 
+/**
+ * Anonymous visitors get the local-only service. Selecting by owner id keeps the
+ * boundary structural: there is no cloud store to accidentally write to, rather
+ * than a flag each call site must remember to check.
+ */
+function serviceFor(ownerId: string | null) {
+  return isAnonymousOwnerId(ownerId) ? anonymousWorkspaceService : workspaceService;
+}
+
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [ownerId, setOwnerId] = useState<string | null>(null);
   const [home, setHome] = useState<WorkspaceHome | null>(null);
@@ -92,14 +108,19 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const ownerIdRef = useRef<string | null>(null);
 
   const syncRemoteError = useCallback(() => {
-    setRemoteError(workspaceService.getRemoteError());
+    // Anonymous mode has no remote, so it can never have a remote error.
+    setRemoteError(
+      isAnonymousOwnerId(ownerIdRef.current) ? null : workspaceService.getRemoteError()
+    );
   }, []);
 
   const resolveOwnerId = useCallback(async (): Promise<string | null> => {
     const session = await authService.currentSession();
     if (session?.user?.id) return session.user.id;
     const user = await authService.currentUser();
-    return user?.id ?? null;
+    if (user?.id) return user.id;
+    // No account: the workspace still opens, backed by local storage only.
+    return getOrCreateAnonymousOwnerId();
   }, []);
 
   /**
@@ -119,13 +140,21 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         const user = session?.user ?? (await authService.currentUser());
         const id = user?.id ?? null;
         if (!id || !user) {
-          hasHydratedRef.current = false;
-          ownerIdRef.current = null;
-          setOwnerId(null);
-          setHome(null);
-          setWorkspaces([]);
-          setPreferences(DEFAULT_PREFERENCES);
+          // No account: hydrate an anonymous, local-only workspace rather than
+          // an empty shell. Signing in later claims this work.
+          const anonId = getOrCreateAnonymousOwnerId();
+          const anonService = serviceFor(anonId);
+          const [anonHome, anonList] = await Promise.all([
+            anonService.load(anonId),
+            anonService.listWorkspaces(anonId),
+          ]);
+          ownerIdRef.current = anonId;
+          setOwnerId(anonId);
+          setHome(anonHome);
+          setWorkspaces(anonList);
+          setPreferences(loadUserPreferences(anonId));
           setRemoteError(null);
+          hasHydratedRef.current = true;
           return;
         }
         setOwnerId(id);
@@ -140,8 +169,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
 
         const [loaded, list] = await Promise.all([
-          workspaceService.load(id),
-          workspaceService.listWorkspaces(id),
+          serviceFor(id).load(id),
+          serviceFor(id).listWorkspaces(id),
         ]);
         setHome(loaded);
         setWorkspaces(list);
@@ -207,7 +236,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       try {
         const next = await action(id);
         setHome(next);
-        const list = await workspaceService.listWorkspaces(id);
+        const list = await serviceFor(id).listWorkspaces(id);
         setWorkspaces(list);
         syncRemoteError();
         return next;
@@ -243,7 +272,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       refresh,
       createWorkspace: async (name, description) => {
         const next = await withOwner((id) =>
-          workspaceService.createWorkspace(id, name, description ?? "")
+          serviceFor(id).createWorkspace(id, name, description ?? "")
         );
         trackProductEvent("workspace_created", {
           workspaceId: next.workspace.id,
@@ -261,9 +290,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         setLoading(true);
         setError(null);
         try {
-          const next = await workspaceService.switchWorkspace(id, workspaceId);
+          const next = await serviceFor(id).switchWorkspace(id, workspaceId);
           setHome(next);
-          setWorkspaces(await workspaceService.listWorkspaces(id));
+          setWorkspaces(await serviceFor(id).listWorkspaces(id));
           trackProductEvent("workspace_opened", { workspaceId });
         } catch (err) {
           setError((err as Error).message);
@@ -273,51 +302,51 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         }
       },
       setGoal: async (title, description) => {
-        await withOwner((id) => workspaceService.setGoal(id, title, description ?? ""));
+        await withOwner((id) => serviceFor(id).setGoal(id, title, description ?? ""));
         trackProductEvent("goal_set", { titleLength: title.trim().length });
       },
       addKnowledge: async (input) => {
-        await withOwner((id) => workspaceService.addKnowledge(id, input));
+        await withOwner((id) => serviceFor(id).addKnowledge(id, input));
         trackProductEvent("knowledge_added", { type: input.type });
       },
       updateKnowledge: async (knowledgeId, patch) => {
-        await withOwner((id) => workspaceService.updateKnowledge(id, knowledgeId, patch));
+        await withOwner((id) => serviceFor(id).updateKnowledge(id, knowledgeId, patch));
       },
       deleteKnowledge: async (knowledgeId) => {
-        await withOwner((id) => workspaceService.deleteKnowledge(id, knowledgeId));
+        await withOwner((id) => serviceFor(id).deleteKnowledge(id, knowledgeId));
       },
       addNote: async (title, content) => {
-        await withOwner((id) => workspaceService.addNote(id, title, content));
+        await withOwner((id) => serviceFor(id).addNote(id, title, content));
         trackProductEvent("knowledge_added", { type: "note" });
       },
       deleteNote: async (noteId) => {
-        await withOwner((id) => workspaceService.deleteNote(id, noteId));
+        await withOwner((id) => serviceFor(id).deleteNote(id, noteId));
       },
       runSimulation: async (objective, constraints = []) => {
         // Analytics: SimulationStarted/Finished → productEventSubscribers
         const next = await withOwner((id) =>
-          workspaceService.runSimulation(id, objective, constraints)
+          serviceFor(id).runSimulation(id, objective, constraints)
         );
         const sim = next.recentSimulations[0];
         return sim?.id ?? null;
       },
       rerunSimulation: async (parentSimulationId, constraints) => {
         const next = await withOwner((id) =>
-          workspaceService.rerunSimulation(id, parentSimulationId, constraints)
+          serviceFor(id).rerunSimulation(id, parentSimulationId, constraints)
         );
         const sim = next.recentSimulations[0];
         return sim?.id ?? null;
       },
       rebranchFromOpen: async (parentSimulationId, constraints) => {
         const next = await withOwner((id) =>
-          workspaceService.rebranchFromOpen(id, parentSimulationId, constraints)
+          serviceFor(id).rebranchFromOpen(id, parentSimulationId, constraints)
         );
         const sim = next.recentSimulations[0];
         return sim?.id ?? null;
       },
       chooseBestPath: async (simulationId, futureId) => {
         const saved = await withOwner((id) =>
-          workspaceService.chooseBestPath(id, simulationId, futureId)
+          serviceFor(id).chooseBestPath(id, simulationId, futureId)
         );
         trackProductEvent("path_chosen", { simulationId, futureId });
 
@@ -339,19 +368,19 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           if (plan.steps.length === 0) return;
 
           await withOwner((id) =>
-            workspaceService.saveExecutionPlan(id, simulationId, plan.steps, plan.source)
+            serviceFor(id).saveExecutionPlan(id, simulationId, plan.steps, plan.source)
           );
         } catch (err) {
           console.warn("[chronos] execution plan skipped; decision stands.", err);
         }
       },
       recordOutcomeFollowed: async (simulationId, followed) => {
-        await withOwner((id) => workspaceService.recordOutcomeFollowed(id, simulationId, followed));
+        await withOwner((id) => serviceFor(id).recordOutcomeFollowed(id, simulationId, followed));
         trackProductEvent("outcome_followed", { simulationId, followed });
       },
       recordOutcomeResult: async (simulationId, resultNote, verdict) => {
         await withOwner((id) =>
-          workspaceService.recordOutcomeResult(id, simulationId, resultNote, verdict)
+          serviceFor(id).recordOutcomeResult(id, simulationId, resultNote, verdict)
         );
         trackProductEvent("outcome_result", {
           simulationId,

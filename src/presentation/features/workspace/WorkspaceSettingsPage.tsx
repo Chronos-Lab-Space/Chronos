@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
 import {
   formatDurationMs,
@@ -5,11 +6,13 @@ import {
 } from "../../../infrastructure/analytics/productAnalytics";
 import { useWorkspace } from "./WorkspaceContext";
 import { SurfaceLoading } from "./SurfaceLoading";
+import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
 
 /** Workspace settings — switch, create, inspect, share. */
 export function WorkspaceSettingsPage() {
   const {
     home,
+    ownerId,
     workspaces,
     createWorkspace,
     switchWorkspace,
@@ -26,6 +29,37 @@ export function WorkspaceSettingsPage() {
   const analytics = useMemo(() => getProductAnalyticsSnapshot(), [home]);
 
   if (!home) return <SurfaceLoading eyebrow="Workspace" title="Workspaces" size="md" />;
+
+  // Sharing and members need real identities, so this surface needs an account.
+  // A sign-in prompt keeps an anonymous visitor inside the app; a redirect would
+  // eject them from a workspace that otherwise works without one.
+  if (isAnonymousOwnerId(ownerId)) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            Workspace
+          </div>
+          <h1 className="mt-2 font-serif text-3xl text-ink sm:text-4xl">Workspaces</h1>
+        </div>
+        <div
+          data-testid="settings-requires-account"
+          className="rounded-2xl border border-chronos/30 bg-chronos/5 px-5 py-6"
+        >
+          <p className="text-sm leading-relaxed text-ink-dim">
+            Multiple workspaces and sharing need an account — they identify who a workspace belongs
+            to. Your current decisions stay on this device until you sign in.
+          </p>
+          <Link
+            to="/login"
+            className="mt-4 inline-flex rounded-full border border-chronos/40 bg-chronos/10 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-chronos transition hover:bg-chronos/20"
+          >
+            Sign in to keep your decisions
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();

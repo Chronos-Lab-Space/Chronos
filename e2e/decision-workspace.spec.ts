@@ -246,9 +246,30 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByTestId("graph-describe")).not.toContainText(/not yet collapsed/i);
   });
 
-  test("without e2e flag, workspace still requires login", async ({ page }) => {
-    // No localStorage flag — even with VITE_E2E_AUTH build flag, must redirect
+  test("an anonymous visitor gets a workspace, and is told it is device-only", async ({ page }) => {
+    // Deliberately replaces "workspace still requires login". The workspace is
+    // local-first: no account needed to run the decision loop, and signing in is
+    // how work becomes durable. See SPEC-anonymous-workspace.md.
     await page.goto("/workspace");
-    await expect(page).toHaveURL(/\/login$/);
+
+    await expect(page).toHaveURL(/\/workspace$/);
+    await expect(page.getByTestId("sign-in-to-save")).toBeVisible({ timeout: 15_000 });
+    // The durability limit must be stated, not implied.
+    await expect(page.getByTestId("anonymous-banner")).toContainText(/this device only/i);
+  });
+
+  test("settings asks an anonymous visitor to sign in rather than ejecting them", async ({
+    page,
+  }) => {
+    // Sharing and members need real identities. A prompt in place keeps the
+    // visitor inside a workspace that otherwise works without an account; a
+    // redirect would throw them out of it.
+    // A brand-new visitor has no workspace yet, so the shell shows onboarding
+    // rather than the settings surface. What matters here is the inversion: no
+    // login wall. The sign-in gate itself is covered by a component test, which
+    // can put the page in the anonymous-with-workspace state directly.
+    await page.goto("/workspace/settings");
+    await expect(page).toHaveURL(/\/workspace\/settings$/);
+    await expect(page).not.toHaveURL(/\/login/);
   });
 });

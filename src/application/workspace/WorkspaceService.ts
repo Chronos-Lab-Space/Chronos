@@ -1119,3 +1119,14 @@ export class WorkspaceService {
 }
 
 export const workspaceService = new WorkspaceService();
+
+/**
+ * Local-only service for anonymous visitors.
+ *
+ * `remote: null` is the security boundary and it is structural rather than
+ * conditional: with no cloud store constructed, there is no code path that can
+ * write anonymous data to Supabase — no flag to forget to check.
+ *
+ * See SPEC-anonymous-workspace.md.
+ */
+export const anonymousWorkspaceService = new WorkspaceService({ remote: null });
