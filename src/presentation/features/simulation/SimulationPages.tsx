@@ -13,6 +13,7 @@ import { DecisionReportCard } from "./components/DecisionReportCard";
 import { FutureComparison } from "./components/FutureComparison";
 import { FutureGraph } from "./FutureGraph";
 import { OutcomeTracking } from "./components/OutcomeTracking";
+import { SurfaceLoading } from "../workspace/SurfaceLoading";
 
 export function SimulationsPage() {
   const { home, runSimulation, error } = useWorkspace();
@@ -25,7 +26,7 @@ export function SimulationsPage() {
   const [constraints, setConstraints] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (!home) return null;
+  if (!home) return <SurfaceLoading eyebrow="Simulation engine" title="Simulations" size="md" />;
 
   const knowledgePreview = home.knowledge.slice(0, 5);
 
@@ -269,7 +270,7 @@ export function SimulationDetailPage() {
       .sort((a, b) => a.version - b.version);
   }, [home, sim]);
 
-  if (!home) return null;
+  if (!home) return <SurfaceLoading eyebrow="Simulation" title="Decision report" size="md" />;
   if (!sim) {
     return (
       <div>

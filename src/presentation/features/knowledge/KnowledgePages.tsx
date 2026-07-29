@@ -13,6 +13,7 @@ import {
 import { knowledgeCounts } from "../../../domain/workspace/seed";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { MarkdownNoteEditor } from "./components/MarkdownNoteEditor";
+import { SurfaceLoading } from "../workspace/SurfaceLoading";
 
 /**
  * Phase 3 — Knowledge Library (RAG-lite).
@@ -41,7 +42,7 @@ export function KnowledgePage() {
   const counts = useMemo(() => knowledgeCounts(knowledge), [knowledge]);
   const hits = useMemo(() => searchLibrary(knowledge, notes, query), [knowledge, notes, query]);
 
-  if (!home) return null;
+  if (!home) return <SurfaceLoading eyebrow="Knowledge" title="Library" size="lg" />;
 
   const openPanel = (next: "upload" | "import" | null) => {
     if (!next) setParams({});
@@ -345,7 +346,7 @@ export function NotesPage() {
     );
   }, [notes, query]);
 
-  if (!home) return null;
+  if (!home) return <SurfaceLoading eyebrow="Notes" title="Working notes" size="lg" />;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
