@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
 import { isWorkspaceOnboarded } from "../../../domain/workspace/onboarding";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
@@ -9,6 +9,7 @@ import { WorkspaceContextRail } from "./WorkspaceContextRail";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
 import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 import { WorkspaceStageBand } from "./WorkspaceStageBand";
+import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
 
@@ -55,6 +56,7 @@ function WorkspaceShellInner() {
 
   const ready = isWorkspaceOnboarded(home);
   const initials = (ownerId ?? "You").slice(0, 2).toUpperCase();
+  const anonymous = isAnonymousOwnerId(ownerId);
   const routeKey = location.pathname;
   const brief = deriveDecisionBrief(home);
   // Simulation detail is where a decision is actually worked — compare futures,
@@ -144,23 +146,48 @@ function WorkspaceShellInner() {
                 </span>
               </button>
             )}
-            <div
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-line font-mono text-[10px] text-chronos"
-              title={ownerId ?? "You"}
-            >
-              {initials}
-            </div>
-            <button
-              type="button"
-              onClick={() => void handleSignOut()}
-              aria-label="Sign out"
-              className="hidden rounded-full border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-dim transition hover:border-chronos/40 hover:text-ink sm:inline-flex"
-            >
-              Sign out
-            </button>
+            {anonymous ? (
+              <Link
+                to="/login"
+                data-testid="sign-in-to-save"
+                className="rounded-full border border-chronos/40 bg-chronos/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-chronos transition hover:bg-chronos/20"
+              >
+                Sign in to save
+              </Link>
+            ) : (
+              <>
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-line font-mono text-[10px] text-chronos"
+                  title={ownerId ?? "You"}
+                >
+                  {initials}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleSignOut()}
+                  aria-label="Sign out"
+                  className="hidden rounded-full border border-line px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-dim transition hover:border-chronos/40 hover:text-ink sm:inline-flex"
+                >
+                  Sign out
+                </button>
+              </>
+            )}
           </div>
         </div>
       </header>
+
+      {anonymous && (
+        <div
+          role="status"
+          data-testid="anonymous-banner"
+          className="border-b border-chronos/25 bg-chronos/5 px-4 py-2 text-center text-[13px] text-ink-dim"
+        >
+          Saved on this device only — clearing your browser data loses it.{" "}
+          <Link to="/login" className="text-chronos underline-offset-2 hover:underline">
+            Sign in to keep your decisions
+          </Link>
+        </div>
+      )}
 
       {remoteError && (
         <div

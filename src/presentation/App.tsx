@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Navigate, Routes, Route, useNavigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { HomePage } from "./components/HomePage";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { OptionalAuthRoute } from "./components/OptionalAuthRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { QuietLoading } from "./features/workspace/WorkspaceLoadingScreen";
@@ -111,13 +111,15 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
-        {/* Authenticated product: Workspace is the foundation */}
+        {/* Local-first product: the workspace opens without an account.
+            Signing in makes work durable and shareable — see
+            SPEC-anonymous-workspace.md. */}
         <Route
           path="/workspace"
           element={lazyRoute(
-            <ProtectedRoute>
+            <OptionalAuthRoute>
               <WorkspaceShell />
-            </ProtectedRoute>
+            </OptionalAuthRoute>
           )}
         >
           {/* Decision Brief is the workspace home; the HQ dashboard moved to /workspace/hq */}
@@ -128,6 +130,10 @@ function App() {
           <Route path="simulations" element={lazyRoute(<SimulationsPage />)} />
           <Route path="simulations/:simulationId" element={lazyRoute(<SimulationDetailPage />)} />
           <Route path="timeline" element={lazyRoute(<TimelinePage />)} />
+          {/* Settings owns sharing and members, which need a real identity.
+              Gated inside the page rather than by a route guard: this route
+              renders through the shell's Outlet, which only mounts once
+              onboarding completes, so a nested guard would never fire. */}
           <Route path="settings" element={lazyRoute(<WorkspaceSettingsPage />)} />
           {/* Hidden from primary nav — deep links still work */}
           <Route path="notes" element={lazyRoute(<NotesPage />)} />
