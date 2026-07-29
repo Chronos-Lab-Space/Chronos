@@ -14,6 +14,10 @@
  */
 
 import { isAnonymousOwnerId } from "../../domain/workspace/anonymousOwner";
+import {
+  isSampleSimulation,
+  withoutSampleSimulations,
+} from "../../domain/workspace/sampleDecision";
 import type { LocalWorkspaceStore } from "./LocalWorkspaceStore";
 
 export type ClaimOutcome =
@@ -32,10 +36,15 @@ export type ClaimResult = {
   workspaceName?: string;
 };
 
-/** A bundle counts as "work" only if it holds at least one simulation. */
+/**
+ * A bundle counts as "work" only if it holds a simulation the person actually
+ * ran. The seeded sample is a demo: claiming it would hand every signed-up user
+ * a decision and a note they never made, and the note silently satisfies the
+ * onboarding context gate.
+ */
 function hasWork(store: LocalWorkspaceStore, ownerId: string): boolean {
   const home = store.get(ownerId);
-  return Boolean(home && home.recentSimulations.length > 0);
+  return Boolean(home && withoutSampleSimulations(home.recentSimulations).length > 0);
 }
 
 export function claimAnonymousWork(
@@ -50,7 +59,7 @@ export function claimAnonymousWork(
   }
 
   const anonymousHome = store.get(anonymousOwnerId);
-  if (!anonymousHome || anonymousHome.recentSimulations.length === 0) {
+  if (!anonymousHome || withoutSampleSimulations(anonymousHome.recentSimulations).length === 0) {
     // An id minted by merely visiting is not work. Nothing to move, and the
     // account's own data must not be disturbed.
     return { outcome: "nothing-to-claim" };
@@ -60,7 +69,22 @@ export function claimAnonymousWork(
     return { outcome: "kept-separate", workspaceName: anonymousHome.workspace.name };
   }
 
-  store.save(realOwnerId, anonymousHome);
+  // Carry only their own work across — the sample stays behind with the
+  // anonymous identity, along with the futures and timeline keyed to it.
+  const sampleIds = anonymousHome.recentSimulations.filter(isSampleSimulation).map((s) => s.id);
+  const futuresBySimulation = { ...anonymousHome.futuresBySimulation };
+  const timelineBySimulation = { ...anonymousHome.timelineBySimulation };
+  for (const id of sampleIds) {
+    delete futuresBySimulation[id];
+    delete timelineBySimulation[id];
+  }
+
+  store.save(realOwnerId, {
+    ...anonymousHome,
+    recentSimulations: withoutSampleSimulations(anonymousHome.recentSimulations),
+    futuresBySimulation,
+    timelineBySimulation,
+  });
   store.clear(anonymousOwnerId);
 
   return { outcome: "claimed", workspaceName: anonymousHome.workspace.name };

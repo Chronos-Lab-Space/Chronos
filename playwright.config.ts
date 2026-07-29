@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Absorb the dev server's first on-demand compile once, so it is not charged
+  // to whichever test happens to load the simulator route first.
+  globalSetup: "./e2e/globalSetup.ts",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,

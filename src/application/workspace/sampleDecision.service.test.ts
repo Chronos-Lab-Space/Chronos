@@ -4,6 +4,7 @@ import {
   isSampleSimulation,
   withoutSampleSimulations,
 } from "../../domain/workspace/sampleDecision";
+import { isWorkspaceOnboarded, requiredOnboardingStep } from "../../domain/workspace/onboarding";
 import { WorkspaceService } from "./WorkspaceService";
 
 const OWNER = "anon-11111111-1111-4111-8111-111111111111";
@@ -91,6 +92,19 @@ describe("sample decision seeding", () => {
     expect(reseeded).toHaveLength(1);
     expect(reseeded[0]!.status).toBe("completed");
     expect(home.futuresBySimulation[reseeded[0]!.id]?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("leaves the goal unset so the visitor is still asked for their decision", async () => {
+    // The sample is an example to look at, not the visitor's decision. Claiming
+    // the goal made isWorkspaceOnboarded true, so a first-time visitor skipped
+    // the wizard and landed on someone else's objective.
+    const home = await service.seedSampleDecision(OWNER);
+
+    expect(home.goal).toBeNull();
+    expect(isWorkspaceOnboarded(home)).toBe(false);
+    expect(requiredOnboardingStep(home)).toBe("goal");
+    // The sample is still there to explore.
+    expect(home.recentSimulations.some(isSampleSimulation)).toBe(true);
   });
 
   it("seeds at most one sample", async () => {
