@@ -256,6 +256,22 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByTestId("sign-in-to-save")).toBeVisible({ timeout: 15_000 });
     // The durability limit must be stated, not implied.
     await expect(page.getByTestId("anonymous-banner")).toContainText(/this device only/i);
+
+    // Seeded worked example: the visitor lands on a real decision rather than
+    // an empty workspace or the onboarding wizard.
+    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
+    await page.goto("/workspace/simulations");
+    const sampleRun = page.getByRole("link", { name: /launch our public beta/i }).first();
+    await expect(sampleRun).toBeVisible({ timeout: 15_000 });
+    await sampleRun.click();
+
+    // Labelled as a sample — it must never read as the visitor's own run.
+    await expect(page.getByTestId("sample-banner")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 15_000 });
+
+    // And removable in one click.
+    await page.getByTestId("remove-sample").click();
+    await expect(page.getByTestId("sample-banner")).toHaveCount(0, { timeout: 10_000 });
   });
 
   test("settings asks an anonymous visitor to sign in rather than ejecting them", async ({

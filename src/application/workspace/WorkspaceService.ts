@@ -1,4 +1,8 @@
-import type { SimulationConstraint, SimulationEngineOutput } from "../simulation/SimulationEngine";
+import {
+  SimulationEngine,
+  type SimulationConstraint,
+  type SimulationEngineOutput,
+} from "../simulation/SimulationEngine";
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
 import { registerProductEventSubscribers } from "../runtime/productEventSubscribers";
@@ -32,6 +36,13 @@ import {
   localWorkspaceStore,
 } from "../../infrastructure/repositories/LocalWorkspaceStore";
 import { supabaseWorkspaceRepository } from "../../infrastructure/repositories/SupabaseWorkspaceRepository";
+import {
+  isSampleSimulation,
+  SAMPLE_NOTE_BODY,
+  SAMPLE_NOTE_TITLE,
+  SAMPLE_OBJECTIVE,
+  SAMPLE_WORKSPACE_NAME,
+} from "../../domain/workspace/sampleDecision";
 
 function engineOutputFromAgent(data: Record<string, unknown>): SimulationEngineOutput {
   const engine = data.engine;
@@ -65,6 +76,23 @@ function uuid(): string {
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+/** Remove simulations and every relation keyed by their ids. */
+function dropSimulations(home: WorkspaceHome, ids: readonly string[]): WorkspaceHome {
+  const drop = new Set(ids);
+  const futuresBySimulation = { ...home.futuresBySimulation };
+  const timelineBySimulation = { ...home.timelineBySimulation };
+  for (const id of drop) {
+    delete futuresBySimulation[id];
+    delete timelineBySimulation[id];
+  }
+  return {
+    ...home,
+    recentSimulations: home.recentSimulations.filter((s) => !drop.has(s.id)),
+    futuresBySimulation,
+    timelineBySimulation,
+  };
 }
 
 function emptyRelations(): Pick<WorkspaceHome, "futuresBySimulation" | "timelineBySimulation"> {
@@ -394,9 +422,17 @@ export class WorkspaceService {
     constraintLines: string[] = [],
     options: { parentSimulationId?: string } = {}
   ): Promise<WorkspaceHome> {
-    const home = await this.require(ownerId);
+    const required = await this.require(ownerId);
     const title = objective.trim();
     if (!title) throw new Error("Simulation objective is required.");
+
+    // The user is running their own decision now; the demo has served its
+    // purpose and must not sit beside real work.
+    const sampleIds = required.recentSimulations.filter(isSampleSimulation).map((s) => s.id);
+    const home =
+      sampleIds.length > 0
+        ? await this.persist(ownerId, dropSimulations(required, sampleIds))
+        : required;
 
     const parent = options.parentSimulationId
       ? home.recentSimulations.find((s) => s.id === options.parentSimulationId)
@@ -1049,6 +1085,125 @@ export class WorkspaceService {
         text,
         kind: /^(must|hard|required|no |never)/i.test(text) ? ("hard" as const) : ("soft" as const),
       }));
+  }
+
+  /**
+   * Seed a worked example a new visitor can explore immediately.
+   *
+   * Runs the **real engine** and collapses through the ordinary chooseBestPath
+   * path, so the sample's futures and ranking are exactly what Chronos would
+   * produce for that objective. Hand-written fixtures would be a fabricated
+   * ranking in a product whose entire claim is deterministic ranking.
+   *
+   * No-ops when the workspace already holds any simulation — a sample is for an
+   * empty workspace, and must never appear beside real work.
+   */
+  async seedSampleDecision(ownerId: string): Promise<WorkspaceHome> {
+    let home = this.local.get(ownerId) ?? (await this.load(ownerId));
+
+    if (home) {
+      const sims = home.recentSimulations;
+      // Any real work at all means no sample.
+      if (sims.some((s) => !isSampleSimulation(s))) return this.normalize(home);
+      // A completed sample is already seeded.
+      if (sims.some((s) => isSampleSimulation(s) && s.status === "completed")) {
+        return this.normalize(home);
+      }
+      // A sample left mid-flight — the visitor navigated while it was seeding —
+      // would otherwise be treated as "already seeded" and stay stuck running
+      // forever. Drop it and seed again.
+      const stale = sims.filter(isSampleSimulation).map((s) => s.id);
+      if (stale.length > 0) {
+        home = await this.persist(ownerId, dropSimulations(home, stale));
+      }
+    }
+
+    if (!home) {
+      home = await this.createWorkspace(ownerId, SAMPLE_WORKSPACE_NAME, "");
+    }
+    if (!home.goal?.title?.trim()) {
+      home = await this.setGoal(ownerId, SAMPLE_OBJECTIVE, "");
+    }
+    if (home.knowledge.length === 0 && home.notes.length === 0) {
+      home = await this.addNote(ownerId, SAMPLE_NOTE_TITLE, SAMPLE_NOTE_BODY);
+    }
+
+    // Run the engine directly rather than through runSimulation.
+    //
+    // Same engine, same ranking — but SimulationEngine.run is synchronous,
+    // whereas runSimulation drives the async agent runtime and persists a
+    // "running" record partway through. That intermediate state is abortable:
+    // a visitor who navigates while the sample is seeding leaves a stuck run
+    // behind, and the next load treats it as already-seeded. Building the
+    // finished record and persisting once removes the window entirely.
+    const simId = uuid();
+    const createdAt = nowIso();
+    const output = new SimulationEngine().run({
+      simulationId: simId,
+      workspaceId: home.workspace.id,
+      goal: home.goal ?? null,
+      objective: SAMPLE_OBJECTIVE,
+      knowledge: home.knowledge,
+      notes: home.notes,
+      constraints: [],
+    });
+
+    const chosen = output.futures[0] ?? output.best;
+    const sample: SimulationRecord = {
+      id: simId,
+      workspace_id: home.workspace.id,
+      goal_id: home.goal?.id ?? null,
+      title: SAMPLE_OBJECTIVE,
+      status: "completed",
+      confidence: output.confidence,
+      result: {
+        is_sample: true,
+        futures_count: output.futures.length,
+        best_future: output.best.name,
+        recommendation: output.recommendation,
+        risks: output.risks,
+        tasks: output.tasks,
+        paths_evaluated: output.pathsEvaluated,
+        path_archetypes: output.pathArchetypes,
+        disqualified_count: output.disqualifiedCount,
+        graph_branch_ids: output.futures.map((f) => f.id),
+        // Collapsed, so the visitor sees the whole loop rather than a half-run.
+        chosen_future_id: chosen.id,
+        chosen_future_name: chosen.name,
+        chosen_summary: chosen.summary,
+        chosen_at: createdAt,
+        graph_shape: "collapsed",
+        graph_op: "collapse",
+        graph_active_node: "n2-collapsed",
+        graph_collapsed_future_id: chosen.id,
+      },
+      created_at: createdAt,
+      version: 1,
+      lineage_id: simId,
+      parent_simulation_id: null,
+    };
+
+    return this.persist(ownerId, {
+      ...home,
+      recentSimulations: [sample, ...home.recentSimulations],
+      futuresBySimulation: { ...home.futuresBySimulation, [simId]: output.futures },
+      timelineBySimulation: { ...home.timelineBySimulation, [simId]: output.timeline },
+    });
+  }
+
+  /** Remove the sample and its relations, leaving no orphaned futures behind. */
+  async removeSampleDecision(ownerId: string): Promise<WorkspaceHome> {
+    const home = await this.require(ownerId);
+    const samples = home.recentSimulations.filter(isSampleSimulation);
+    if (samples.length === 0) return home;
+
+    return this.persist(
+      ownerId,
+      dropSimulations(
+        home,
+        samples.map((s) => s.id)
+      )
+    );
   }
 
   private async require(ownerId: string): Promise<WorkspaceHome> {

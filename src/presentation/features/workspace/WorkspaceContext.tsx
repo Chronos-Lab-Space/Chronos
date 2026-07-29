@@ -78,6 +78,8 @@ type WorkspaceContextValue = {
   /** Decision-graph rollback: fork next version from N0 Open. */
   rebranchFromOpen: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
   chooseBestPath: (simulationId: string, futureId: string) => Promise<void>;
+  /** Discard the seeded worked example. */
+  removeSampleDecision: () => Promise<void>;
   recordOutcomeFollowed: (simulationId: string, followed: OutcomeFollowed) => Promise<void>;
   recordOutcomeResult: (
     simulationId: string,
@@ -151,6 +153,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           // an empty shell. Signing in later claims this work.
           const anonId = getOrCreateAnonymousOwnerId();
           const anonService = serviceFor(anonId);
+          // A brand-new visitor gets a worked example rather than an empty
+          // workspace — the cold-start problem one step past the login wall.
+          // Seeding no-ops once any simulation exists, so a returning visitor
+          // never has one re-appear.
+          try {
+            await anonService.seedSampleDecision(anonId);
+          } catch (err) {
+            // A missing sample is cosmetic; never block the workspace on it.
+            console.warn("[chronos] sample decision seed skipped", err);
+          }
           const [anonHome, anonList] = await Promise.all([
             anonService.load(anonId),
             anonService.listWorkspaces(anonId),
@@ -373,6 +385,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         );
         const sim = next.recentSimulations[0];
         return sim?.id ?? null;
+      },
+      removeSampleDecision: async () => {
+        await withOwner((id) => serviceFor(id).removeSampleDecision(id));
       },
       chooseBestPath: async (simulationId, futureId) => {
         const saved = await withOwner((id) =>
