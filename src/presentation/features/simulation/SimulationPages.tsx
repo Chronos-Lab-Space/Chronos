@@ -309,6 +309,9 @@ export function SimulationDetailPage() {
   const activeFutureId = selectedFutureId ?? chosenId ?? futures[0]?.id ?? null;
   const decisionGraph =
     sim.status === "completed" && futures.length > 0 ? buildDecisionGraph(sim, futures) : null;
+  const planSteps = Array.isArray(sim.result.plan_steps)
+    ? sim.result.plan_steps.filter((s): s is string => typeof s === "string" && s.length > 0)
+    : [];
 
   return (
     <div className="space-y-10">
@@ -453,6 +456,37 @@ export function SimulationDetailPage() {
             />
           }
         />
+      )}
+
+      {/* Execution plan — steps for the path already committed to */}
+      {planSteps.length > 0 && (
+        <section
+          data-testid="execution-plan"
+          className="rounded-2xl border border-line bg-bg/50 p-5 sm:p-6"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
+              Execution plan
+            </h2>
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+              {sim.result.plan_source === "ai" ? "AI-drafted" : "Draft"}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-ink-dim">
+            Steps for {String(sim.result.chosen_future_name ?? "the chosen path")}. The decision is
+            already made — these do not change the ranking.
+          </p>
+          <ol className="mt-4 space-y-2">
+            {planSteps.map((step, i) => (
+              <li key={step} className="flex gap-3 text-sm text-ink">
+                <span className="font-mono text-[11px] text-ink-faint">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
 
       {/* Future graph — signature branching visualization */}
