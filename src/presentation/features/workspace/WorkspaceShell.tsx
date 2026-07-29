@@ -50,7 +50,7 @@ export function WorkspaceShell() {
 function WorkspaceShellInner() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { home, loading, ownerId, error, remoteError } = useWorkspace();
+  const { home, loading, ownerId, error, remoteError, notice, dismissNotice } = useWorkspace();
   const [moreOpen, setMoreOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
@@ -175,6 +175,23 @@ function WorkspaceShellInner() {
           </div>
         </div>
       </header>
+
+      {notice && (
+        <div
+          role="status"
+          data-testid="workspace-notice"
+          className="flex items-center justify-center gap-3 border-b border-chronos/25 bg-chronos/10 px-4 py-2 text-center text-[13px] text-ink-dim"
+        >
+          <span>{notice}</span>
+          <button
+            type="button"
+            onClick={dismissNotice}
+            className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] uppercase text-ink-faint transition hover:text-ink"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {anonymous && (
         <div
