@@ -1121,12 +1121,16 @@ export class WorkspaceService {
     if (!home) {
       home = await this.createWorkspace(ownerId, SAMPLE_WORKSPACE_NAME, "");
     }
-    if (!home.goal?.title?.trim()) {
-      home = await this.setGoal(ownerId, SAMPLE_OBJECTIVE, "");
-    }
     if (home.knowledge.length === 0 && home.notes.length === 0) {
       home = await this.addNote(ownerId, SAMPLE_NOTE_TITLE, SAMPLE_NOTE_BODY);
     }
+
+    // Deliberately does NOT set the workspace goal. The sample is an example to
+    // look at, not the visitor's decision — claiming the goal made
+    // isWorkspaceOnboarded true, so a first-time visitor skipped the wizard
+    // entirely and landed on someone else's objective in a workspace named
+    // after the sample. Leaving the goal unset keeps "What decision are you
+    // trying to make?" as the first thing they are asked.
 
     // Run the engine directly rather than through runSimulation.
     //
@@ -1141,7 +1145,9 @@ export class WorkspaceService {
     const output = new SimulationEngine().run({
       simulationId: simId,
       workspaceId: home.workspace.id,
-      goal: home.goal ?? null,
+      // No goal: the sample stands on its own objective and must not depend on
+      // (or imply) a goal the visitor has not set yet.
+      goal: null,
       objective: SAMPLE_OBJECTIVE,
       knowledge: home.knowledge,
       notes: home.notes,
@@ -1152,7 +1158,7 @@ export class WorkspaceService {
     const sample: SimulationRecord = {
       id: simId,
       workspace_id: home.workspace.id,
-      goal_id: home.goal?.id ?? null,
+      goal_id: null,
       title: SAMPLE_OBJECTIVE,
       status: "completed",
       confidence: output.confidence,

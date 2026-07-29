@@ -257,9 +257,23 @@ test.describe("Decision Workspace (authenticated)", () => {
     // The durability limit must be stated, not implied.
     await expect(page.getByTestId("anonymous-banner")).toContainText(/this device only/i);
 
-    // Seeded worked example: the visitor lands on a real decision rather than
-    // an empty workspace or the onboarding wizard.
+    // Asked for their own decision first. The seeded sample is an example to
+    // look at, not the visitor's identity — it must not answer "what are you
+    // deciding?" on their behalf.
+    await expect(
+      page.getByRole("heading", {
+        name: /what decision are you trying to make|what are you trying to decide|current goal/i,
+      })
+    ).toBeVisible({ timeout: 15_000 });
+
+    await page.getByLabel(/first decision|decision \/ goal/i).fill("My own beta decision");
+    await page.getByRole("button", { name: /continue/i }).click();
+
+    // Their decision is the workspace's, not the sample's.
     await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("My own beta decision").first()).toBeVisible();
+
+    // And the sample is still there to explore.
     await page.goto("/workspace/simulations");
     const sampleRun = page.getByRole("link", { name: /launch our public beta/i }).first();
     await expect(sampleRun).toBeVisible({ timeout: 15_000 });
