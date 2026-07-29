@@ -12,12 +12,23 @@ import {
 import { useWorkspace } from "./WorkspaceContext";
 
 /**
- * Mandatory path: Create → Name → Goal → Context → Dashboard.
- * No skipping. Frames "What am I working on?"
+ * Path: Create → Name → Goal → Context → Dashboard.
+ * Workspace and goal are required; context is offered but skippable.
+ * Frames "What am I working on?"
  */
 export function WorkspaceOnboarding() {
-  const { home, createWorkspace, setGoal, addKnowledge, addNote, error } = useWorkspace();
-  const required = requiredOnboardingStep(home);
+  const {
+    home,
+    createWorkspace,
+    setGoal,
+    addKnowledge,
+    addNote,
+    error,
+    preferences,
+    updatePreferences,
+  } = useWorkspace();
+  const onboardingOptions = { contextSkipped: preferences.onboardingContextSkipped };
+  const required = requiredOnboardingStep(home, onboardingOptions);
 
   const [localStep, setLocalStep] = useState<"welcome" | "name">("welcome");
   const [name, setName] = useState("Chronos Lab");
@@ -31,7 +42,7 @@ export function WorkspaceOnboarding() {
   const [noteTitle, setNoteTitle] = useState("Decision context");
   const [noteBody, setNoteBody] = useState("");
 
-  if (isWorkspaceOnboarded(home)) return null;
+  if (isWorkspaceOnboarded(home, onboardingOptions)) return null;
 
   const active: OnboardingStep =
     required === "welcome" || required === "name"
@@ -306,6 +317,17 @@ export function WorkspaceOnboarding() {
                 className="w-full rounded-full bg-ink px-4 py-3 text-sm font-medium text-bg hover:bg-chronos disabled:opacity-50"
               >
                 {busy ? "Adding…" : "Add knowledge → run simulation"}
+              </button>
+              {/* Knowledge improves ranking but is not required to run — the
+                  simulation form says so too. Gating the workspace on it put
+                  four forms between a new user and their first decision. */}
+              <button
+                type="button"
+                data-testid="skip-context"
+                onClick={() => updatePreferences({ onboardingContextSkipped: true })}
+                className="w-full rounded-full border border-line px-4 py-3 text-sm text-ink-dim transition hover:border-chronos/40 hover:text-ink"
+              >
+                Skip for now — add sources later
               </button>
               {displayError && <p className="text-sm text-red-400">{displayError}</p>}
             </form>

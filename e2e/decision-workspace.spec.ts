@@ -274,6 +274,41 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByTestId("sample-banner")).toHaveCount(0, { timeout: 10_000 });
   });
 
+  test("a new user can skip context and reach the workspace in three steps", async ({ page }) => {
+    // Onboarding used to hard-gate on knowledge while the simulation form said
+    // "you can still run without it". Skipping resolves that contradiction and
+    // removes a form from the path to a first decision.
+    await enableE2EAuth(page);
+    await page.goto("/workspace");
+
+    const createHeading = page.getByRole("heading", { name: /create workspace/i });
+    const decisionHeading = page.getByRole("heading", {
+      name: /what decision are you trying to make|what are you trying to decide|current goal/i,
+    });
+    await expect(createHeading.or(decisionHeading)).toBeVisible({ timeout: 15_000 });
+
+    if (await createHeading.isVisible().catch(() => false)) {
+      await page.getByRole("button", { name: /begin/i }).click();
+      await expect(page.getByRole("heading", { name: /name this workspace/i })).toBeVisible();
+      await page.getByLabel(/workspace name/i).fill("Skip Lab");
+      await page.getByRole("button", { name: /continue/i }).click();
+    }
+
+    await expect(decisionHeading).toBeVisible({ timeout: 10_000 });
+    await page.getByLabel(/first decision|decision \/ goal/i).fill("Ship without a source");
+    await page.getByRole("button", { name: /continue/i }).click();
+
+    // Context step offers a way past itself.
+    await expect(page.getByRole("heading", { name: /add knowledge/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await page.getByTestId("skip-context").click();
+
+    // Workspace unlocks with no knowledge and no notes.
+    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("Ship without a source").first()).toBeVisible();
+  });
+
   test("settings asks an anonymous visitor to sign in rather than ejecting them", async ({
     page,
   }) => {

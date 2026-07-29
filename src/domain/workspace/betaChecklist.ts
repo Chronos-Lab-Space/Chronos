@@ -21,11 +21,14 @@ export type BetaChecklistItem = {
 export type UserPreferences = {
   shareAcknowledged: boolean;
   preferredAuthProvider: string | null;
+  /** Visitor chose "skip for now" on the onboarding context step. */
+  onboardingContextSkipped: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   shareAcknowledged: false,
   preferredAuthProvider: null,
+  onboardingContextSkipped: false,
 };
 
 export function evaluateBetaChecklist(
