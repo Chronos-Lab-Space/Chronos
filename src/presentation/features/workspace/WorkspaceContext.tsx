@@ -15,9 +15,12 @@ import {
   workspaceService,
 } from "../../../application/workspace/WorkspaceService";
 import {
+  clearAnonymousOwnerId,
   getOrCreateAnonymousOwnerId,
   isAnonymousOwnerId,
 } from "../../../domain/workspace/anonymousOwner";
+import { claimAnonymousWork } from "../../../infrastructure/repositories/claimAnonymousWork";
+import { localWorkspaceStore } from "../../../infrastructure/repositories/LocalWorkspaceStore";
 import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
 import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
 import type {
@@ -45,6 +48,9 @@ type WorkspaceContextValue = {
    * surfaces honest sync state without blocking the decision loop.
    */
   remoteError: string | null;
+  /** One-shot message after a sign-in that could not claim local work. */
+  notice: string | null;
+  dismissNotice: () => void;
   createWorkspace: (name: string, description?: string) => Promise<void>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
   setGoal: (title: string, description?: string) => Promise<void>;
@@ -102,6 +108,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [remoteError, setRemoteError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   /** After first hydrate, background sync must not flip loading (unmounts forms). */
   const hasHydratedRef = useRef(false);
@@ -216,6 +223,27 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
       const nextId = session.user?.id ?? null;
       const userChanged = Boolean(nextId && nextId !== ownerIdRef.current);
+
+      // Anonymous → signed in: move local work onto the account before the
+      // reload, so the refresh below reads the claimed bundle and the existing
+      // cloud backfill pushes it to Supabase. Claiming refuses to merge into an
+      // account that already has decisions, so nothing is ever overwritten.
+      const previousOwnerId = ownerIdRef.current;
+      if (nextId && previousOwnerId && isAnonymousOwnerId(previousOwnerId)) {
+        const result = claimAnonymousWork(localWorkspaceStore, previousOwnerId, nextId);
+        if (result.outcome === "claimed") {
+          clearAnonymousOwnerId();
+          trackProductEvent("anonymous_work_claimed");
+        } else if (result.outcome === "kept-separate") {
+          // Both bundles survive; say so rather than letting the visitor think
+          // their local decisions vanished.
+          setNotice(
+            "Signed in. This account already had decisions, so your local work was kept separate on this device."
+          );
+          trackProductEvent("anonymous_work_kept_separate");
+        }
+      }
+
       trackProductEvent("session_start", { authEvent: event });
       // Full loading flash only on true sign-in / account switch.
       void refresh({ quiet: !userChanged && hasHydratedRef.current });
@@ -266,6 +294,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       loading,
       error,
       remoteError,
+      notice,
+      dismissNotice: () => setNotice(null),
       preferences,
       updatePreferences,
       markShareAcknowledged: () => updatePreferences({ shareAcknowledged: true }),
@@ -395,6 +425,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       loading,
       error,
       remoteError,
+      notice,
       preferences,
       updatePreferences,
       refresh,

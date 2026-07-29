@@ -27,7 +27,9 @@ export type ProductEventName =
   | "report_exported"
   | "outcome_followed"
   | "outcome_result"
-  | "workspace_opened";
+  | "workspace_opened"
+  | "anonymous_work_claimed"
+  | "anonymous_work_kept_separate";
 
 export type ProductAnalyticsSnapshot = {
   workspace_created: number;
