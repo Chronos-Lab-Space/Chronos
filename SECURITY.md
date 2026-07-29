@@ -47,10 +47,12 @@ Re-evaluate each when its precondition changes.
 
 Configured in the Supabase dashboard, not in this repository:
 
-- **Leaked-password protection** (Auth → Providers → Email) — blocks
-  passwords found in HaveIBeenPwned. **Currently disabled in production**
-  (`get_advisors`, 2026-07-29). Listing a control here is not the same as
-  applying it; enable before the beta takes real signups.
+- **Leaked-password protection** (Auth → Providers → Email) — blocks passwords
+  found in HaveIBeenPwned. **Not available on this plan.** Attempting to enable
+  it returns *"Configuring leaked password protection via HaveIBeenPwned.org is
+  available on Pro Plans and up"* (2026-07-29). `get_advisors` will keep
+  reporting it as disabled; that finding is unactionable on Free, not ignored.
+  See the accepted exception below.
 - **Email confirmation** (Auth → Providers → Email) — decide whether public
   beta signups must verify their address.
 
@@ -61,6 +63,28 @@ versions, matching hash. `20260726190000_ai_usage` was applied to production
 under **its own repo version** rather than a fresh timestamp, so the two
 histories stay comparable. `apply_migration` generates its own version and
 would have introduced exactly the drift `CLAUDE.md` warns about.
+
+## Accepted: no leaked-password check on Free
+
+**Risk:** a beta user can choose a password already exposed in a public breach,
+and Supabase will accept it. HaveIBeenPwned checking is Pro-and-up.
+
+**Why accepted:** upgrading the plan for one auth control is not proportionate
+at current beta scale, and the exposure is bounded by what an account actually
+holds — decision workspaces, not payments or PII beyond an email address.
+
+**Compensating controls:**
+
+- **OAuth is the primary path.** The login page leads with Google/GitHub and
+  treats email/password as secondary, so most accounts never set a password
+  with us at all.
+- **Server-side minimum password length.** Raise it in Auth → Providers →
+  Email; this is configurable on Free. Note the `minLength={8}` on the signup
+  and login inputs is an HTML attribute — client-side only, and bypassed by
+  anything that is not our form. The server-side setting is the one that binds.
+
+**Revisit when:** the project moves to Pro (enable immediately — it is a single
+toggle), or the beta starts holding anything more sensitive than decision text.
 
 ## Supabase advisor findings
 
