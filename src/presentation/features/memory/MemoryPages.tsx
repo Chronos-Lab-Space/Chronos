@@ -17,7 +17,26 @@ export function MemoryPage() {
   const decisions = useMemo(() => (home ? listDecisionHistory(home) : []), [home]);
   const learning = useMemo(() => (home ? learningMemoryStore.list(home.workspace.id) : []), [home]);
 
-  if (!home) return null;
+  // Render the page identity while the workspace hydrates rather than a blank
+  // screen. `home` is null both before the first load resolves and when there
+  // is genuinely no workspace, and returning null for either made the page
+  // appear to not exist — bad on a slow connection, and enough to make anything
+  // navigating straight here race the load.
+  if (!home) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            Memory
+          </div>
+          <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">History</h1>
+        </div>
+        <p className="text-sm text-ink-dim" data-testid="memory-loading">
+          Loading your workspace…
+        </p>
+      </div>
+    );
+  }
 
   const previousGoals = home.goalHistory ?? [];
   const learningFromKnowledge = home.knowledge.filter((k) => k.metadata?.source === "learning");
