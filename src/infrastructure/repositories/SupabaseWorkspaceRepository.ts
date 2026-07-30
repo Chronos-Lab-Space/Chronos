@@ -16,6 +16,13 @@ import { supabase } from "../supabase/client";
  * Tables: workspaces, goals, simulations, futures, knowledge, notes, timeline_nodes
  */
 export class SupabaseWorkspaceRepository {
+  /**
+   * Per-workspace fingerprint of the last payload the cloud actually
+   * accepted. In memory only: a reload re-sends everything once, which is a
+   * cheap way to stay self-healing if another device wrote in between.
+   */
+  private readonly lastSaved = new Map<string, Record<string, string>>();
+
   constructor(private readonly client: SupabaseClient = supabase) {}
 
   async list(ownerId: string): Promise<WorkspaceRecord[]> {
@@ -144,12 +151,39 @@ export class SupabaseWorkspaceRepository {
    *
    * Semantics are unchanged: upsert only, never delete. Removals still go
    * through deleteKnowledge / deleteNote.
+   *
+   * Only changed collections are sent. That is safe precisely *because* the
+   * RPC never deletes: every list is read as `coalesce(payload -> 'x', '[]')`,
+   * so an absent collection means "leave those rows alone". Sending the whole
+   * snapshot every time meant adding a note rewrote every simulation, future
+   * and timeline node — on the hosted project, ~44k row updates to maintain
+   * ~600 rows.
    */
   async save(home: WorkspaceHome): Promise<void> {
-    const { error } = await this.client.rpc("save_workspace_home", {
-      payload: buildSavePayload(home),
-    });
+    const full = buildSavePayload(home);
+    const workspaceId = workspaceIdOf(full);
+    const next = fingerprintCollections(full);
+    const previous = this.lastSaved.get(workspaceId);
+
+    const changed = previous
+      ? Object.keys(next).filter((key) => next[key] !== previous[key])
+      : Object.keys(full);
+
+    // Nothing to write. persist() runs on read-repair and load write-through,
+    // not only on real edits, so this is the common case rather than a corner.
+    if (changed.length === 0) return;
+
+    // `workspace` is the one collection the SQL reads uncoalesced, via
+    // jsonb_to_record — omitting it would be an error, not a no-op.
+    const payload: Record<string, unknown> = { workspace: full.workspace };
+    for (const key of changed) payload[key] = full[key];
+
+    const { error } = await this.client.rpc("save_workspace_home", { payload });
     if (error) throw error;
+    // Only after the write lands. A remembered-but-unwritten snapshot would
+    // make the next save omit rows the cloud never received, and persist()
+    // swallows the throw — the divergence would be silent.
+    this.lastSaved.set(workspaceId, next);
   }
 
   async deleteKnowledge(knowledgeId: string): Promise<void> {
@@ -161,6 +195,20 @@ export class SupabaseWorkspaceRepository {
     const { error } = await this.client.from("notes").delete().eq("id", noteId);
     if (error) throw error;
   }
+}
+
+/** Stable per-collection fingerprint. Order is already deterministic upstream. */
+function fingerprintCollections(payload: Record<string, unknown>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    out[key] = JSON.stringify(value ?? null);
+  }
+  return out;
+}
+
+function workspaceIdOf(payload: Record<string, unknown>): string {
+  const workspace = payload.workspace as { id?: unknown } | undefined;
+  return typeof workspace?.id === "string" ? workspace.id : "";
 }
 
 /** Topological order: roots first, then children by version/created_at. */
