@@ -179,9 +179,14 @@ export function DecisionReportCard({
               ⭐
             </span>
           </h2>
-          {report.recommendedSummary ? (
-            <p className="mt-3 max-w-2xl text-sm text-ink-dim">{report.recommendedSummary}</p>
-          ) : null}
+          {report.narrative.map((paragraph) => (
+            <p
+              key={paragraph}
+              className="mt-3 max-w-2xl font-serif text-[15px] leading-relaxed text-ink-dim"
+            >
+              {paragraph}
+            </p>
+          ))}
           <div className="mt-5">
             <div className="font-mono text-[10px] uppercase text-ink-faint">Confidence</div>
             <div className="mt-1 font-mono text-4xl text-chronos sm:text-5xl">{conf}</div>
