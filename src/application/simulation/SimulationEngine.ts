@@ -394,8 +394,11 @@ export class SimulationEngine {
   /**
    * @param planner Task decomposition
    * @param ai Provider-agnostic port (default pure Noop).
-   *           Product path does not call AI yet — keeps sims deterministic.
-   *           Composition roots may inject `createAIPortFromEnv()` for Ollama etc.
+   *           The product singleton below injects `createAIPortFromEnv()`, which
+   *           the hosted build resolves to the `ai-generate` proxy — so workspace
+   *           sims *do* reach a model for signed-in users. It only ever rewrites
+   *           recommendation prose, after the collapse: scores, futures, ranking
+   *           and confidence are computed before `ai` is consulted at all.
    */
   constructor(
     private readonly planner = new StartupLaunchPlanner(),

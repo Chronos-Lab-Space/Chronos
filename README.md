@@ -221,7 +221,9 @@ The home live demo and `/simulate` share `publicStartupSimulator`:
 3. Collapse to best path + alternatives (ARR × probability EV, roadmap)  
 
 **Fully deterministic** for a given prompt + sample budget (hash-seeded RNG, cacheable).  
-**No LLM calls** on this path. Workspace simulations are also engine-scored; optional AI only polishes recommendation prose when `VITE_AI_PROVIDER` is set (default: noop).
+**No LLM calls** on this path — the public simulator and the home demo run entirely on `publicStartupSimulator`, signed in or not.
+
+Workspace simulations are engine-scored too, and since `VITE_AI_PROVIDER=proxy` shipped they additionally send the settled recommendation to a model for a prose rewrite — signed-in users only, since the proxy requires a session. Scores, futures, ranking and confidence are already final by then, and an AI failure falls back to the deterministic wording. Locally the default is still `noop`.
 
 ---
 
