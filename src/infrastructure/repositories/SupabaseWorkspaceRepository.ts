@@ -195,6 +195,23 @@ export class SupabaseWorkspaceRepository {
     const { error } = await this.client.from("notes").delete().eq("id", noteId);
     if (error) throw error;
   }
+
+  /**
+   * `futures.simulation_id` and `timeline_nodes.simulation_id` are both
+   * `on delete cascade`, and `parent_simulation_id` is `on delete set null`,
+   * so one delete removes the relations without orphaning later versions.
+   */
+  async deleteSimulations(simulationIds: readonly string[]): Promise<void> {
+    if (simulationIds.length === 0) return;
+    const { error } = await this.client
+      .from("simulations")
+      .delete()
+      .in("id", [...simulationIds]);
+    if (error) throw error;
+    // The next save must not assume the cloud still holds what we just
+    // removed, or it would omit rows that need re-creating.
+    this.lastSaved.clear();
+  }
 }
 
 /** Stable per-collection fingerprint. Order is already deterministic upstream. */

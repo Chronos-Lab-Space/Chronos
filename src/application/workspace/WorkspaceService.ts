@@ -65,6 +65,12 @@ export type WorkspaceCloudStore = {
   save(home: WorkspaceHome): Promise<void>;
   deleteKnowledge?(knowledgeId: string): Promise<void>;
   deleteNote?(noteId: string): Promise<void>;
+  /**
+   * Deliberate removals only. `save` upserts and never deletes, so without
+   * this a locally-dropped simulation survives in the cloud and `load`'s
+   * merge brings it back on the next visit.
+   */
+  deleteSimulations?(simulationIds: readonly string[]): Promise<void>;
 };
 
 function nowIso() {
@@ -437,7 +443,7 @@ export class WorkspaceService {
     const sampleIds = required.recentSimulations.filter(isSampleSimulation).map((s) => s.id);
     const home =
       sampleIds.length > 0
-        ? await this.persist(ownerId, dropSimulations(required, sampleIds))
+        ? await this.dropSimulationsEverywhere(ownerId, required, sampleIds)
         : required;
 
     const parent = options.parentSimulationId
@@ -1120,7 +1126,7 @@ export class WorkspaceService {
       // forever. Drop it and seed again.
       const stale = sims.filter(isSampleSimulation).map((s) => s.id);
       if (stale.length > 0) {
-        home = await this.persist(ownerId, dropSimulations(home, stale));
+        home = await this.dropSimulationsEverywhere(ownerId, home, stale);
       }
     }
 
@@ -1209,12 +1215,10 @@ export class WorkspaceService {
     const samples = home.recentSimulations.filter(isSampleSimulation);
     if (samples.length === 0) return home;
 
-    return this.persist(
+    return this.dropSimulationsEverywhere(
       ownerId,
-      dropSimulations(
-        home,
-        samples.map((s) => s.id)
-      )
+      home,
+      samples.map((s) => s.id)
     );
   }
 
@@ -1225,6 +1229,35 @@ export class WorkspaceService {
     const loaded = await this.load(ownerId);
     if (!loaded) throw new Error("Create a workspace first.");
     return loaded;
+  }
+
+  /**
+   * Drop simulations from local *and* cloud.
+   *
+   * Only for deliberate removals — a sample the visitor has outgrown, or a
+   * half-seeded one. Retention trimming in `normalize` deliberately does not
+   * come through here: that bound exists to protect localStorage quota, and
+   * deleting a user's older decisions from durable storage to satisfy a cache
+   * limit would be irreversible. Since the dual-write became incremental, the
+   * cloud write no longer grows with history either.
+   *
+   * Cloud failure is swallowed, matching deleteKnowledge / deleteNote: the
+   * local copy is what the user's next action reads.
+   */
+  private async dropSimulationsEverywhere(
+    ownerId: string,
+    home: WorkspaceHome,
+    ids: readonly string[]
+  ): Promise<WorkspaceHome> {
+    const persisted = await this.persist(ownerId, dropSimulations(home, ids));
+    if (ids.length > 0 && this.remote?.deleteSimulations) {
+      try {
+        await this.remote.deleteSimulations(ids);
+      } catch (err) {
+        console.warn("[workspace] Supabase deleteSimulations failed; local updated.", err);
+      }
+    }
+    return persisted;
   }
 
   private async persist(ownerId: string, home: WorkspaceHome): Promise<WorkspaceHome> {
