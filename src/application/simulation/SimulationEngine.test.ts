@@ -3,7 +3,11 @@ import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import type { GenerateRequest, GenerateResult } from "../../domain/ai/types";
 import type { GoalRecord, KnowledgeRecord } from "../../domain/workspace/types";
-import { extractDecisionSignals, SimulationEngine } from "./SimulationEngine";
+import {
+  extractDecisionSignals,
+  SimulationEngine,
+  type SimulationEngineInput,
+} from "./SimulationEngine";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -36,6 +40,47 @@ describe("SimulationEngine", () => {
 
   it("defaults to Noop AI and does not require a live model", () => {
     expect(engine.getAIPort().id).toBe("noop");
+  });
+
+  it("honours an injected enrich gate, without reading the environment", async () => {
+    // The engine used to call isAISimEnrichEnabled() itself, which is how an
+    // application service ended up importing infrastructure. The gate is now
+    // a constructor argument, so this asserts against a *live* port: with the
+    // old Noop-based test the short-circuit at the top of maybeEnrich made
+    // the assertion pass no matter what the flag did.
+    let called = false;
+    class CountingAI implements AIPort {
+      readonly id = "counting";
+      async generate(): Promise<GenerateResult> {
+        called = true;
+        return { text: "should never be used", model: "counting", provider: "counting" };
+      }
+      async embed() {
+        return { vectors: [], model: "counting", provider: "counting" };
+      }
+      async reason() {
+        return this.generate();
+      }
+      async code() {
+        return this.generate();
+      }
+    }
+    const input: SimulationEngineInput = {
+      simulationId: "sim-gate-off",
+      workspaceId: "w1",
+      goal,
+      objective: "Should we raise funding before Kickstart?",
+      knowledge,
+      notes: [],
+      constraints: [{ id: "c1", text: "no raise before launch", kind: "hard" }],
+    };
+    const gated = new SimulationEngine(undefined, new CountingAI(), () => false);
+
+    const out = gated.run(input);
+    const enriched = await gated.maybeEnrichRecommendation(out, input);
+
+    expect(called).toBe(false);
+    expect(enriched.recommendation).toBe(out.recommendation);
   });
 
   it("maybeEnrich is a no-op when enrich flag is off", async () => {
