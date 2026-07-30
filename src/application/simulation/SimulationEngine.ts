@@ -40,6 +40,12 @@ export type SimulationEngineOutput = {
   futures: FutureRecord[];
   best: FutureRecord;
   recommendation: string;
+  /**
+   * Longer prose under the headline, when the model wrote one. Absent on the
+   * deterministic path and whenever enrichment fails open, in which case the
+   * brief falls back to `thesis` as it always did.
+   */
+  recommendationBody?: string;
   risks: string[];
   confidence: number;
   tasks: SimulationTask[];
@@ -211,6 +217,22 @@ export function extractDecisionSignals(
     growthPressure,
     corpus,
   };
+}
+
+/**
+ * Split the model's answer into headline and body on the first blank line.
+ *
+ * A single block is a valid answer, not a failure — older prompts, smaller
+ * models, and partial refusals all produce one. It becomes the headline and
+ * the brief keeps its deterministic body, which is exactly the previous
+ * behaviour.
+ */
+export function splitBrief(raw: string): { headline: string; body: string | null } {
+  const text = raw.trim();
+  if (!text) return { headline: "", body: null };
+  const [first, ...rest] = text.split(/\n\s*\n/);
+  const body = rest.join("\n\n").trim();
+  return { headline: (first ?? "").trim(), body: body || null };
 }
 
 function pathText(path: Path): string {
@@ -433,30 +455,44 @@ export class SimulationEngine {
     try {
       const result = await this.ai.generate({
         system:
-          "You write concise decision recommendations for founders and PMs. " +
-          "2–4 sentences max. No hype, no invented metrics. Preserve the chosen path name. " +
-          "Focus on why this path fits the objective and the single next action.",
+          "You write decision briefs for founders and PMs. No hype, no invented metrics. " +
+          "Preserve the chosen path name. " +
+          "Answer as exactly two blocks separated by one blank line. " +
+          "First block: a single sentence stating the call. " +
+          "Second block: 2–4 sentences on why this path beats the alternatives given " +
+          "the evidence, what it costs, and the single next action.",
         prompt: [
           `Objective: ${input.objective}`,
           input.goal?.title ? `Goal: ${input.goal.title}` : null,
           `Chosen path: ${output.best.name}`,
           `Path summary: ${output.best.summary}`,
           `Deterministic recommendation: ${output.recommendation}`,
+          `Deterministic thesis: ${output.thesis}`,
+          // Naming the runners-up is what lets the body compare rather than
+          // paraphrase — the old prompt could only restate one sentence.
+          `Alternatives considered: ${
+            output.futures
+              .filter((f) => f.id !== output.best.id)
+              .slice(0, 3)
+              .map((f) => `${f.name} (${(f.score * 100).toFixed(0)}%)`)
+              .join("; ") || "none"
+          }`,
           `Risks: ${output.risks.slice(0, 4).join("; ") || "none listed"}`,
           `Confidence: ${(output.confidence * 100).toFixed(0)}%`,
           "",
-          "Rewrite the recommendation more clearly for this specific decision. Do not change the chosen path.",
+          "Write the brief for this specific decision. Do not change the chosen path, the scores, or the confidence.",
         ]
           .filter(Boolean)
           .join("\n"),
         temperature: 0.4,
-        maxTokens: 280,
+        maxTokens: 420,
       });
-      const text = result.text.trim();
-      if (!text) return output;
+      const { headline, body } = splitBrief(result.text);
+      if (!headline) return output;
       return {
         ...output,
-        recommendation: text,
+        recommendation: headline,
+        ...(body ? { recommendationBody: body } : {}),
       };
     } catch (err) {
       console.warn("[chronos] AI sim enrich failed; keeping deterministic recommendation.", err);
