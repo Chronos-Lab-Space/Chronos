@@ -5,7 +5,6 @@
  * Best-effort against Supabase when online; always works local-first.
  */
 import type { User } from "@supabase/supabase-js";
-import { workspaceService } from "./WorkspaceService";
 import {
   loadUserPreferences,
   saveUserPreferences,
@@ -37,7 +36,15 @@ function providerFromUser(user: User): string | null {
   return app?.provider ?? null;
 }
 
+/** The two calls bootstrap makes. Injected so this never names a singleton. */
+export type BootstrapWorkspaces = {
+  load(ownerId: string): Promise<WorkspaceHome | null>;
+  createWorkspace(ownerId: string, name: string, description: string): Promise<WorkspaceHome>;
+};
+
 export class AccountBootstrapService {
+  constructor(private readonly workspaces: BootstrapWorkspaces) {}
+
   /**
    * Ensure profile row + personal workspace + owner membership exist.
    * Safe to call on every session; idempotent.
@@ -82,10 +89,10 @@ export class AccountBootstrapService {
     }
 
     // Workspace bootstrap
-    let home = await workspaceService.load(userId);
+    let home = await this.workspaces.load(userId);
     if (!home) {
       const name = `${displayNameFromUser(user)}'s Workspace`;
-      home = await workspaceService.createWorkspace(userId, name, "Personal Decision Workspace");
+      home = await this.workspaces.createWorkspace(userId, name, "Personal Decision Workspace");
       workspaceBootstrapped = true;
       trackProductEvent("workspace_created", {
         source: "bootstrap",
@@ -113,4 +120,4 @@ export class AccountBootstrapService {
   }
 }
 
-export const accountBootstrapService = new AccountBootstrapService();
+/** The wired singleton lives in `composition/workspaceService.ts`. */

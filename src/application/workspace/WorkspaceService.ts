@@ -5,17 +5,16 @@ import {
 } from "../simulation/SimulationEngine";
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
-import { registerProductEventSubscribers } from "../runtime/productEventSubscribers";
-import { learningMemoryStore } from "../../infrastructure/memory/LearningMemoryStore";
 import { sanitizeWorkspaceHomeIds } from "../../domain/workspace/persistedIds";
-
-// Side effects (analytics, memory) attach via the event bus once per process.
-registerProductEventSubscribers();
 import {
   deriveOutcomeLearning,
   type OutcomeSignal,
   selectWeightedPreferences,
 } from "../../domain/workspace/outcomeLearning";
+import {
+  type LearningMemoryPort,
+  noopLearningMemory,
+} from "../../domain/workspace/productLearning";
 import { snapshotKnowledgeUsed } from "../../domain/workspace/simulationReport";
 import { archiveGoalIfChanged } from "../../domain/workspace/workspaceMemory";
 import type {
@@ -30,12 +29,6 @@ import type {
   WorkspaceRecord,
 } from "../../domain/workspace/types";
 import { hasLocalMemory, mergeWorkspaceHomes } from "../../domain/workspace/sync";
-import { isE2EAuthEnabled } from "../../infrastructure/auth/e2eAuth";
-import {
-  LocalWorkspaceStore,
-  localWorkspaceStore,
-} from "../../infrastructure/repositories/LocalWorkspaceStore";
-import { supabaseWorkspaceRepository } from "../../infrastructure/repositories/SupabaseWorkspaceRepository";
 import {
   isSampleSimulation,
   SAMPLE_NOTE_BODY,
@@ -51,6 +44,19 @@ function engineOutputFromAgent(data: Record<string, unknown>): SimulationEngineO
   }
   return engine as SimulationEngineOutput;
 }
+
+/**
+ * Minimal local port: the five calls this service actually makes. Named as a
+ * port rather than typed as `LocalWorkspaceStore` so nothing here depends on
+ * the browser-storage adapter that happens to implement it.
+ */
+export type WorkspaceLocalStore = {
+  get(ownerId: string, workspaceId?: string): WorkspaceHome | null;
+  list(ownerId: string): WorkspaceRecord[];
+  getActiveId(ownerId: string): string | null;
+  setActiveId(ownerId: string, workspaceId: string): void;
+  save(ownerId: string, home: WorkspaceHome): WorkspaceHome;
+};
 
 /** Minimal cloud port used for dual-write + sync (Supabase or test double). */
 export type WorkspaceCloudStore = {
@@ -107,9 +113,12 @@ function emptyRelations(): Pick<WorkspaceHome, "futuresBySimulation" | "timeline
 export const MAX_RETAINED_SIMULATIONS = 40;
 
 export type WorkspaceServiceOptions = {
-  local?: LocalWorkspaceStore;
-  /** Pass null to disable remote (unit tests). */
+  /** Required: where data lives is never this service's assumption to make. */
+  local: WorkspaceLocalStore;
+  /** Pass null to disable remote (unit tests, anonymous visitors). */
   remote?: WorkspaceCloudStore | null;
+  /** Where outcome learning is kept. Omitted means "remember nothing". */
+  memory?: LearningMemoryPort;
 };
 
 /**
@@ -118,24 +127,21 @@ export type WorkspaceServiceOptions = {
  * Load merges remote + local memory; empty cloud is backfilled from local when present.
  */
 export class WorkspaceService {
-  private readonly local: LocalWorkspaceStore;
+  private readonly local: WorkspaceLocalStore;
   private readonly remote: WorkspaceCloudStore | null;
+  private readonly memory: LearningMemoryPort;
   /** Last cloud dual-write / load error (null when healthy). */
   private remoteError: string | null = null;
 
-  constructor(options: WorkspaceServiceOptions | LocalWorkspaceStore = {}) {
-    // Back-compat: tests pass LocalWorkspaceStore directly
-    if (options instanceof LocalWorkspaceStore) {
-      this.local = options;
-      this.remote = null;
-    } else {
-      this.local = options.local ?? localWorkspaceStore;
-      // Playwright E2E uses local-only memory so placeholder Supabase cannot hang the loop.
-      const defaultRemote = isE2EAuthEnabled()
-        ? null
-        : (supabaseWorkspaceRepository as WorkspaceCloudStore);
-      this.remote = options.remote === undefined ? defaultRemote : options.remote;
-    }
+  /**
+   * Every dependency is supplied, never reached for. The adapters — browser
+   * storage, Supabase, the learning store, and the E2E decision about which
+   * cloud store to use — are chosen in `composition/workspaceService.ts`.
+   */
+  constructor(options: WorkspaceServiceOptions) {
+    this.local = options.local;
+    this.remote = options.remote ?? null;
+    this.memory = options.memory ?? noopLearningMemory;
   }
 
   /** Surface dual-write failures to the UI (local copy may still have succeeded). */
@@ -523,7 +529,7 @@ export class WorkspaceService {
       };
     }
     const learnedPreferences = selectWeightedPreferences(
-      learningMemoryStore.list(home.workspace.id),
+      this.memory.list(home.workspace.id),
       outcomeBySimulationId,
       3
     );
@@ -967,7 +973,7 @@ export class WorkspaceService {
     };
 
     // Observed reality becomes memory — this is what re-weights future priors.
-    learningMemoryStore.append(
+    this.memory.append(
       home.workspace.id,
       deriveOutcomeLearning({
         workspaceId: home.workspace.id,
@@ -1036,7 +1042,7 @@ export class WorkspaceService {
       },
     };
 
-    learningMemoryStore.append(
+    this.memory.append(
       home.workspace.id,
       deriveOutcomeLearning({
         workspaceId: home.workspace.id,
@@ -1279,15 +1285,9 @@ export class WorkspaceService {
   }
 }
 
-export const workspaceService = new WorkspaceService();
-
 /**
- * Local-only service for anonymous visitors.
- *
- * `remote: null` is the security boundary and it is structural rather than
- * conditional: with no cloud store constructed, there is no code path that can
- * write anonymous data to Supabase — no flag to forget to check.
- *
- * See SPEC-anonymous-workspace.md.
+ * Both product singletons live in `composition/workspaceService.ts`, which is
+ * also where `registerProductEventSubscribers()` runs. Constructing them here
+ * is what made this file import four infrastructure modules and fire an
+ * analytics side effect on import.
  */
-export const anonymousWorkspaceService = new WorkspaceService({ remote: null });

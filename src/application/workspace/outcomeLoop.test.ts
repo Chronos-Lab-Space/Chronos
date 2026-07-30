@@ -4,8 +4,10 @@ import {
   selectWeightedPreferences,
 } from "../../domain/workspace/outcomeLearning";
 import type { WorkspaceHome } from "../../domain/workspace/types";
+import type { LearningMemoryRecord } from "../../domain/workspace/productLearning";
 import { learningMemoryStore } from "../../infrastructure/memory/LearningMemoryStore";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
+import { registerProductEventSubscribers } from "../runtime/productEventSubscribers";
 import { WorkspaceService } from "./WorkspaceService";
 
 /**
@@ -22,6 +24,12 @@ describe("outcome learning loop", () => {
   beforeEach(() => {
     localStorage.clear();
     learningMemoryStore.clear();
+    // Prediction-time records ("Predicted best future") are written by the
+    // DecisionRanked subscriber, not by the service. That registration used to
+    // happen as a side effect of importing WorkspaceService; it now belongs to
+    // the composition root, so a test that asserts on those records has to ask
+    // for them. Idempotent.
+    registerProductEventSubscribers();
   });
 
   /** Mirrors how WorkspaceService builds its outcome map before a run. */
@@ -36,8 +44,27 @@ describe("outcome learning loop", () => {
     return map;
   }
 
+  /** Drive any service to a collapsed decision, whatever it was wired with. */
+  async function runToChosenPath(service: WorkspaceService, name: string) {
+    await service.createWorkspace(ownerId, name, "");
+    await service.setGoal(ownerId, "Launch the public beta");
+    const afterRun = await service.runSimulation(ownerId, "How should we launch?", []);
+    const sim = afterRun.recentSimulations[0];
+    if (!sim) throw new Error("expected a simulation");
+    const futures = afterRun.futuresBySimulation[sim.id] ?? [];
+    if (futures.length === 0) throw new Error("expected futures");
+    await service.chooseBestPath(ownerId, sim.id, futures[0]!.id);
+    return { simulationId: sim.id };
+  }
+
   async function seedRunWithChosenPath() {
-    const service = new WorkspaceService({ local: new LocalWorkspaceStore(), remote: null });
+    // The memory store is injected rather than reached for: WorkspaceService
+    // owns the learning rules, not the choice of where records land.
+    const service = new WorkspaceService({
+      local: new LocalWorkspaceStore(),
+      remote: null,
+      memory: learningMemoryStore,
+    });
     const created = await service.createWorkspace(ownerId, "Loop Lab", "");
     await service.setGoal(ownerId, "Launch the public beta");
     await service.addKnowledge(ownerId, {
@@ -129,5 +156,40 @@ describe("outcome learning loop", () => {
     );
     expect(selected.length).toBeGreaterThan(0);
     expect(priorHints).toEqual(expect.arrayContaining(selected));
+  });
+
+  it("writes outcome learning to the injected port, not to a store it picked", async () => {
+    const appended: LearningMemoryRecord[] = [];
+    const fakeMemory = {
+      list: () => appended,
+      append: (_workspaceId: string, records: readonly LearningMemoryRecord[]) => {
+        appended.push(...records);
+        return records.length;
+      },
+    };
+    const service = new WorkspaceService({
+      local: new LocalWorkspaceStore(),
+      remote: null,
+      memory: fakeMemory,
+    });
+    const { simulationId } = await runToChosenPath(service, "Fake Memory");
+
+    await service.recordOutcomeFollowed(ownerId, simulationId, "yes");
+    await service.recordOutcomeResult(ownerId, simulationId, "Churn doubled.", "worse");
+
+    expect(appended.some((r) => r.metadata.observed === true)).toBe(true);
+  });
+
+  it("completes the loop with no memory port at all", async () => {
+    // Learning is an enhancement, not a precondition. Before the port existed
+    // this was unaskable: the store was imported, so there was no
+    // configuration in which it could be absent.
+    const service = new WorkspaceService({ local: new LocalWorkspaceStore(), remote: null });
+    const { simulationId } = await runToChosenPath(service, "No Memory");
+
+    await service.recordOutcomeFollowed(ownerId, simulationId, "yes");
+    const home = await service.recordOutcomeResult(ownerId, simulationId, "Fine.", "better");
+
+    expect(home.recentSimulations[0]?.result.outcome_verdict).toBe("better");
   });
 });
