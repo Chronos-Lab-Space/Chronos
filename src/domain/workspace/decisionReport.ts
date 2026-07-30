@@ -7,6 +7,7 @@ import {
 } from "./simulationReport";
 import { buildDecisionEvidence, type DecisionEvidence } from "./evidence";
 import { deriveExpectedValue, type ExpectedValueResult } from "./expectedValue";
+import { toParagraphs } from "./prose";
 import type {
   FutureRecord,
   GoalRecord,
@@ -54,6 +55,14 @@ export type DecisionReport = {
   confidence: number; // 0–1
   recommended: string;
   recommendedSummary: string | null;
+  /**
+   * The decision written out — the recommendation sentence followed by the
+   * body paragraphs, when a model wrote them. Falls back to the chosen path's
+   * deterministic summary, and is empty rather than invented when the run
+   * produced neither. Paragraphs are separate entries so the card can render
+   * them as paragraphs; a single string collapses them to one block.
+   */
+  narrative: string[];
   /**
    * Trust bullets — short, scannable reasons shown as “Recommended because:”
    * e.g. lowest execution risk · fits your stated objective · highest expected success
@@ -162,6 +171,7 @@ export function buildDecisionReport(
     confidence: Math.max(0, Math.min(1, confidence)),
     recommended,
     recommendedSummary: chosen?.summary ?? null,
+    narrative: deriveNarrative(simulation, chosen),
     recommendedBecause,
     why,
     expectedValue,
@@ -373,6 +383,28 @@ export function deriveWhyReasons(
   }
 
   return dedupe(reasons).slice(0, 6);
+}
+
+/**
+ * The recommendation as prose: the headline sentence, then the body
+ * paragraphs. Both come from `maybeEnrichRecommendation` when a provider is
+ * configured; the deterministic engine still writes a `recommendation`, so
+ * this is populated either way.
+ *
+ * The chosen path's summary is the floor, not an addition — showing it
+ * alongside real prose just says the same thing twice.
+ */
+function deriveNarrative(simulation: SimulationRecord, chosen: FutureRecord | null): string[] {
+  const headline = toParagraphs(
+    typeof simulation.result.recommendation === "string" ? simulation.result.recommendation : null
+  );
+  const body = toParagraphs(
+    typeof simulation.result.recommendation_body === "string"
+      ? simulation.result.recommendation_body
+      : null
+  );
+  if (headline.length > 0 || body.length > 0) return [...headline, ...body];
+  return toParagraphs(chosen?.summary ?? null);
 }
 
 function resolveRisks(simulation: SimulationRecord, chosen: FutureRecord | null): string[] {

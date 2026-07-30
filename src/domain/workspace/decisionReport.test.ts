@@ -66,6 +66,68 @@ const futures: FutureRecord[] = [
   },
 ];
 
+describe("decisionReport narrative", () => {
+  /**
+   * The report card is where you land after a run, and until now its
+   * "Recommendation" section rendered a path *name* and the chosen future's
+   * deterministic summary — the AI-written brief reached the workspace home
+   * and nowhere else.
+   */
+  function simWith(result: SimulationRecord["result"]): SimulationRecord {
+    return {
+      id: "s1",
+      workspace_id: "w1",
+      goal_id: "g1",
+      title: "Raise first?",
+      status: "completed",
+      confidence: 0.88,
+      result: { best_future: "Private Beta First", ...result },
+      created_at: "2026-01-03T00:00:00.000Z",
+      version: 1,
+      lineage_id: "L1",
+      parent_simulation_id: null,
+    };
+  }
+
+  it("leads with the written recommendation and keeps its paragraphs apart", () => {
+    const sim = simWith({
+      recommendation: "Open to the community list first.",
+      recommendation_body: "It beats the big-bang launch on speed.\n\nCost: a slower ramp.",
+    });
+
+    expect(buildDecisionReport(homeWithSim(sim, futures), sim, futures).narrative).toEqual([
+      "Open to the community list first.",
+      "It beats the big-bang launch on speed.",
+      "Cost: a slower ramp.",
+    ]);
+  });
+
+  it("falls back to the chosen path's summary when no prose was written", () => {
+    // Enrichment fails open, and every run that predates it has no prose at
+    // all. The section must not go blank.
+    const sim = simWith({ chosen_future_id: "f1" });
+
+    expect(buildDecisionReport(homeWithSim(sim, futures), sim, futures).narrative).toEqual([
+      "Ship private beta before raise",
+    ]);
+  });
+
+  it("still reads as prose when only the headline exists", () => {
+    const sim = simWith({ recommendation: "Open to the community list first." });
+
+    expect(buildDecisionReport(homeWithSim(sim, futures), sim, futures).narrative).toEqual([
+      "Open to the community list first.",
+    ]);
+  });
+
+  it("is empty rather than invented when there is nothing to say", () => {
+    const bare = simWith({});
+    const home = homeWithSim(bare, []);
+
+    expect(buildDecisionReport(home, bare, []).narrative).toEqual([]);
+  });
+});
+
 describe("decisionReport", () => {
   it("builds a recommended decision with confidence, why, risks, nextActions", () => {
     const sim: SimulationRecord = {

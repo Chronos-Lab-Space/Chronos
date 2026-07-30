@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
+import { toParagraphs } from "../../../domain/workspace/prose";
 import { useWorkspace } from "./WorkspaceContext";
 
 /**
@@ -91,11 +92,14 @@ export function DecisionBriefPage() {
             <h2 className="mt-3 max-w-2xl font-serif text-2xl leading-snug text-ink sm:text-3xl">
               {brief.recommendation.headline}
             </h2>
-            {brief.recommendation.body ? (
-              <p className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink-dim">
-                {brief.recommendation.body}
+            {toParagraphs(brief.recommendation.body).map((paragraph) => (
+              <p
+                key={paragraph}
+                className="mt-4 max-w-2xl font-serif text-lg leading-relaxed text-ink-dim"
+              >
+                {paragraph}
               </p>
-            ) : null}
+            ))}
             <Link
               to={simHref}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-chronos px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos/85"
