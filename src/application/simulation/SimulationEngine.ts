@@ -2,7 +2,6 @@ import { StartupLaunchPlanner } from "../planner/StartupLaunchPlanner";
 import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import { simulate, type Path } from "../../domain/chronos/startup-sim";
-import { createAIPortFromEnv, isAISimEnrichEnabled } from "../../infrastructure/ai";
 import type {
   FutureRecord,
   GoalRecord,
@@ -393,16 +392,21 @@ function parsePreferOver(text: string): { prefer: string; avoid: string } | null
 export class SimulationEngine {
   /**
    * @param planner Task decomposition
-   * @param ai Provider-agnostic port (default pure Noop).
-   *           The product singleton below injects `createAIPortFromEnv()`, which
-   *           the hosted build resolves to the `ai-generate` proxy — so workspace
-   *           sims *do* reach a model for signed-in users. It only ever rewrites
-   *           recommendation prose, after the collapse: scores, futures, ranking
-   *           and confidence are computed before `ai` is consulted at all.
+   * @param ai Provider-agnostic port (default pure Noop). `composition/`
+   *           injects the env-configured port, which the hosted build resolves
+   *           to the `ai-generate` proxy — so workspace sims *do* reach a model
+   *           for signed-in users. It only ever rewrites recommendation prose,
+   *           after the collapse: scores, futures, ranking and confidence are
+   *           computed before `ai` is consulted at all.
+   * @param enrichEnabled Whether to attempt that rewrite. A function, not a
+   *           boolean, because the deployed value comes from the environment
+   *           and is read per call — but reading it is the composition root's
+   *           job, not this engine's.
    */
   constructor(
     private readonly planner = new StartupLaunchPlanner(),
-    private readonly ai: AIPort = new NoopAIProvider()
+    private readonly ai: AIPort = new NoopAIProvider(),
+    private readonly enrichEnabled: () => boolean = () => true
   ) {}
 
   /** Exposed for enrich paths / tests. */
@@ -412,15 +416,16 @@ export class SimulationEngine {
 
   /**
    * LLM polish of recommendation prose after deterministic collapse.
-   * Enabled by default (VITE_AI_SIM_ENRICH=false to disable).
-   * Futures, scores, risks, and confidence stay deterministic.
-   * Fail-open: noop provider, empty text, or any AI error → original output.
+   * On unless the injected gate says otherwise (the product wiring reads
+   * VITE_AI_SIM_ENRICH=false). Futures, scores, risks, and confidence stay
+   * deterministic. Fail-open: noop provider, empty text, or any AI error →
+   * original output.
    */
   async maybeEnrichRecommendation(
     output: SimulationEngineOutput,
     input: SimulationEngineInput
   ): Promise<SimulationEngineOutput> {
-    if (!isAISimEnrichEnabled()) return output;
+    if (!this.enrichEnabled()) return output;
     if (isNoopAiPort(this.ai)) return output;
     // Failed runs keep the engine message
     if (output.confidence <= 0 || output.best.score <= 0) return output;
@@ -1145,8 +1150,9 @@ export class SimulationEngine {
   }
 }
 
-/** Product singleton: AI from env (default Noop); enrich only when flagged. */
-export const simulationEngine = new SimulationEngine(
-  new StartupLaunchPlanner(),
-  createAIPortFromEnv()
-);
+/**
+ * The product singleton lives in `src/composition/simulationEngine.ts`.
+ * Building it here is what made this file import infrastructure, and what
+ * let the class doc above drift out of date for a whole release: nothing in
+ * an application service should know which adapter the deploy chose.
+ */

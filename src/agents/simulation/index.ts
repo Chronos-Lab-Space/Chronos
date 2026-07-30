@@ -1,8 +1,8 @@
-import {
-  simulationEngine,
-  type SimulationEngineInput,
-  type SimulationEngineOutput,
+import type {
+  SimulationEngineInput,
+  SimulationEngineOutput,
 } from "../../application/simulation/SimulationEngine";
+import { simulationEngine } from "../../composition/simulationEngine";
 import type { Agent, AgentResult, AgentTask } from "../types";
 
 function isSimulationInput(value: unknown): value is SimulationEngineInput {

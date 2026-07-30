@@ -41,7 +41,8 @@ src/
 │   ├── auth/                 # Supabase Auth boundary
 │   ├── storage/              # Supabase Storage boundary
 │   ├── queries/              # Read models and analytics query helpers
-│   └── ai/                   # AIPort adapters (noop, Ollama) and provider router
+│   └── ai/                   # AIPort adapters (noop, Ollama, proxy) and provider router
+├── composition/              # Wires application services to chosen adapters
 ├── presentation/
 │   ├── App.tsx               # Router and presentation composition root
 │   ├── components/           # React UI components and dashboard views
@@ -72,14 +73,22 @@ domain         -> nothing outside domain
 - **Presentation** renders the UI and coordinates user interactions. It may
   invoke application use cases and infrastructure adapters, but it owns no
   temporal decision rules.
+- **Composition** sits above the layers rather than inside them: the one place
+  allowed to name an application service *and* the adapters it runs on, so the
+  service itself stays adapter-agnostic. `main.tsx` and `App.tsx` are the same
+  idea for the UI. Product singletons belong here, not at the bottom of the
+  module that defines the class.
 
 ### Known deviations (accepted for now)
 
 The rules above are the target, not yet fully enforced. Current exceptions:
 
-- `application/workspace` and `application/simulation` import infrastructure
-  adapters directly (LocalWorkspaceStore, Supabase repositories, AI port
-  factory) instead of receiving them through a composition root.
+- `application/workspace` imports infrastructure adapters directly
+  (LocalWorkspaceStore, Supabase repositories, the learning-memory store,
+  analytics) instead of receiving them through a composition root.
+  `application/simulation` no longer does: `SimulationEngine` takes its AI port
+  and enrich gate as constructor arguments, and `composition/simulationEngine.ts`
+  supplies them.
 - `domain/workspace/simulationReport.ts` contains a browser download helper
   (guarded no-op outside the DOM).
 
