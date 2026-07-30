@@ -14,11 +14,24 @@ function envString(value: unknown): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+/**
+ * The browser-safe key, publishable (`sb_publishable_...`) for preference and
+ * the legacy anon JWT while it is still around.
+ *
+ * Order matters during a rotation: you set the new key before removing the
+ * old one, so both are present at once. Checking the legacy key first — as
+ * this did — means the new key is ignored exactly when it is supposed to take
+ * over, and the rotation silently does nothing.
+ */
+export function resolvePublicKey(env: {
+  VITE_SUPABASE_PUBLISHABLE_KEY?: unknown;
+  VITE_SUPABASE_ANON_KEY?: unknown;
+}): string | undefined {
+  return envString(env.VITE_SUPABASE_PUBLISHABLE_KEY) ?? envString(env.VITE_SUPABASE_ANON_KEY);
+}
+
 const supabaseUrl = envString(import.meta.env.VITE_SUPABASE_URL);
-/** Prefer publishable key (sb_publishable_...); legacy anon JWT still accepted. */
-const supabaseAnonKey =
-  envString(import.meta.env.VITE_SUPABASE_ANON_KEY) ||
-  envString(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const supabaseAnonKey = resolvePublicKey(import.meta.env);
 
 /** True when real project URL + anon/publishable key are present. */
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
@@ -26,7 +39,7 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 if (!isSupabaseConfigured) {
   console.warn(
     "[chronos] Missing Supabase credentials. Auth and cloud persistence are disabled. " +
-      "Copy .env.example → .env (or set VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY). " +
+      "Copy .env.example → .env (or set VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_KEY). " +
       "Local stack: npm run supabase:start && npm run supabase:env"
   );
 }
