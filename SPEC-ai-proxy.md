@@ -1,6 +1,6 @@
 # Spec: hosted AI behind AIPort, via a Supabase Edge Function key proxy
 
-**Status:** Implemented in 5.6.0, second upstream added in 5.7.0, dormant. The function and adapter are in the tree; `VITE_AI_PROVIDER` is unset, so the product path is unchanged. Steps 2–4 of the rollout below are still outstanding and need the key.
+**Status:** Implemented in 5.6.0, second upstream added in 5.7.0, deployed but unconfigured. `ai_usage` is applied to the hosted project and `ai-generate` is deployed there (v1, `verify_jwt` enabled); with no upstream secrets set it answers 503, and `VITE_AI_PROVIDER` is unset, so the product path is unchanged. Rollout steps 2 and 4 are outstanding and need the key.
 **Scope:** One new Edge Function (`ai-generate`) with two interchangeable upstreams, one new adapter (`ProxyAIProvider`), one usage/quota table, env + secret wiring.
 **Out of scope:** Changing simulation scoring, futures, ranking, or confidence. Streaming. Embeddings. Agent loops. Replacing Ollama or Noop.
 
@@ -34,7 +34,7 @@ The port contract does not change. `AIPort` stays vendor-free; every vendor SDK 
 
 ## Assumptions
 
-1. The caller is always a **signed-in user** — `maybeEnrichRecommendation` only runs inside an authenticated workspace session. Auth mode is therefore `auth: 'user'`, and `verify_jwt` stays at its default (enabled).
+1. The caller is always a **signed-in user**. Auth mode is therefore `auth: 'user'`, and `verify_jwt` stays at its default (enabled). Since `SPEC-anonymous-workspace.md` shipped, a workspace session is no longer necessarily authenticated: an anonymous visitor has no Supabase session, so `ProxyAIProvider` throws before the request is made and `maybeEnrichRecommendation` fails open to deterministic prose. That is the correct outcome — an anonymous id must never reach a cloud table, and the ledger attributes spend to a person — but it means **hosted enrichment reaches signed-in users only**, and anonymous visitors see the deterministic recommendation with no AI rewrite. Serving them would need a different quota subject, not a different auth mode.
 2. The provider key is a Supabase secret, set by the repo owner. On a paid upstream **the owner pays for every call**; on a free tier the owner spends the account's rate limit instead. Either way the resource is exhaustible and attributable, which is why quotas are in v1 rather than a later slice.
 3. AI remains **prose-only**. Scores, futures, risks, and confidence stay deterministic; `maybeEnrichRecommendation` is still fail-open.
 4. Only `generate` is proxied in v1. `embed` throws `AICapabilityError`; `reason`/`code` delegate to `generate` (same shape as the Ollama adapter).
@@ -432,10 +432,10 @@ Everything above the Edge Function row runs in CI. The Edge Function rows need D
 
 ## Rollout
 
-1. Merge the function + adapter with `VITE_AI_PROVIDER` **unset**. Zero production change; the function is deployed but unreachable from the app.
-2. Owner picks an upstream and sets its secrets. Starting on a free open-weights host is the cheap way to validate the whole path before deciding whether the output justifies a paid model.
-3. `supabase db push` for `ai_usage`, then `supabase functions deploy ai-generate`. Smoke-test with a real session token and confirm one `ai_usage` row.
-4. Flip `VITE_AI_PROVIDER=proxy` in the GitHub Actions build env. Watch `ai_usage` for a week.
+1. ~~Merge the function + adapter with `VITE_AI_PROVIDER` **unset**. Zero production change; the function is deployed but unreachable from the app.~~ **Done.**
+2. Owner picks an upstream and sets its secrets. Starting on a free open-weights host is the cheap way to validate the whole path before deciding whether the output justifies a paid model. **Outstanding — everything below waits on this.**
+3. ~~`supabase db push` for `ai_usage`, then `supabase functions deploy ai-generate`.~~ **Done** — `20260726190000_ai_usage` is applied and `ai-generate` is deployed. Smoke-tested only as far as the auth boundary reaches: unauthenticated 401, malformed bearer 401, CORS preflight 204. **The 400 / 429 / 503 paths and the first `ai_usage` row remain unverified** — each sits behind `auth: 'user'` and needs a real session token, so they can only be checked after step 2.
+4. Flip `VITE_AI_PROVIDER=proxy` in the GitHub Actions build env — a plain value in the `env:` block of `deploy-pages.yml`, not a secret. Watch `ai_usage` for a week.
 5. If moving to a paid upstream later, run `messages.countTokens` against three saved simulations first and replace the estimated caps with measured ones.
 6. Rollback is unsetting one build var — the deterministic path never went away.
 
