@@ -44,6 +44,7 @@ jobs:
         env:
           SECRET_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SECRET_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          SECRET_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           SECRET_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           SECRET_SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SECRET_SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
@@ -54,7 +55,7 @@ jobs:
           # every VITE_* is inlined into the public bundle. "proxy" only says
           # "route AI through the ai-generate function"; the function picks
           # the upstream from AI_UPSTREAM / AI_BASE_URL / AI_MODEL.
-          VITE_AI_PROVIDER: proxy
+          VITE_AI_PROVIDER: 
         run: |
           if [ -n "$SECRET_SUPABASE_URL" ]; then
             export VITE_SUPABASE_URL="$SECRET_SUPABASE_URL"
@@ -67,6 +68,13 @@ jobs:
             echo "Using VITE_SUPABASE_ANON_KEY from Actions secrets"
           else
             echo "::notice::VITE_SUPABASE_ANON_KEY secret unset — Vite will use .env.production if present"
+          fi
+          # Publishable keys (sb_publishable_...) replace the legacy anon JWT.
+          # The client prefers this one when both are set, so rotating is a
+          # matter of adding this secret — no code change, no key removal first.
+          if [ -n "$SECRET_SUPABASE_PUBLISHABLE_KEY" ]; then
+            export VITE_SUPABASE_PUBLISHABLE_KEY="$SECRET_SUPABASE_PUBLISHABLE_KEY"
+            echo "Using VITE_SUPABASE_PUBLISHABLE_KEY from Actions secrets"
           fi
           if [ -n "$SECRET_SENTRY_DSN" ]; then
             export VITE_SENTRY_DSN="$SECRET_SENTRY_DSN"
