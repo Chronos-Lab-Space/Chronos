@@ -50,6 +50,11 @@ jobs:
           SECRET_SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
           SECRET_SENTRY_URL: ${{ secrets.SENTRY_URL }}
           VITE_SENTRY_RELEASE: ${{ github.sha }}
+          # Which vendor answers is a Supabase secret, never a build value —
+          # every VITE_* is inlined into the public bundle. "proxy" only says
+          # "route AI through the ai-generate function"; the function picks
+          # the upstream from AI_UPSTREAM / AI_BASE_URL / AI_MODEL.
+          VITE_AI_PROVIDER: proxy
         run: |
           if [ -n "$SECRET_SUPABASE_URL" ]; then
             export VITE_SUPABASE_URL="$SECRET_SUPABASE_URL"
