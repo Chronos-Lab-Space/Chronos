@@ -10,7 +10,160 @@ export type Release = {
   highlights: { label: string; detail: string }[];
 };
 
-const releases: Release[] = [
+/**
+ * Newest first. This array is the only version the product shows anyone —
+ * package.json is not read at runtime — so `changelog.test.ts` pins the two
+ * together. They had drifted four releases apart before that test existed.
+ */
+export const releases: Release[] = [
+  {
+    version: "5.9.1",
+    date: "2026-07-31",
+    tag: "patch",
+    title: "The written recommendation reaches the report card",
+    summary:
+      "The Decision Report — the page you land on after a run — had a Recommendation section that showed the chosen path's name and a deterministic template summary, and no prose at all. Both recommendation and recommendation_body were written on every run and read only by the workspace home. The report card now leads with the written recommendation, and multi-paragraph bodies render as paragraphs instead of collapsing into one block.",
+    highlights: [
+      {
+        label: "Report card",
+        detail: "DecisionReport.narrative: headline then body, chosen path summary as the floor",
+      },
+      {
+        label: "Paragraphs",
+        detail: "toParagraphs splits on blank lines; a single <p> was collapsing them to spaces",
+      },
+      {
+        label: "Fail-open",
+        detail: "Empty rather than invented when a run produced no prose",
+      },
+    ],
+  },
+  {
+    version: "5.9.0",
+    date: "2026-07-31",
+    tag: "minor",
+    title: "Decisions are first-class objects",
+    summary:
+      "The decisions table, its RLS policies and simulations.decision_id shipped in July and were then never written to, while the docs described them as done. A decision is now the question and a simulation is one attempt at answering it: re-running adds a version rather than opening a second decision. New /workspace/decisions registry lists questions with their runs underneath. Status is derived from the versions on every read, never stored.",
+    highlights: [
+      {
+        label: "Keyed on lineage",
+        detail:
+          "A decision's id is its lineage_id, so the SQL backfill and the client agree without coordinating and two offline devices converge on one decision",
+      },
+      {
+        label: "Backfill",
+        detail:
+          "Idempotent migration links existing runs; anonymous visitors get the same grouping locally, with nothing written to Supabase",
+      },
+      {
+        label: "Registry",
+        detail:
+          "/workspace/decisions — questions with versions underneath, status open · decided · executed",
+      },
+    ],
+  },
+  {
+    version: "5.8.8",
+    date: "2026-07-31",
+    tag: "patch",
+    title: "Brief bodies the model writes · publishable keys that can take over",
+    summary:
+      "AI enrichment now writes a short body under the recommendation headline, given the runners-up and their scores to compare against rather than one templated sentence to paraphrase. Separately, the Supabase client preferred the legacy anon key over the publishable key despite a comment claiming the opposite — which broke rotation exactly when both keys are set, silently.",
+    highlights: [
+      {
+        label: "Brief body",
+        detail: "Two blocks: the call, then why it beats the alternatives, its cost, next action",
+      },
+      {
+        label: "Key rotation",
+        detail:
+          "resolvePublicKey prefers VITE_SUPABASE_PUBLISHABLE_KEY; deploy workflow passes the secret through",
+      },
+      {
+        label: "Ranking",
+        detail: "Untouched — enrichment still only rewrites prose after a deterministic collapse",
+      },
+    ],
+  },
+  {
+    version: "5.8.7",
+    date: "2026-07-31",
+    tag: "patch",
+    title: "Dual-write sends only what changed · dropped runs really are deleted",
+    summary:
+      "Every persist re-sent the whole workspace snapshot, so adding a note rewrote every simulation, future and timeline node — roughly 44,000 row updates to maintain about 600 rows. Saves now diff per collection and send only what moved, which is safe because the save RPC never deletes. Separately, dropping a simulation locally left the cloud copy behind, so a pruned sample came back on the next visit.",
+    highlights: [
+      {
+        label: "Incremental save",
+        detail: "Per-collection fingerprint; snapshot updated only after the write lands",
+      },
+      {
+        label: "Real deletes",
+        detail:
+          "deleteSimulations for deliberate removals; retention trimming still never deletes from the cloud",
+      },
+    ],
+  },
+  {
+    version: "5.8.6",
+    date: "2026-07-30",
+    tag: "patch",
+    title: "Composition roots for the engine and the workspace loop",
+    summary:
+      "SimulationEngine and WorkspaceService built their own adapters, which made them impossible to test without the environment they run in. Both now take every dependency as a constructor argument, and a new src/composition layer supplies them. Registering product event subscribers is an explicit call rather than an import side effect.",
+    highlights: [
+      {
+        label: "Injection",
+        detail: "AI port, enrichment gate, local/cloud stores and learning memory all passed in",
+      },
+      {
+        label: "No import side effects",
+        detail: "registerProductEventSubscribers() runs in composition, not on module load",
+      },
+    ],
+  },
+  {
+    version: "5.8.5",
+    date: "2026-07-30",
+    tag: "patch",
+    title: "AI runs through the proxy in production, and surfaces its own failures",
+    summary:
+      "The Pages build now routes AI through the ai-generate Edge Function, which holds the upstream key server-side and enforces per-user and global monthly caps. Proxy failures used to fail open in total silence; they are now reported with the stage that failed and the HTTP status, so a misconfigured upstream is visible instead of just quietly producing deterministic prose. Docs that claimed the product path never calls a model were corrected.",
+    highlights: [
+      {
+        label: "Proxy",
+        detail: "VITE_AI_PROVIDER=proxy; upstream, model and caps are Supabase secrets",
+      },
+      {
+        label: "Visibility",
+        detail: "ProxyFailure {stage, status, message} routed to Sentry by severity",
+      },
+      {
+        label: "Honesty",
+        detail:
+          "Docs corrected: workspace enrichment does call a model; /simulate and the scenario demos still do not",
+      },
+    ],
+  },
+  {
+    version: "5.8.4",
+    date: "2026-07-30",
+    tag: "patch",
+    title: "Objectives the catalog cannot model are refused, not dressed up",
+    summary:
+      "The scenario catalog covers startup and business decisions. An out-of-domain objective used to be ranked anyway, against go-to-market archetypes that could not possibly fit it. The run form now flags it while you type and refuses to submit, rather than returning a confident answer to a question the engine never modelled.",
+    highlights: [
+      {
+        label: "Scope check",
+        detail: "assessObjectiveScope runs live on the objective field, not on a rejected submit",
+      },
+      {
+        label: "Honest refusal",
+        detail: "Says what Chronos does model and asks for a rephrase",
+      },
+    ],
+  },
   {
     version: "5.8.3",
     date: "2026-07-28",

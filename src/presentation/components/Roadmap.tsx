@@ -33,7 +33,7 @@ const phases = [
       "Workspace Pulse + Decision Report (Recommended because, risks, next actions)",
       "Multi-future comparison · choose/save path · outcome tracking",
       "Timeline cards + Memory (goals, decisions, versions)",
-      "Primary nav: Dashboard · Knowledge · Sims · Timeline · Memory · Settings",
+      "Primary nav: Current Decision · Workspace HQ · Decisions · Knowledge · Sims · Timeline · Memory · Settings",
       "Knowledge library + dual-write persistence (local + Supabase RLS)",
     ],
   },
