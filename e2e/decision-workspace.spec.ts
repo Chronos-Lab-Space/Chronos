@@ -288,6 +288,35 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByTestId("sample-banner")).toHaveCount(0, { timeout: 10_000 });
   });
 
+  test("an off-domain objective is refused rather than dressed up as a SaaS play", async ({
+    page,
+  }) => {
+    // "I want to cook boiled egg" used to produce a branch called
+    // "Bottom-up SaaS · want cook boiled", scored and ranked as if it meant
+    // something. The catalog is startup scenarios only, so the honest answer
+    // is to say so rather than staple the user's words onto a template.
+    // Onboard first — the run form is not reachable before the workspace has
+    // a decision, same path as the anonymous-visitor test above.
+    await page.goto("/workspace");
+    await page.getByLabel(/first decision|decision \/ goal/i).fill("My own beta decision");
+    await page.getByRole("button", { name: /continue/i }).click();
+    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
+
+    await page.goto("/workspace/simulations?new=1");
+
+    const objective = page.getByLabel(/what should chronos decide/i);
+    await expect(objective).toBeVisible({ timeout: 15_000 });
+
+    await objective.fill("I want to cook boiled egg");
+    await expect(page.getByText(/startup and business decisions/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /generate futures/i })).toBeDisabled();
+
+    // A real business objective clears it — the gate must not become a wall.
+    await objective.fill("How should we launch the public beta with a small team?");
+    await expect(page.getByText(/startup and business decisions/i)).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /generate futures/i })).toBeEnabled();
+  });
+
   test("a new user can skip context and reach the workspace in three steps", async ({ page }) => {
     // Onboarding used to hard-gate on knowledge while the simulation form said
     // "you can still run without it". Skipping resolves that contradiction and

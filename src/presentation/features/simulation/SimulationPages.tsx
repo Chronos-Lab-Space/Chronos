@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { assessObjectiveScope } from "../../../domain/chronos/objectiveScope";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
 import { buildDecisionGraph } from "../../../domain/workspace/decisionGraph";
@@ -31,8 +32,16 @@ export function SimulationsPage() {
 
   const knowledgePreview = home.knowledge.slice(0, 5);
 
+  // Live, so the warning appears while typing rather than on a rejected submit.
+  // Empty is "not yet answered", not "out of scope" — `required` covers that.
+  const scope = assessObjectiveScope(objective);
+  const outOfScope = objective.trim().length > 0 && !scope.inScope;
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // The catalog is startup scenarios only. Running anyway would rank
+    // "Bottom-up SaaS" against an objective it cannot model.
+    if (outOfScope) return;
     setBusy(true);
     try {
       const lines = constraints
@@ -90,8 +99,22 @@ export function SimulationsPage() {
               value={objective}
               onChange={(e) => setObjective(e.target.value)}
               placeholder="e.g. How should we launch with a small team and limited runway?"
+              aria-invalid={outOfScope}
+              aria-describedby={outOfScope ? "objective-scope" : undefined}
               className="w-full rounded-lg border border-line bg-bg px-3 py-2 text-sm text-ink focus:border-chronos focus:outline-none"
             />
+            {outOfScope && (
+              <p
+                id="objective-scope"
+                role="status"
+                className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-ink-dim"
+              >
+                Chronos models <strong className="text-ink">startup and business decisions</strong>{" "}
+                — funding, go-to-market, pricing, hiring, product strategy. This objective does not
+                look like one, and the simulator would rank go-to-market scenarios that do not fit
+                it. Rephrase it as a business decision to continue.
+              </p>
+            )}
           </Field>
 
           <Field label="Knowledge (from library)">
@@ -137,7 +160,7 @@ export function SimulationsPage() {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || outOfScope}
               className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
             >
               {busy ? "Generating futures…" : "Generate futures"}
