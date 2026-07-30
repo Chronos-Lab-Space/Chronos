@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { AICapabilityError, AIProviderError } from "../../domain/ai/errors";
-import { ProxyAIProvider } from "./ProxyAIProvider";
+import { ProxyAIProvider, type ProxyFailure } from "./ProxyAIProvider";
 
 const PROXY = "https://project.supabase.co/functions/v1/ai-generate";
 
@@ -159,5 +159,91 @@ describe("ProxyAIProvider", () => {
     fetchImpl.mockClear();
     await ai.code({ prompt: "p", language: "ts" });
     expect(String(bodyOf(fetchImpl).system)).toContain("Language: ts.");
+  });
+});
+
+/**
+ * Enrichment fails open, which means a broken proxy looks exactly like a
+ * working one from the outside: the user still gets a recommendation, just
+ * the deterministic wording. Without a report, an expired key or a wrong
+ * model id is invisible until someone happens to notice blander prose.
+ */
+describe("ProxyAIProvider failure reporting", () => {
+  function providerReporting(fetchImpl: unknown, onFailure: unknown, token: string | null = "t") {
+    return new ProxyAIProvider({
+      proxyUrl: PROXY,
+      getAccessToken: async () => token,
+      fetchImpl: fetchImpl as typeof fetch,
+      onFailure: onFailure as (failure: ProxyFailure) => void,
+    });
+  }
+
+  it("reports an HTTP failure with the status the proxy returned", async () => {
+    const onFailure = vi.fn();
+    const fetchImpl = vi.fn(async () =>
+      jsonResponse({ error: "service_disabled", message: "AI provider is switched off." }, 503)
+    );
+
+    await expect(providerReporting(fetchImpl, onFailure).generate({ prompt: "x" })).rejects.toThrow(
+      AIProviderError
+    );
+
+    expect(onFailure).toHaveBeenCalledTimes(1);
+    expect(onFailure.mock.calls[0][0]).toMatchObject({ stage: "http", status: 503 });
+    expect(String(onFailure.mock.calls[0][0].message)).toContain("switched off");
+  });
+
+  it("reports an unreachable proxy as a network failure", async () => {
+    const onFailure = vi.fn();
+    const fetchImpl = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+
+    await expect(providerReporting(fetchImpl, onFailure).generate({ prompt: "x" })).rejects.toThrow(
+      AIProviderError
+    );
+
+    expect(onFailure).toHaveBeenCalledTimes(1);
+    const failure = onFailure.mock.calls[0][0] as ProxyFailure;
+    expect(failure.stage).toBe("network");
+    // No HTTP status exists — the request never got an answer.
+    expect(failure.status).toBeUndefined();
+    expect(failure.message).toContain("fetch failed");
+  });
+
+  it("stays silent when the visitor simply has no session", async () => {
+    // Anonymous workspaces shipped before the proxy did, so signed-out
+    // sims are the common case, not a fault. Reporting them would bury
+    // every real failure under noise.
+    const onFailure = vi.fn();
+    const fetchImpl = vi.fn();
+
+    await expect(
+      providerReporting(fetchImpl, onFailure, null).generate({ prompt: "x" })
+    ).rejects.toThrow(AIProviderError);
+
+    expect(onFailure).not.toHaveBeenCalled();
+  });
+
+  it("stays silent on success", async () => {
+    const onFailure = vi.fn();
+    const fetchImpl = vi.fn(async () => jsonResponse({ text: "ok", model: "m" }));
+
+    await providerReporting(fetchImpl, onFailure).generate({ prompt: "x" });
+
+    expect(onFailure).not.toHaveBeenCalled();
+  });
+
+  it("keeps failing open even when the reporter itself throws", async () => {
+    const onFailure = vi.fn(() => {
+      throw new Error("Sentry exploded");
+    });
+    const fetchImpl = vi.fn(async () => new Response("nope", { status: 502 }));
+
+    // The engine catches AIProviderError and keeps deterministic prose.
+    // A monitoring bug must not escape as a different error and break that.
+    await expect(providerReporting(fetchImpl, onFailure).generate({ prompt: "x" })).rejects.toThrow(
+      AIProviderError
+    );
   });
 });

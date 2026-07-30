@@ -9,6 +9,18 @@ import type {
   ReasonRequest,
 } from "../../domain/ai/types";
 
+/**
+ * Why a call did not produce text. `stage` says how far it got, which is
+ * what separates "nobody configured this" from "the upstream is down".
+ * A rejected session appears here as an HTTP 401 — a missing one never
+ * does, because that is an ordinary signed-out visitor, not a fault.
+ */
+export type ProxyFailure = {
+  stage: "config" | "network" | "http";
+  status?: number;
+  message: string;
+};
+
 export type ProxyAIProviderOptions = {
   /** Proxy endpoint. Defaults to `${VITE_SUPABASE_URL}/functions/v1/ai-generate`. */
   proxyUrl?: string;
@@ -20,6 +32,12 @@ export type ProxyAIProviderOptions = {
   getAccessToken?: () => Promise<string | null>;
   /** Inject for tests */
   fetchImpl?: typeof fetch;
+  /**
+   * Told about every failure that is not simply "signed out". Injected for
+   * the same reason as the token getter, and called for its side effect
+   * only — the throw that follows is what the engine acts on.
+   */
+  onFailure?: (failure: ProxyFailure) => void;
 };
 
 type ProxyResponse = {
@@ -52,16 +70,29 @@ export class ProxyAIProvider implements AIPort {
   private readonly proxyUrl: string;
   private readonly getAccessToken: () => Promise<string | null>;
   private readonly fetchImpl: typeof fetch;
+  private readonly onFailure: (failure: ProxyFailure) => void;
 
   constructor(options: ProxyAIProviderOptions = {}) {
     this.proxyUrl = (options.proxyUrl ?? "").replace(/\/$/, "");
     this.getAccessToken = options.getAccessToken ?? (async () => null);
     this.fetchImpl = options.fetchImpl ?? fetch.bind(globalThis);
+    this.onFailure = options.onFailure ?? (() => {});
+  }
+
+  /** Reporting is best-effort: a monitoring bug must not mask the real error. */
+  private report(failure: ProxyFailure): void {
+    try {
+      this.onFailure(failure);
+    } catch {
+      /* swallowed on purpose — the AIProviderError below is what matters */
+    }
   }
 
   async generate(req: GenerateRequest): Promise<GenerateResult> {
     if (!this.proxyUrl) {
-      throw new AIProviderError(this.id, "No AI proxy URL configured (VITE_SUPABASE_URL unset).");
+      const message = "No AI proxy URL configured (VITE_SUPABASE_URL unset).";
+      this.report({ stage: "config", message });
+      throw new AIProviderError(this.id, message);
     }
 
     const token = await this.getAccessToken();
@@ -92,14 +123,15 @@ export class ProxyAIProvider implements AIPort {
         body,
       });
     } catch (err) {
-      throw new AIProviderError(
-        this.id,
-        `Cannot reach the AI proxy: ${err instanceof Error ? err.message : String(err)}`
-      );
+      const message = `Cannot reach the AI proxy: ${err instanceof Error ? err.message : String(err)}`;
+      this.report({ stage: "network", message });
+      throw new AIProviderError(this.id, message);
     }
 
     if (!res.ok) {
-      throw new AIProviderError(this.id, await describeFailure(res), res.status);
+      const message = await describeFailure(res);
+      this.report({ stage: "http", status: res.status, message });
+      throw new AIProviderError(this.id, message, res.status);
     }
 
     let data: ProxyResponse;

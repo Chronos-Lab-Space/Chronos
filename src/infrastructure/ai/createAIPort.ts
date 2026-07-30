@@ -1,5 +1,6 @@
 import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
+import { reportAIProxyFailure } from "../monitoring/aiFailureReporter";
 import { OllamaAIProvider } from "./OllamaAIProvider";
 import { ProxyAIProvider } from "./ProxyAIProvider";
 import { ProviderRouter } from "./ProviderRouter";
@@ -109,6 +110,11 @@ export function createAIPortFromEnv(
   const proxy = new ProxyAIProvider({
     proxyUrl: resolveProxyUrl(override?.proxyUrl),
     getAccessToken: override?.getAccessToken ?? currentAccessToken,
+    // Wired here rather than inside the adapter so the adapter keeps no
+    // dependency on monitoring, and tests can watch failures without a
+    // Sentry stub. Enrichment fails open, so this is the only signal that
+    // the hosted path has stopped working.
+    onFailure: reportAIProxyFailure,
   });
 
   const providers: Record<string, AIPort> = {
