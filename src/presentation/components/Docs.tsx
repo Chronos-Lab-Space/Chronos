@@ -545,7 +545,10 @@ function AuthAccessDocs() {
           { title: "profiles", body: "Display name, avatar, preferences, onboarded_at." },
           { title: "workspaces", body: "Private decision HQ; owner_id + memberships." },
           { title: "workspace_members", body: "Roles: owner, admin, member, viewer." },
-          { title: "decisions", body: "First-class decision objects (sims hang underneath)." },
+          {
+            title: "decisions",
+            body: "Reserved for first-class decision objects. Not yet populated — a simulation currently carries its own lineage (see SPEC-decision-object.md).",
+          },
           { title: "simulations / events", body: "Runs + product analytics events." },
         ]}
       />
