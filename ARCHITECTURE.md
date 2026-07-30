@@ -83,12 +83,17 @@ domain         -> nothing outside domain
 
 The rules above are the target, not yet fully enforced. Current exceptions:
 
-- `application/workspace` imports infrastructure adapters directly
-  (LocalWorkspaceStore, Supabase repositories, the learning-memory store,
-  analytics) instead of receiving them through a composition root.
-  `application/simulation` no longer does: `SimulationEngine` takes its AI port
-  and enrich gate as constructor arguments, and `composition/simulationEngine.ts`
-  supplies them.
+- `AccountBootstrapService` still calls Supabase, the preferences store, the
+  E2E auth flag, and analytics directly. Its workspace dependency is injected,
+  so what remains is the profile/membership upsert — a repository port waiting
+  to be extracted.
+- `application/agent-os`, `application/planner`, and `application/runtime` build
+  their own adapters (`createAIPortFromEnv`, `MemorySimulationCache`,
+  `trackProductEvent`). The first two are themselves composition points and may
+  simply belong under `composition/`.
+
+`WorkspaceService` and `SimulationEngine` no longer deviate: both take every
+adapter as a constructor argument, and `composition/` supplies them.
 - `domain/workspace/simulationReport.ts` contains a browser download helper
   (guarded no-op outside the DOM).
 

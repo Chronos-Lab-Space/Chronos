@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { accountBootstrapService } from "../../application/workspace/AccountBootstrapService";
+import { accountBootstrapService } from "../../composition/workspaceService";
 import { authService } from "../../infrastructure/auth/SupabaseAuthService";
 import { trackProductEvent } from "../../infrastructure/analytics/productAnalytics";
 import { WorkspaceLoadingScreen } from "../features/workspace/WorkspaceLoadingScreen";

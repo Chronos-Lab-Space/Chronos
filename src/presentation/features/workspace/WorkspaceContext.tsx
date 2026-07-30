@@ -9,11 +9,11 @@ import {
 } from "react";
 import { getDefaultCapabilityRegistry } from "../../../application/agent-os/createDefaultCapabilityRegistry";
 import { planChosenPath } from "../../../application/agent-os/planChosenPath";
-import { accountBootstrapService } from "../../../application/workspace/AccountBootstrapService";
 import {
+  accountBootstrapService,
   anonymousWorkspaceService,
   workspaceService,
-} from "../../../application/workspace/WorkspaceService";
+} from "../../../composition/workspaceService";
 import {
   clearAnonymousOwnerId,
   getOrCreateAnonymousOwnerId,

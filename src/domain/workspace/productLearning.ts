@@ -25,6 +25,22 @@ export type LearningMemoryRecord = {
   createdAt: string;
 };
 
+/**
+ * Where learning records are kept. The rules for *what* to remember are
+ * domain logic; localStorage, Supabase, or nothing at all is a deployment
+ * choice, so services take this port instead of naming a store.
+ */
+export type LearningMemoryPort = {
+  list(workspaceId: string): readonly LearningMemoryRecord[];
+  append(workspaceId: string, records: readonly LearningMemoryRecord[]): number;
+};
+
+/** Discards everything. The default when no store is wired in. */
+export const noopLearningMemory: LearningMemoryPort = {
+  list: () => [],
+  append: () => 0,
+};
+
 export type ProductLearningSnapshot = {
   workspaceId: string;
   simulationId: string;

@@ -28,7 +28,7 @@ vi.mock("../../infrastructure/auth/SupabaseAuthService", () => ({
   },
 }));
 
-vi.mock("../../application/workspace/AccountBootstrapService", () => ({
+vi.mock("../../composition/workspaceService", () => ({
   accountBootstrapService: { ensureAccount: (user: User) => ensureAccount(user) },
 }));
 
