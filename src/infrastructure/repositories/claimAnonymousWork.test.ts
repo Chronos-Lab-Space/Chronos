@@ -120,10 +120,31 @@ describe("claimAnonymousWork", () => {
 
   it("strips the sample when claiming real work alongside it", () => {
     const bundle = home("Anon Lab", "Their own decision");
-    const real = bundle.recentSimulations[0]!;
+    const real = { ...bundle.recentSimulations[0]!, decision_id: "dec-real" };
     store.save(ANON, {
       ...bundle,
-      recentSimulations: [real, { ...real, id: "sample-1", result: { is_sample: true } }],
+      recentSimulations: [
+        real,
+        { ...real, id: "sample-1", decision_id: "dec-sample", result: { is_sample: true } },
+      ],
+      decisions: [
+        {
+          id: "dec-real",
+          workspace_id: bundle.workspace.id,
+          title: "Their own decision",
+          description: "",
+          goal_id: null,
+          created_at: "2026-07-02T00:00:00.000Z",
+        },
+        {
+          id: "dec-sample",
+          workspace_id: bundle.workspace.id,
+          title: "Sample decision",
+          description: "",
+          goal_id: null,
+          created_at: "2026-07-02T00:00:00.000Z",
+        },
+      ],
     });
 
     const result = claimAnonymousWork(store, ANON, USER);
@@ -132,6 +153,8 @@ describe("claimAnonymousWork", () => {
     const claimed = store.get(USER)!;
     expect(claimed.recentSimulations).toHaveLength(1);
     expect(claimed.recentSimulations[0]!.title).toBe("Their own decision");
+    // The sample's question was never this account's, so it stays behind too.
+    expect(claimed.decisions.map((d) => d.id)).toEqual(["dec-real"]);
   });
 
   it("refuses to claim into an anonymous target", () => {

@@ -17,6 +17,7 @@ type NavItem = { to: string; label: string; short: string; end?: boolean; icon: 
 const navItems: NavItem[] = [
   { to: "/workspace", label: "Current Decision", short: "Home", end: true, icon: "⌂" },
   { to: "/workspace/hq", label: "Workspace HQ", short: "HQ", icon: "▦" },
+  { to: "/workspace/decisions", label: "Decisions", short: "Decs", icon: "◈" },
   { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
   { to: "/workspace/simulations", label: "Simulations", short: "Sims", icon: "⬡" },
   { to: "/workspace/timeline", label: "Timeline", short: "Time", icon: "▤" },
@@ -81,7 +82,11 @@ function WorkspaceShellInner() {
     ? home.recentSimulations.filter((s) => Boolean(s.result.outcome_result?.toString().trim()))
         .length
     : null;
+  // Questions, not runs — three re-runs of one question count once here and
+  // three times under Simulations. That gap is the point of the surface.
+  const decisionsCount = home ? home.decisions.length : null;
   const navCounts: Record<string, number | null> = {
+    "/workspace/decisions": decisionsCount,
     "/workspace/knowledge": sourcesCount,
     "/workspace/simulations": simsCount,
     "/workspace/memory": memoryCount,

@@ -26,6 +26,20 @@ export type GoalRecord = {
   created_at: string;
 };
 
+/**
+ * The question; simulations are the attempts at answering it.
+ * `status` is deliberately absent — it is derived from the versions rather
+ * than stored. See `decision.ts` and SPEC-decision-object.md.
+ */
+export type DecisionRecord = {
+  id: string;
+  workspace_id: string;
+  title: string;
+  description: string;
+  goal_id: string | null;
+  created_at: string;
+};
+
 export type SimulationTaskStatus = "pending" | "running" | "completed" | "failed";
 
 export type SimulationTaskRecord = {
@@ -89,6 +103,11 @@ export type SimulationRecord = {
   version: number;
   lineage_id: string;
   parent_simulation_id: string | null;
+  /**
+   * The decision this run answers. Absent on legacy rows and on anything that
+   * has not been through `attachDecisions` yet; populated from there on.
+   */
+  decision_id?: string | null;
 };
 
 /** Full reopenable report: Workspace → Simulation → Futures → Report */
@@ -147,6 +166,12 @@ export type WorkspaceHome = {
   /** Previous goals archived when the active objective changes — persistent memory. */
   goalHistory: readonly GoalRecord[];
   recentSimulations: readonly SimulationRecord[];
+  /**
+   * One per simulation lineage, newest first. Derived by `attachDecisions`
+   * for local-first visitors and by the backfill migration in the cloud, so
+   * both arrive at the same ids.
+   */
+  decisions: readonly DecisionRecord[];
   knowledge: readonly KnowledgeRecord[];
   notes: readonly NoteRecord[];
   futuresBySimulation: Record<string, readonly FutureRecord[]>;

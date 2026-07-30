@@ -20,6 +20,7 @@ function baseHome(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
     },
     goal: null,
     goalHistory: [],
+    decisions: [],
     recentSimulations: [],
     knowledge: [],
     notes: [],

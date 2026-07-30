@@ -5,6 +5,7 @@ import {
 } from "../simulation/SimulationEngine";
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
+import { attachDecisions, decisionIdForSimulation } from "../../domain/workspace/decision";
 import { sanitizeWorkspaceHomeIds } from "../../domain/workspace/persistedIds";
 import {
   deriveOutcomeLearning,
@@ -260,6 +261,7 @@ export class WorkspaceService {
       goal: null,
       goalHistory: [],
       recentSimulations: [],
+      decisions: [],
       knowledge: [],
       notes: [],
       ...emptyRelations(),
@@ -461,6 +463,17 @@ export class WorkspaceService {
       : 1;
 
     const simId = uuid();
+    // A re-branch answers the question its parent answered — same decision,
+    // next version. A fresh objective opens a new one. Deriving the id from
+    // the lineage rather than minting one keeps this identical to what the
+    // backfill migration and `attachDecisions` compute for the same rows.
+    //
+    // The DecisionRecord itself is created by `attachDecisions` inside
+    // normalize(), which runs on the persist below. That is deliberately the
+    // only place a decision is constructed: a second constructor here would
+    // be free to drift from it.
+    const decisionId =
+      parent?.decision_id ?? decisionIdForSimulation({ id: simId, lineage_id: lineageId });
     const createdAt = nowIso();
     const constraints = this.parseConstraints(
       constraintLines.length
@@ -506,6 +519,7 @@ export class WorkspaceService {
       version,
       lineage_id: lineageId,
       parent_simulation_id: parent?.id ?? null,
+      decision_id: decisionId,
     };
 
     await this.persist(ownerId, {
@@ -571,6 +585,7 @@ export class WorkspaceService {
         createdAt,
         version,
         lineageId,
+        decisionId,
         parent: parent ?? null,
       });
     } catch (err) {
@@ -602,6 +617,7 @@ export class WorkspaceService {
     createdAt: string;
     version: number;
     lineageId: string;
+    decisionId: string;
     parent: SimulationRecord | null;
   }): Promise<WorkspaceHome> {
     const {
@@ -617,6 +633,7 @@ export class WorkspaceService {
       createdAt,
       version,
       lineageId,
+      decisionId,
       parent,
     } = args;
 
@@ -733,6 +750,7 @@ export class WorkspaceService {
       version,
       lineage_id: lineageId,
       parent_simulation_id: parent?.id ?? null,
+      decision_id: decisionId,
     };
 
     const latestHome = await this.require(ownerId);
@@ -1202,6 +1220,7 @@ export class WorkspaceService {
       version: 1,
       lineage_id: simId,
       parent_simulation_id: null,
+      decision_id: simId,
     };
 
     return this.persist(ownerId, {
@@ -1283,6 +1302,7 @@ export class WorkspaceService {
     const repaired = sanitizeWorkspaceHomeIds({
       ...home,
       goalHistory: home.goalHistory ?? [],
+      decisions: home.decisions ?? [],
       knowledge: home.knowledge ?? [],
       notes: home.notes ?? [],
       futuresBySimulation: home.futuresBySimulation ?? {},
@@ -1312,12 +1332,14 @@ export class WorkspaceService {
       Object.entries(repaired.timelineBySimulation ?? {}).filter(([id]) => keptIds.has(id))
     );
 
-    return {
+    // Last, and deliberately: it groups whatever survived retention, so a
+    // decision is never left pointing at a version that has just been trimmed.
+    return attachDecisions({
       ...repaired,
       recentSimulations,
       futuresBySimulation,
       timelineBySimulation,
-    };
+    });
   }
 }
 

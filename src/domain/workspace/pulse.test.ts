@@ -26,6 +26,7 @@ function baseHome(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
       created_at: "2026-01-01T12:00:00.000Z",
     },
     goalHistory: [],
+    decisions: [],
     recentSimulations: [],
     knowledge: [],
     notes: [],

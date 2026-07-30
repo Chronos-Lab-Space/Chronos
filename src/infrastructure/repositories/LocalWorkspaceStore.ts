@@ -28,6 +28,9 @@ function normalizeHome(home: WorkspaceHome): WorkspaceHome {
       description: home.workspace.description ?? "",
     },
     goalHistory: home.goalHistory ?? [],
+    // Absent in anything stored before decisions existed; WorkspaceService
+    // .normalize() derives them from the lineages on the way back out.
+    decisions: home.decisions ?? [],
     futuresBySimulation: home.futuresBySimulation ?? {},
     timelineBySimulation: home.timelineBySimulation ?? {},
     recentSimulations: (home.recentSimulations ?? []).map((sim) => {

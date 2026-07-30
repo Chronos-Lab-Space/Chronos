@@ -76,6 +76,7 @@ function home(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
     workspace,
     goal,
     goalHistory: [],
+    decisions: [],
     recentSimulations: [simulation],
     knowledge: [],
     notes: [],
@@ -102,6 +103,7 @@ describe("incremental dual-write", () => {
     expect(rpc).toHaveBeenCalledTimes(1);
     const payload = payloadOf(rpc, 0);
     expect(Object.keys(payload).sort()).toEqual([
+      "decisions",
       "futures",
       "goal",
       "knowledge",
@@ -194,6 +196,7 @@ describe("incremental dual-write", () => {
 
     expect(rpc).toHaveBeenCalledTimes(2);
     expect(Object.keys(payloadOf(rpc, 1)).sort()).toEqual([
+      "decisions",
       "futures",
       "goal",
       "knowledge",

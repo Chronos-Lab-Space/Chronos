@@ -75,6 +75,16 @@ jobs:
             -v ON_ERROR_STOP=1 \
             -f supabase/tests/rls_access_matrix.sql
 
+      # Data, not shape: inserts simulations across several lineages, runs
+      # the backfill, and checks that a lineage maps to exactly one decision,
+      # that replaying changes nothing, and that a save from a client with no
+      # decision_id cannot unset one. Also rolls back.
+      - name: Assert decision backfill
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/tests/decision_backfill.sql
+
       - name: Dump policies and grants on failure
         if: failure()
         run: |

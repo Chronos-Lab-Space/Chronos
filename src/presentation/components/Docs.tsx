@@ -547,7 +547,7 @@ function AuthAccessDocs() {
           { title: "workspace_members", body: "Roles: owner, admin, member, viewer." },
           {
             title: "decisions",
-            body: "Reserved for first-class decision objects. Not yet populated — a simulation currently carries its own lineage (see SPEC-decision-object.md).",
+            body: "First-class decision objects; simulations hang underneath as versions. One decision per simulation lineage — a re-run is v2 of the same question, not a new one.",
           },
           { title: "simulations / events", body: "Runs + product analytics events." },
         ]}

@@ -27,6 +27,7 @@ function ownerHome(ownerId: string, sims: readonly SimulationRecord[]): Workspac
     },
     goal: null,
     goalHistory: [],
+    decisions: [],
     recentSimulations: sims,
     knowledge: [],
     notes: [],

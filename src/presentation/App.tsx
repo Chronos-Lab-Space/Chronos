@@ -49,6 +49,9 @@ const DashboardPage = lazy(async () => ({
 const DecisionBriefPage = lazy(async () => ({
   default: (await import("./features/workspace/DecisionBriefPage")).DecisionBriefPage,
 }));
+const DecisionsPage = lazy(async () => ({
+  default: (await import("./features/workspace/DecisionsPage")).DecisionsPage,
+}));
 const KnowledgePage = lazy(async () => ({
   default: (await import("./features/knowledge/KnowledgePages")).KnowledgePage,
 }));
@@ -126,6 +129,9 @@ function App() {
           <Route index element={lazyRoute(<DecisionBriefPage />)} />
           <Route path="hq" element={lazyRoute(<DashboardPage />)} />
           <Route path="decision" element={<Navigate to="/workspace" replace />} />
+          {/* The registry: questions, with their runs as versions underneath.
+              Distinct from /simulations, which lists runs by time. */}
+          <Route path="decisions" element={lazyRoute(<DecisionsPage />)} />
           <Route path="knowledge" element={lazyRoute(<KnowledgePage />)} />
           <Route path="simulations" element={lazyRoute(<SimulationsPage />)} />
           <Route path="simulations/:simulationId" element={lazyRoute(<SimulationDetailPage />)} />
