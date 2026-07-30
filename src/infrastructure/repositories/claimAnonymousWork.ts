@@ -70,7 +70,8 @@ export function claimAnonymousWork(
   }
 
   // Carry only their own work across — the sample stays behind with the
-  // anonymous identity, along with the futures and timeline keyed to it.
+  // anonymous identity, along with the futures, timeline and decision keyed
+  // to it.
   const sampleIds = anonymousHome.recentSimulations.filter(isSampleSimulation).map((s) => s.id);
   const futuresBySimulation = { ...anonymousHome.futuresBySimulation };
   const timelineBySimulation = { ...anonymousHome.timelineBySimulation };
@@ -79,9 +80,15 @@ export function claimAnonymousWork(
     delete timelineBySimulation[id];
   }
 
+  const kept = withoutSampleSimulations(anonymousHome.recentSimulations);
+  // Keyed off what actually survived rather than off the sample ids: the
+  // question the sample answered is not one this account ever asked.
+  const keptDecisionIds = new Set(kept.map((s) => s.decision_id));
+
   store.save(realOwnerId, {
     ...anonymousHome,
-    recentSimulations: withoutSampleSimulations(anonymousHome.recentSimulations),
+    recentSimulations: kept,
+    decisions: anonymousHome.decisions.filter((d) => keptDecisionIds.has(d.id)),
     futuresBySimulation,
     timelineBySimulation,
   });

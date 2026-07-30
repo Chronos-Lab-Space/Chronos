@@ -87,6 +87,7 @@ describe("persistent memory (history)", () => {
       },
       goal: null,
       goalHistory: [],
+      decisions: [],
       recentSimulations: [right, left],
       knowledge: [],
       notes: [],

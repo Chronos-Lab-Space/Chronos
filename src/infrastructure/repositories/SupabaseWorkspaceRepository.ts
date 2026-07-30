@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  DecisionRecord,
   FutureRecord,
   GoalRecord,
   KnowledgeRecord,
@@ -61,7 +62,7 @@ export class SupabaseWorkspaceRepository {
     const workspace = mapWorkspace(wsRow);
     const workspaceIdResolved = workspace.id;
 
-    const [goalRes, simRes, knowledgeRes, notesRes] = await Promise.all([
+    const [goalRes, simRes, knowledgeRes, notesRes, decisionRes] = await Promise.all([
       this.client
         .from("goals")
         .select("*")
@@ -87,12 +88,19 @@ export class SupabaseWorkspaceRepository {
         .eq("workspace_id", workspaceIdResolved)
         .order("created_at", { ascending: false })
         .limit(200),
+      this.client
+        .from("decisions")
+        .select("id, workspace_id, title, description, goal_id, created_at")
+        .eq("workspace_id", workspaceIdResolved)
+        .order("created_at", { ascending: false })
+        .limit(200),
     ]);
 
     if (goalRes.error) throw goalRes.error;
     if (simRes.error) throw simRes.error;
     if (knowledgeRes.error) throw knowledgeRes.error;
     if (notesRes.error) throw notesRes.error;
+    if (decisionRes.error) throw decisionRes.error;
 
     const simulations = (simRes.data ?? []).map(mapSimulation);
     const simIds = simulations.map((s) => s.id);
@@ -129,6 +137,7 @@ export class SupabaseWorkspaceRepository {
       goal: goalRes.data?.[0] ? mapGoal(goalRes.data[0]) : null,
       goalHistory: [],
       recentSimulations: simulations,
+      decisions: (decisionRes.data ?? []).map(mapDecision),
       knowledge: (knowledgeRes.data ?? []).map(mapKnowledge),
       notes: (notesRes.data ?? []).map(mapNote),
       futuresBySimulation,
@@ -330,6 +339,17 @@ export function buildSavePayload(home: WorkspaceHome): Record<string, unknown> {
       content: n.content ?? "",
       created_at: n.created_at,
     })),
+    // Ahead of simulations: `simulations.decision_id` is a real FK, and unlike
+    // the self-referencing parent columns it points at another table, so the
+    // decision row has to exist within the same statement order.
+    decisions: (home.decisions ?? []).map((d) => ({
+      id: d.id,
+      workspace_id: d.workspace_id,
+      title: d.title,
+      description: d.description ?? "",
+      goal_id: d.goal_id,
+      created_at: d.created_at,
+    })),
     simulations: sims.map((s) => ({
       id: s.id,
       workspace_id: s.workspace_id,
@@ -342,6 +362,7 @@ export function buildSavePayload(home: WorkspaceHome): Record<string, unknown> {
       version: s.version ?? 1,
       lineage_id: s.lineage_id ?? s.id,
       parent_simulation_id: s.parent_simulation_id,
+      decision_id: s.decision_id ?? null,
     })),
     futures: futures.map((f) => ({
       id: f.id,
@@ -399,6 +420,18 @@ function mapSimulation(row: Record<string, unknown>): SimulationRecord {
     version: Number(row.version ?? 1),
     lineage_id: String(row.lineage_id ?? id),
     parent_simulation_id: row.parent_simulation_id ? String(row.parent_simulation_id) : null,
+    decision_id: row.decision_id ? String(row.decision_id) : null,
+  };
+}
+
+function mapDecision(row: Record<string, unknown>): DecisionRecord {
+  return {
+    id: String(row.id),
+    workspace_id: String(row.workspace_id),
+    title: String(row.title ?? ""),
+    description: String(row.description ?? ""),
+    goal_id: row.goal_id ? String(row.goal_id) : null,
+    created_at: String(row.created_at),
   };
 }
 

@@ -244,6 +244,17 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("graph-describe")).toContainText(/collapsed/i);
     await expect(page.getByTestId("graph-describe")).not.toContainText(/not yet collapsed/i);
+
+    // --- The registry files the fork as v2 of one question, not a second one ---
+    // This is the whole point of decisions being first-class: /simulations
+    // shows two rows because two runs happened, and the registry shows one,
+    // because only one question was asked.
+    await page.goto("/workspace/decisions");
+    await expect(page.getByTestId("decision-registry")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("decision-row")).toHaveCount(1);
+    await expect(page.getByTestId("decision-version-count")).toHaveText(/2 versions/i);
+    // Collapsed and an outcome logged earlier in this test, so it reads as executed.
+    await expect(page.getByTestId("decision-row")).toContainText(/executed/i);
   });
 
   test("an anonymous visitor gets a workspace, and is told it is device-only", async ({ page }) => {

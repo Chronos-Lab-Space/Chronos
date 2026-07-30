@@ -21,6 +21,7 @@ function baseHome(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
       created_at: "2026-07-01T00:00:00.000Z",
     },
     goalHistory: [],
+    decisions: [],
     recentSimulations: [],
     knowledge: [],
     notes: [],
@@ -73,6 +74,7 @@ describe("mergeWorkspaceHomes", () => {
       },
       goal: null,
       goalHistory: [],
+      decisions: [],
       recentSimulations: [
         {
           id: "sim-l",
@@ -143,6 +145,7 @@ describe("mergeWorkspaceHomes", () => {
         baseHome({
           goal: null,
           goalHistory: [],
+          decisions: [],
           recentSimulations: [
             {
               id: "s",

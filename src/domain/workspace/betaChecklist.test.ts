@@ -17,6 +17,7 @@ function home(partial: Partial<WorkspaceHome> = {}): WorkspaceHome {
     },
     goal: null,
     goalHistory: [],
+    decisions: [],
     recentSimulations: [],
     knowledge: [],
     notes: [],

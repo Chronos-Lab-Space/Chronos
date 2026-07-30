@@ -37,6 +37,15 @@ export function mergeWorkspaceHomes(remote: WorkspaceHome, local: WorkspaceHome)
       (s) => s.id,
       (remoteSim, localSim) => preferRicherSimulation(remoteSim, localSim)
     ).sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    // Both sides derive decision ids from the same lineage, so a shared
+    // question collides on id rather than duplicating. Remote wins on the
+    // title: it is the copy every other device will read.
+    decisions: mergeById(
+      remote.decisions ?? [],
+      local.decisions ?? [],
+      (d) => d.id,
+      preferRemote
+    ).sort((a, b) => b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id)),
     knowledge: mergeById(remote.knowledge, local.knowledge, (k) => k.id, preferRemote),
     notes: mergeById(remote.notes, local.notes, (n) => n.id, preferRemote),
     futuresBySimulation: mergeRelationMaps(remote.futuresBySimulation, local.futuresBySimulation),

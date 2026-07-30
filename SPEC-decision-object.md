@@ -1,6 +1,7 @@
 # Spec: decisions as first-class objects
 
-**Status:** Draft, not started.
+**Status:** Shipped — all three slices. One success criterion is unverified;
+see "What shipped" at the end.
 **Scope:** A `Decision` entity that owns its simulation versions, a backfill for
 existing data, and the read surface that makes the product's existing claim true.
 **Out of scope:** Changing scoring, futures, ranking, or confidence. Replay and
@@ -142,8 +143,40 @@ second source of truth for which version was chosen.
 
 ---
 
-## Until this ships
+## What shipped
 
-The `Docs.tsx` claim is false right now. If this spec is not approved, that copy
-should be amended rather than left standing — a product that describes an entity
-it does not have is the problem this document exists to fix.
+All three slices, in one change.
+
+**The key decision, made during implementation:** a decision is keyed on its
+`lineage_id` rather than given a fresh uuid. That makes the mapping bijective,
+so the SQL backfill and the client derive the same id without coordinating,
+two offline devices converge on one decision instead of two, and the backfill
+is idempotent by construction rather than by bookkeeping. A lineage that is
+not a valid uuid — legacy local data — falls back to the simulation's own id,
+a lineage of one. The rule lives in exactly two places, deliberately mirrored:
+`decisionIdForSimulation` and `private.decision_id_for_simulation`.
+
+`runSimulation` does *not* construct a `DecisionRecord`. It sets `decision_id`
+on the simulation, and `attachDecisions` inside `normalize()` is the single
+constructor. A second one would be free to drift from the first.
+
+**Criteria 2–6 are verified.** Migrations replay on a clean stack;
+`rls_invariants.sql`, `rls_access_matrix.sql` and the new
+`decision_backfill.sql` all pass; a re-branch produces v2 of the same decision
+(unit *and* E2E); anonymous visitors get decisions with `remote: null`;
+ranking is untouched — nothing in this change reaches the engine.
+
+**Criterion 1 is not verified.** "All 49 hosted simulations have a non-null
+`decision_id`, and exactly 21 decisions exist" needs a query against the live
+project, which was not run. The backfill is asserted against fixtures covering
+multi-version lineages, single-version lineages, non-uuid lineages and empty
+titles, and it is idempotent — but the hosted counts are a prediction until
+somebody runs:
+
+```sql
+select count(*) filter (where decision_id is null) as unlinked,
+       count(distinct decision_id) as decisions
+from public.simulations;
+```
+
+Treat 49/21 as the expectation to check, not a result.

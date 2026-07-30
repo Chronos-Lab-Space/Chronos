@@ -14,6 +14,7 @@ function makeHome(id: string, name = "Lab", createdAt = "2026-07-01T00:00:00.000
     workspace: { id, owner_id: OWNER, name, description: "", created_at: createdAt },
     goal: null,
     goalHistory: [],
+    decisions: [],
     recentSimulations: [],
     knowledge: [],
     notes: [],

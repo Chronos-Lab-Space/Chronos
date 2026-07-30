@@ -61,6 +61,7 @@ function home(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
     },
     goal,
     goalHistory: [],
+    decisions: [],
     recentSimulations: [child, parent], // deliberately out of order
     knowledge: [],
     notes: [],
@@ -79,6 +80,7 @@ function home(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
 describe("buildSavePayload", () => {
   it("emits exactly the keys save_workspace_home reads", () => {
     expect(Object.keys(buildSavePayload(home())).sort()).toEqual([
+      "decisions",
       "futures",
       "goal",
       "knowledge",

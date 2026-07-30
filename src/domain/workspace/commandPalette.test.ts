@@ -17,6 +17,7 @@ function home(sims: SimulationRecord[] = []): WorkspaceHome {
     },
     goal: null,
     goalHistory: [],
+    decisions: [],
     recentSimulations: sims,
     knowledge: [],
     notes: [],
