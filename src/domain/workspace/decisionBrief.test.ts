@@ -103,6 +103,49 @@ describe("deriveDecisionBrief", () => {
     expect(brief?.stageId).toBe("simulating");
   });
 
+  it("prefers AI-written body prose over the deterministic thesis", () => {
+    const brief = deriveDecisionBrief(
+      home({
+        sims: [
+          sim({
+            id: "s1",
+            status: "completed",
+            result: {
+              best_future: "Community first",
+              recommendation: "Open to the community list first.",
+              thesis: "Deterministic thesis.",
+              recommendation_body: "It beats the big-bang launch on speed to first signal.",
+            },
+          }),
+        ],
+        futures: { s1: futures },
+      })
+    );
+    expect(brief?.recommendation?.body).toBe(
+      "It beats the big-bang launch on speed to first signal."
+    );
+  });
+
+  it("falls back to the thesis for runs that predate AI body prose", () => {
+    const brief = deriveDecisionBrief(
+      home({
+        sims: [
+          sim({
+            id: "s1",
+            status: "completed",
+            result: {
+              best_future: "Community first",
+              recommendation: "Open to the community list first.",
+              thesis: "Deterministic thesis.",
+            },
+          }),
+        ],
+        futures: { s1: futures },
+      })
+    );
+    expect(brief?.recommendation?.body).toBe("Deterministic thesis.");
+  });
+
   it("evaluating: completed run ranks futures best-first with the engine pick flagged", () => {
     const brief = deriveDecisionBrief(
       home({ sims: [sim({ id: "s1", status: "completed" })], futures: { s1: futures } })

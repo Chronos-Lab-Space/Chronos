@@ -693,6 +693,7 @@ export class WorkspaceService {
       simulationId: simId,
       workspaceId: home.workspace.id,
       recommendation: output.recommendation,
+      recommendation_body: output.recommendationBody ?? null,
       evaluationRationale:
         typeof evaluation.data.rationale === "string" ? evaluation.data.rationale : undefined,
       edge: typeof evaluation.data.edge === "number" ? evaluation.data.edge : undefined,
@@ -711,6 +712,7 @@ export class WorkspaceService {
         category: output.category,
         thesis: output.thesis,
         recommendation: output.recommendation,
+        recommendation_body: output.recommendationBody ?? null,
         risks: output.risks,
         tasks: output.tasks,
         constraints: constraints.map((c) => `${c.kind}: ${c.text}`),
@@ -1179,6 +1181,7 @@ export class WorkspaceService {
         futures_count: output.futures.length,
         best_future: output.best.name,
         recommendation: output.recommendation,
+        recommendation_body: output.recommendationBody ?? null,
         risks: output.risks,
         tasks: output.tasks,
         paths_evaluated: output.pathsEvaluated,

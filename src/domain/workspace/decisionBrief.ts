@@ -169,7 +169,12 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
     report && (recommendationText || bestName)
       ? {
           headline: recommendationText ?? `Collapse to “${bestName}”.`,
-          body: trimmed(report.result.thesis) ?? trimmed(report.result.chosen_summary),
+          // AI prose when enrichment produced any, the deterministic thesis
+          // otherwise — including on every run that predates this field.
+          body:
+            trimmed(report.result.recommendation_body) ??
+            trimmed(report.result.thesis) ??
+            trimmed(report.result.chosen_summary),
         }
       : null;
 
