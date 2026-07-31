@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { Scheduler } from "../agent-os/AgentOperatingSystem";
 import { StartupLaunchPlanner } from "./StartupLaunchPlanner";
 
 describe("StartupLaunchPlanner", () => {
@@ -18,13 +17,9 @@ describe("StartupLaunchPlanner", () => {
       "Financial simulation",
       "Risk analysis",
     ]);
-    expect(new Scheduler().next(graph, new Set()).map((task) => task.id)).toEqual([
-      "research-competitors",
-    ]);
+    expect(graph.readyTasks(new Set()).map((task) => task.id)).toEqual(["research-competitors"]);
     expect(
-      new Scheduler()
-        .next(graph, new Set(["research-competitors", "estimate-market"]))
-        .map((task) => task.id)
+      graph.readyTasks(new Set(["research-competitors", "estimate-market"])).map((task) => task.id)
     ).toEqual(["build-roadmap"]);
   });
 });
