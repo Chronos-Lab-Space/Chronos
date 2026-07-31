@@ -12,6 +12,8 @@ import { Shift } from "../components/Shift";
 import { Simulate } from "../features/planner/Simulate";
 import { Journey } from "../components/Journey";
 import { CTA } from "../components/CTA";
+import { ChronosCode } from "../components/ChronosCode";
+import { LANDING_PROGRAM } from "../../domain/chronos/landing-program";
 
 // ============================================================
 // HOME
@@ -256,9 +258,10 @@ export function CorePage() {
                 <span className="italic text-ink-dim">Chronos plans the work.</span>
               </h2>
               <p className="mt-6 max-w-md text-[14px] leading-[1.75] text-ink-dim">
-                Chronos Language is the authoring layer for task-oriented temporal reasoning.
-                Declare an objective, constraints, and evaluation rules; the Planner creates the
-                task graph and resolves capabilities automatically.
+                Chronos Language is the authoring layer for temporal reasoning. Declare a starting
+                state, the actions open to you, and a score that says what "better" means. Chronos
+                forks each action into its own branch, evaluates them on reward against risk, and
+                collapses to the strongest.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link
@@ -286,42 +289,11 @@ export function CorePage() {
                   launch.chronos
                 </span>
               </div>
-              <pre className="overflow-x-auto p-6 font-mono text-[12px] leading-[1.8]">
-                <code>
-                  <span className="text-chronos">objective</span>
-                  <span className="text-ink"> </span>
-                  <span className="text-accent-warm">"Launch startup"</span>
-                  <span className="text-ink">
-                    {" "}
-                    {"{"}
-                    {"\n"} workspace:{" "}
-                  </span>
-                  <span className="text-accent-warm">"acme"</span>
-                  <span className="text-ink">{"\n"} constraints: [</span>
-                  <span className="text-accent-warm">"18 month runway"</span>
-                  <span className="text-ink">]{"\n"}</span>
-                  <span className="text-ink">
-                    {"}"}
-                    {"\n\n"}
-                  </span>
-                  <span className="text-chronos">plan</span>
-                  <span className="text-ink">
-                    {" "}
-                    {"{"}
-                    {"\n"} research.competitors{"\n"} market.estimate{"\n"} roadmap.build{"\n"}{" "}
-                    adoption.predict{"\n"} financial.simulate{"\n"} risk.analyze{"\n"}
-                  </span>
-                  <span className="text-ink">
-                    {"}"}
-                    {"\n\n"}
-                  </span>
-                  <span className="text-chronos">rank</span>
-                  <span className="text-ink"> timelines </span>
-                  <span className="text-accent-warm">by expected_value</span>
-                </code>
+              <pre className="max-h-[26rem] overflow-auto p-6 font-mono text-[12px] leading-[1.8]">
+                <ChronosCode source={LANDING_PROGRAM} />
               </pre>
               <div className="border-t border-line px-5 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
-                objective → task graph → capabilities → ranked timeline
+                state → actions → score → fork → collapse
               </div>
             </div>
           </div>
