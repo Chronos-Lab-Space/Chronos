@@ -181,8 +181,6 @@ Planner
   ↓
 Task Graph
   ↓
-Scheduler
-  ↓
 Execution Runtime
   ↓
 Memory
@@ -196,8 +194,7 @@ Timeline Ranking
 |---|---|
 | `Planner` | Converts a decision goal and constraints into a validated `TaskGraph` |
 | `TaskGraph` | Dependency-aware DAG of atomic work; rejects missing dependencies and cycles |
-| `Scheduler` | Selects dependency-ready tasks by priority and concurrency budget |
-| `ExecutionRuntime` | Resolves each task kind to a registered capability and records execution output |
+| `ExecutionRuntime` | Resolves each task kind to a registered capability and records execution output. One production caller: `planChosenPath`. |
 | `Memory` | Supplies workspace evidence and retains reusable context |
 | `OutcomeEvaluator` | Assigns score, confidence, rationale, and policy compliance to execution results |
 | `RankingEngine` | Ranks evaluated timelines and selects the next canonical path |
@@ -243,7 +240,8 @@ replaced without changing the planner or temporal engine.
 | **Workspace `SimulationEngine`** | Deterministic plan → futures → EV scoring → collapse. Optional `AIPort` **prose polish only** (`maybeEnrichRecommendation`); scores/futures never change. Default provider: **noop**. |
 | **Forge / Oracle / Atlas** (`domain/chronos/agents.ts`) | Hand-authored scenarios for the temporal playground. `AgentSimulationRunner` is pure in-process (no I/O). |
 | **Specialist agents** (`src/agents/*`) | Evaluation + memory + simulation are real pure/domain logic. Research and execution (`plan`) use `AIPort` when configured, else a structured stub (fail-open); both label output `source: "ai" \| "stub"`. Execution emits steps for an already-chosen objective — never an ordering. Coding / knowledge remain stubs. |
-| **Capability registry** | `createDefaultCapabilityRegistry` is wired in production for exactly one path: `planChosenPath` → `cap-plan`, after a collapse. `runTaskGraph` executes a full planner graph but has **no production caller** — it is exercised by tests only, so `roadmap.build` and the rest of the launch graph never run outside them. Product UI “workloads” under `capabilities.ts` are **demo metadata**, not the OS registry. |
+| **Two agent runtimes** | `core/runtime` is the live one: `bootstrap.ts` registers all seven agents and `WorkspaceService` dispatches `simulation.execute` and `outcome.evaluate` through it on the main workspace path. `application/agent-os` is the second, and is wired in production for exactly one path: `planChosenPath` → `cap-plan`, after a collapse. Do not read one as dead because the other is quiet. |
+| **Capability registry** | Dispatched in production: `simulation.execute`, `outcome.evaluate` (via `core/runtime`) and `plan` (via `agent-os`). Registered but never dispatched: coding, knowledge, research, memory — `roadmap.build` included. The launch graph is a planning artifact only: `StartupLaunchPlanner` builds it, `Product.tsx` renders it, nothing executes it. Product UI “workloads” under `capabilities.ts` are **demo metadata**, not the OS registry. |
 | **Repository ports** (`TaskGraphRepository`, `CapabilityRepository`, …) | Interface contracts; in-memory / Supabase adapters exist where tables do — ports are not proof that every OS table is product-wired. |
 
 When writing docs or marketing: prefer “deterministic multi-future engine; optional LLM for prose/research” over “AI agents decide for you.”

@@ -43,13 +43,6 @@ export class Planner {
   }
 }
 
-/** Scheduler selects dependency-ready tasks by priority. */
-export class Scheduler {
-  next(graph: TaskGraph, completedTaskIds: ReadonlySet<string>, concurrency = 1): Task[] {
-    return graph.readyTasks(completedTaskIds).slice(0, concurrency);
-  }
-}
-
 /** Executes tasks through registered capabilities, not through named agents. */
 export class ExecutionRuntime {
   private sequence = 0;

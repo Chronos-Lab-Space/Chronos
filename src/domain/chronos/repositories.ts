@@ -55,8 +55,8 @@ export interface WorkspaceRepository extends Repository<Workspace> {}
 
 export interface KnowledgeGraphRepository extends Repository<KnowledgeGraph> {}
 
-// Agent OS persistence ports. These let Planner, Scheduler, Runtime, and
-// Evaluator services retain state without coupling to a concrete database.
+// Agent OS persistence ports. These let Planner, Runtime, and Evaluator
+// services retain state without coupling to a concrete database.
 // Ports are contracts only — see createDefaultCapabilityRegistry for the live
 // in-process handlers used in beta (not every port is product-wired to Postgres yet).
 export interface TaskGraphRepository extends Repository<TaskGraph> {}

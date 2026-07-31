@@ -58,7 +58,7 @@ Start ambiguous sessions with `using-agent-skills` to map work to the right work
 | Scenario demos (Forge / Oracle / Atlas) | `src/domain/chronos/agents.ts` — **scripted world models**, not LLM agents |
 | Specialist agents | `src/agents/*` — real eval/memory/sim; research optional AI; others stubs |
 | Capability registry (live) | `src/application/agent-os/createDefaultCapabilityRegistry.ts` |
-| Task graph execution | `src/application/agent-os/runTaskGraph.ts` |
+| Agent dispatch (live) | `src/core/runtime/` — `bootstrap.ts` registers all seven; `WorkspaceService` runs `simulation.execute` + `outcome.evaluate` |
 | Workspace dual-write | `src/application/workspace/WorkspaceService.ts` |
 | AI port (default noop) | `src/infrastructure/ai/createAIPort.ts` |
 | Supabase client | `src/infrastructure/supabase/client.ts` |

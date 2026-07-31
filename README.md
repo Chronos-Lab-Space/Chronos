@@ -255,9 +255,9 @@ Chronos executes **tasks and capabilities**, not fixed agent personas. Planners 
 Agent OS (beta):
 
 ```text
-Planner → Task Graph → Scheduler → ExecutionRuntime
-        → registered capabilities (createDefaultCapabilityRegistry)
-        → Memory / Evaluation / ranking
+Planner → Task Graph            (planning artifact; rendered, not executed)
+core/runtime → registered agents (live: simulation.execute, outcome.evaluate)
+agent-os ExecutionRuntime        (live: plan, via planChosenPath)
 ```
 
 Capabilities may be deterministic programs, stubs, or AI-backed research — the engine only sees tasks. See `ARCHITECTURE.md` → *Implementation status* for what is live vs sketched.

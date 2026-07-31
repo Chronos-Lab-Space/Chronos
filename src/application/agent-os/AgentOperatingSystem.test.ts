@@ -5,7 +5,6 @@ import {
   ExecutionRuntime,
   Planner,
   RankingEngine,
-  Scheduler,
 } from "./AgentOperatingSystem";
 
 describe("Agent Operating System", () => {
@@ -43,11 +42,12 @@ describe("Agent Operating System", () => {
         }),
       ],
     });
-    const scheduler = new Scheduler();
-
-    expect(scheduler.next(graph, new Set()).map((task) => task.id)).toEqual(["plan"]);
-    expect(scheduler.next(graph, new Set(["plan"])).map((task) => task.id)).toEqual(["simulate"]);
-    expect(scheduler.next(graph, new Set(["plan", "simulate"])).map((task) => task.id)).toEqual([
+    // Asserted on the graph itself rather than through a scheduler: dependency
+    // readiness is a property of the DAG the planner builds and Product.tsx
+    // renders, and it outlived the executor that used to wrap it.
+    expect(graph.readyTasks(new Set()).map((task) => task.id)).toEqual(["plan"]);
+    expect(graph.readyTasks(new Set(["plan"])).map((task) => task.id)).toEqual(["simulate"]);
+    expect(graph.readyTasks(new Set(["plan", "simulate"])).map((task) => task.id)).toEqual([
       "rank",
     ]);
   });

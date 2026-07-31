@@ -7,7 +7,6 @@ import {
   createDefaultCapabilityRegistry,
   resetDefaultCapabilityRegistryForTests,
 } from "./createDefaultCapabilityRegistry";
-import { runTaskGraph } from "./runTaskGraph";
 
 describe("createDefaultCapabilityRegistry", () => {
   it("registers handlers for core product task kinds", async () => {
@@ -113,18 +112,20 @@ describe("createDefaultCapabilityRegistry", () => {
     expect(() => resetDefaultCapabilityRegistryForTests()).not.toThrow();
   });
 
-  it("runTaskGraph executes a launch plan against default capabilities", async () => {
+  it("resolves every capability the launch planner asks for", async () => {
+    // The graph is a planning artifact — Product.tsx renders it and nothing
+    // executes it. What still matters is that each kind the planner emits has
+    // a registered provider, so the decomposition never names a capability
+    // that does not exist.
     const graph = new StartupLaunchPlanner().decompose({
       workspaceId: "ws-launch",
       decisionId: "dec-1",
       prompt: "AI code review for mid-market teams",
     });
-    const result = await runTaskGraph(graph, {
-      registry: createDefaultCapabilityRegistry({ ai: new NoopAIProvider() }),
-    });
+    const registry = createDefaultCapabilityRegistry({ ai: new NoopAIProvider() });
 
-    expect(result.failed).toEqual([]);
-    expect(result.completed.length).toBe(graph.tasks.length);
-    expect(result.outputs["research-competitors"]?.source).toBe("stub");
+    for (const task of graph.tasks) {
+      expect(registry.resolve(task), `no capability for ${task.kind}`).not.toBeNull();
+    }
   });
 });
