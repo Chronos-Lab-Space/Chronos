@@ -1,6 +1,8 @@
 # Spec: does Chronos' confidence mean anything?
 
-**Status:** Draft, not started.
+**Status:** Slices 1 and 2 shipped. Slice 3 (using measured bias to caveat
+displayed confidence) is deliberately not started — it changes what a number in
+the product means and needs its own approval.
 **Scope:** Read back the outcome data the product has been collecting since
 outcome tracking shipped, and say — honestly, with denominators — how well
 predicted confidence has matched what actually happened.
@@ -141,13 +143,16 @@ rejected in review.
 
 ## Slices
 
-1. **Domain only.** `deriveCalibration(home)` → bands with counts, the excluded
-   and unverified tallies, and a per-decision movement list. Pure, unit-tested,
-   nothing rendered. Independently useful: it answers the question in a test
-   before it costs any design time.
-2. **Surface it.** One honest panel — most likely on the learning dashboard,
-   which is where outcome memory already lives. Empty states are the common
-   case and should be designed first, not last.
+1. ~~**Domain only.**~~ *Shipped.* `deriveCalibration(home)` → bands with counts,
+   the excluded and unverified tallies, and a per-decision movement list. Pure,
+   unit-tested, nothing rendered. Independently useful: it answers the question
+   in a test before it costs any design time.
+2. ~~**Surface it.**~~ *Shipped* as `CalibrationPanel`, on **`/workspace/memory`**
+   rather than the learning dashboard: that dashboard renders a synthetic
+   capability workload, not the workspace's real outcomes, so it has no
+   calibration data to report. Memory is where the logged outcomes actually
+   live. The panel sits above the rest of the page because it frames how much
+   to trust everything below it.
 3. **Ask first before anything else.** Using measured bias to caveat displayed
    confidence ("your 80% calls have landed 65% of the time") is a real idea and
    a different decision. It changes what a number in the product means, so it

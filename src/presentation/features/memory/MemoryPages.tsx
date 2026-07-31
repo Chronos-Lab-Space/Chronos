@@ -7,6 +7,7 @@ import { listDecisionHistory } from "../../../domain/workspace/workspaceMemory";
 import { learningMemoryStore } from "../../../infrastructure/memory/LearningMemoryStore";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { SurfaceLoading } from "../workspace/SurfaceLoading";
+import { CalibrationPanel } from "./components/CalibrationPanel";
 
 /**
  * Persistent memory — leave and come back to:
@@ -39,6 +40,10 @@ export function MemoryPage() {
           decisions · {learning.length} learned · {home.knowledge.length} knowledge
         </div>
       </div>
+
+      {/* What the confidence on every run below has actually been worth. Sits
+          first because it frames how much to trust the rest of the page. */}
+      <CalibrationPanel home={home} />
 
       {/* Learned preferences + outcomes from Evaluation → Memory agents */}
       <section>

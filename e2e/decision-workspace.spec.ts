@@ -159,6 +159,9 @@ test.describe("Decision Workspace (authenticated)", () => {
     await page
       .getByPlaceholder(/what happened/i)
       .fill("Shipped invite-only beta; conversion healthy.");
+    // The verdict is what calibration reads. Without it the run is "awaiting an
+    // outcome" — silence is never scored as "as expected".
+    await page.getByRole("button", { name: /^as predicted$/i }).click();
     await page.getByRole("button", { name: /save outcome/i }).click();
     await expect(page.getByText(/shipped invite-only beta/i)).toBeVisible({
       timeout: 8_000,
@@ -212,6 +215,15 @@ test.describe("Decision Workspace (authenticated)", () => {
       page.getByText(/launch clab public beta|how should we launch/i).first()
     ).toBeVisible();
     await expect(page.getByTestId("memory-graph-summary").first()).toContainText(/collapsed|open/i);
+
+    // --- Calibration reads the verdict, and refuses to turn one run into a rate ---
+    // The full loop: a followed run with a verdict becomes a measured data point
+    // on the surface that reports what confidence has been worth.
+    await expect(page.getByTestId("calibration-denominators")).toContainText(/1 measured/i);
+    await expect(page.getByTestId("calibration-empty")).toHaveCount(0);
+    // One run is under the minimum sample, so every band withholds its rate
+    // rather than printing a 100% derived from a single outcome.
+    await expect(page.getByTestId("calibration-bands")).toContainText(/not yet/i);
 
     // --- Re-branch from open: fork a new version, keep the prior one in Memory ---
     // Collapsing is not the end of the loop — standing back at N0 and forking
