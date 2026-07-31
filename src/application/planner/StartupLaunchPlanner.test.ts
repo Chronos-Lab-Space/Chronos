@@ -9,10 +9,13 @@ describe("StartupLaunchPlanner", () => {
       prompt: "Launch a vertical AI startup",
     });
 
+    // Every step names a capability with a real handler behind it. "Build
+    // roadmap" used to sit third and was the one exception — nothing
+    // implemented roadmap.build anywhere, so the plan advertised a step
+    // Chronos could not take.
     expect(graph.tasks.map((task) => task.title)).toEqual([
       "Research competitors",
       "Estimate market",
-      "Build roadmap",
       "Predict adoption",
       "Financial simulation",
       "Risk analysis",
@@ -20,6 +23,6 @@ describe("StartupLaunchPlanner", () => {
     expect(graph.readyTasks(new Set()).map((task) => task.id)).toEqual(["research-competitors"]);
     expect(
       graph.readyTasks(new Set(["research-competitors", "estimate-market"])).map((task) => task.id)
-    ).toEqual(["build-roadmap"]);
+    ).toEqual(["predict-adoption"]);
   });
 });

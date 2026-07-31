@@ -9,7 +9,6 @@ export type TaskKind =
   | "plan"
   | "research.competitors"
   | "market.estimate"
-  | "roadmap.build"
   | "adoption.predict"
   | "financial.simulate"
   | "risk.analyze"

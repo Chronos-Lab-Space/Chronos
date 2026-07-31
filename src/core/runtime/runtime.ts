@@ -65,7 +65,7 @@ export class AgentRuntime {
     return this.byCapability.get(capability) ?? null;
   }
 
-  /** Run a single capability (e.g. runtime.run("generate_code")). */
+  /** Run a single capability (e.g. runtime.run("simulation.execute")). */
   async run(
     capability: string,
     input: Record<string, unknown> = {},

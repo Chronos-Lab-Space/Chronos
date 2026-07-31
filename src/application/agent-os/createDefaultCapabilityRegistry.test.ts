@@ -75,7 +75,7 @@ describe("createDefaultCapabilityRegistry", () => {
     expect(sim.capabilityId).toBe("cap-simulation");
   });
 
-  it("resolves plan and roadmap stubs", async () => {
+  it("resolves the plan capability", async () => {
     const registry = createDefaultCapabilityRegistry({ ai: new NoopAIProvider() });
     const runtime = new ExecutionRuntime(registry);
 
@@ -90,21 +90,6 @@ describe("createDefaultCapabilityRegistry", () => {
     );
     expect(plan.status).toBe("completed");
     expect(plan.capabilityId).toBe("cap-plan");
-
-    const road = await runtime.execute(
-      new Task({
-        id: "rd1",
-        kind: "roadmap.build",
-        title: "Roadmap",
-        capability: "roadmap.build",
-        input: {},
-      })
-    );
-    expect(road.status).toBe("completed");
-    expect(road.capabilityId).toBe("cap-roadmap");
-    // Registered but unimplemented. Mark it the way every other stub is marked,
-    // so a caller cannot mistake an empty roadmap for a computed one.
-    expect(road.output.source).toBe("stub");
   });
 
   it("reset clears the process singleton", () => {

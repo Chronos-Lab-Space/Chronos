@@ -1,8 +1,6 @@
 import {
-  codingAgent,
   evaluationAgent,
   executionAgent,
-  knowledgeAgent,
   memoryAgent,
   researchAgent,
   simulationAgent,
@@ -15,10 +13,8 @@ export function registerDefaultAgents(target: AgentRuntime = runtime): AgentRunt
 
   target
     .register(researchAgent)
-    .register(codingAgent)
     .register(simulationAgent)
     .register(memoryAgent)
-    .register(knowledgeAgent)
     .register(evaluationAgent)
     .register(executionAgent);
 
