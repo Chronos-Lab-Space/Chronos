@@ -20,7 +20,6 @@ const taskKinds: readonly TaskKind[] = [
   "plan",
   "research.competitors",
   "market.estimate",
-  "roadmap.build",
   "adoption.predict",
   "financial.simulate",
   "risk.analyze",
@@ -88,7 +87,6 @@ export const capabilityWorkloads: readonly CapabilityWorkload[] = agents.map((ag
         capabilityKeys: [
           "research.competitors",
           "market.estimate",
-          "roadmap.build",
           "adoption.predict",
           "financial.simulate",
           "risk.analyze",

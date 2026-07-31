@@ -217,8 +217,6 @@ Research competitors
   ↓
 Estimate market
   ↓
-Build roadmap
-  ↓
 Predict adoption
   ↓
 Financial simulation
@@ -239,9 +237,9 @@ replaced without changing the planner or temporal engine.
 | **Public `/simulate` + home demo** | Deterministic Monte Carlo over category path templates (`domain/chronos/startup-sim.ts`). `pathsEvaluated` is the real sample budget. **No LLM.** Progress UI shows `SIMULATION_STAGES` — the phases `simulate()` performs. It must not display planner task titles: that graph is built but never executed here. |
 | **Workspace `SimulationEngine`** | Deterministic plan → futures → EV scoring → collapse. Optional `AIPort` **prose polish only** (`maybeEnrichRecommendation`); scores/futures never change. Default provider: **noop**. |
 | **Forge / Oracle / Atlas** (`domain/chronos/agents.ts`) | Hand-authored scenarios for the temporal playground. `AgentSimulationRunner` is pure in-process (no I/O). |
-| **Specialist agents** (`src/agents/*`) | Evaluation + memory + simulation are real pure/domain logic. Research and execution (`plan`) use `AIPort` when configured, else a structured stub (fail-open); both label output `source: "ai" \| "stub"`. Execution emits steps for an already-chosen objective — never an ordering. Coding / knowledge remain stubs. |
+| **Specialist agents** (`src/agents/*`) | Evaluation + memory + simulation are real pure/domain logic. Research and execution (`plan`) use `AIPort` when configured, else a structured stub (fail-open); both label output `source: "ai" \| "stub"`. Execution emits steps for an already-chosen objective — never an ordering. Five agents, all backed by real logic — the coding and knowledge stubs were deleted rather than left registered. |
 | **Two agent runtimes** | `core/runtime` is the live one: `bootstrap.ts` registers all seven agents and `WorkspaceService` dispatches `simulation.execute` and `outcome.evaluate` through it on the main workspace path. `application/agent-os` is the second, and is wired in production for exactly one path: `planChosenPath` → `cap-plan`, after a collapse. Do not read one as dead because the other is quiet. |
-| **Capability registry** | Dispatched in production: `simulation.execute`, `outcome.evaluate` (via `core/runtime`) and `plan` (via `agent-os`). Registered but never dispatched: coding, knowledge, research, memory — `roadmap.build` included. The launch graph is a planning artifact only: `StartupLaunchPlanner` builds it, `Product.tsx` renders it, nothing executes it. Product UI “workloads” under `capabilities.ts` are **demo metadata**, not the OS registry. |
+| **Capability registry** | Dispatched in production — four sites, and grep for them with a multiline pattern or you will miss the fourth: `simulation.execute` and `outcome.evaluate` (`WorkspaceService`), `memory.write` (the `DecisionRanked` subscriber in `productEventSubscribers`, registered from `composition/workspaceService.ts`), all via `core/runtime`; and `plan` via `agent-os` → `planChosenPath`. Registered but never dispatched: **research** alone. Every task kind the planner emits now resolves to a capability with real logic behind it — enforced by a test. The launch graph is a planning artifact only: `StartupLaunchPlanner` builds it, `Product.tsx` renders it, nothing executes it. Product UI “workloads” under `capabilities.ts` are **demo metadata**, not the OS registry. |
 | **Repository ports** (`TaskGraphRepository`, `CapabilityRepository`, …) | Interface contracts; in-memory / Supabase adapters exist where tables do — ports are not proof that every OS table is product-wired. |
 
 When writing docs or marketing: prefer “deterministic multi-future engine; optional LLM for prose/research” over “AI agents decide for you.”

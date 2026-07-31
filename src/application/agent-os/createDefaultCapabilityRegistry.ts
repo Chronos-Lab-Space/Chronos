@@ -10,7 +10,6 @@
  */
 
 import {
-  codingAgent,
   evaluationAgent,
   ExecutionAgent,
   executionAgent,
@@ -139,18 +138,6 @@ export function createDefaultCapabilityRegistry(
         "Turns a chosen objective into execution steps. Uses AIPort when configured; otherwise a structured stub (source: stub).",
     }),
     handlerFromAgent(execution)
-  );
-
-  registry.register(
-    registration({
-      id: "cap-roadmap",
-      providerId: "chronos-coding",
-      name: "Roadmap",
-      taskKinds: ["roadmap.build"],
-      description:
-        "Registered but unimplemented — returns no roadmap (source: stub). Kept so planner graphs resolve; no production surface dispatches it.",
-    }),
-    handlerFromAgent(codingAgent)
   );
 
   return registry;
