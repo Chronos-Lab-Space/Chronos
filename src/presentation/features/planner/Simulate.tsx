@@ -7,7 +7,7 @@ import {
   createPublicStartupRequest,
   publicStartupSimulator,
 } from "../../../application/planner/publicStartupSimulator";
-import { StartupLaunchPlanner } from "../../../application/planner/StartupLaunchPlanner";
+import { SIMULATION_STAGES } from "../../../domain/chronos/simulation-stages";
 import { ScrollReveal } from "../../components/ScrollReveal";
 
 const EXAMPLES = [
@@ -39,27 +39,17 @@ export function Simulate() {
   const [error, setError] = useState("");
   const [activeTaskIdx, setActiveTaskIdx] = useState(0);
 
-  const graph = useMemo(
-    () =>
-      new StartupLaunchPlanner().decompose({
-        workspaceId: "public-startup-simulator",
-        decisionId: "simulate-page",
-        prompt: idea || "startup idea",
-      }),
-    [idea]
-  );
-
   useEffect(() => {
     if (stage !== "simulating") return;
-    const n = graph.tasks.length;
+    const n = SIMULATION_STAGES.length;
     setActiveTaskIdx(0);
-    const timers = graph.tasks.map((_, i) =>
+    const timers = SIMULATION_STAGES.map((_, i) =>
       window.setTimeout(() => setActiveTaskIdx(i), 200 + i * Math.floor(2200 / Math.max(n, 1)))
     );
     return () => {
       for (const t of timers) window.clearTimeout(t);
     };
-  }, [stage, graph.tasks]);
+  }, [stage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,7 +216,7 @@ export function Simulate() {
               progress={progress}
               counter={branchCounter}
               log={branchLog}
-              tasks={graph.tasks.map((t) => t.title)}
+              tasks={SIMULATION_STAGES.map((s) => s.label)}
               activeTaskIdx={activeTaskIdx}
             />
           )}

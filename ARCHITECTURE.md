@@ -239,11 +239,11 @@ replaced without changing the planner or temporal engine.
 
 | Surface | What the code does today |
 |---|---|
-| **Public `/simulate` + home demo** | Deterministic Monte Carlo over category path templates (`domain/chronos/startup-sim.ts`). `pathsEvaluated` is the real sample budget. **No LLM.** |
+| **Public `/simulate` + home demo** | Deterministic Monte Carlo over category path templates (`domain/chronos/startup-sim.ts`). `pathsEvaluated` is the real sample budget. **No LLM.** Progress UI shows `SIMULATION_STAGES` — the phases `simulate()` performs. It must not display planner task titles: that graph is built but never executed here. |
 | **Workspace `SimulationEngine`** | Deterministic plan → futures → EV scoring → collapse. Optional `AIPort` **prose polish only** (`maybeEnrichRecommendation`); scores/futures never change. Default provider: **noop**. |
 | **Forge / Oracle / Atlas** (`domain/chronos/agents.ts`) | Hand-authored scenarios for the temporal playground. `AgentSimulationRunner` is pure in-process (no I/O). |
 | **Specialist agents** (`src/agents/*`) | Evaluation + memory + simulation are real pure/domain logic. Research and execution (`plan`) use `AIPort` when configured, else a structured stub (fail-open); both label output `source: "ai" \| "stub"`. Execution emits steps for an already-chosen objective — never an ordering. Coding / knowledge remain stubs. |
-| **Capability registry** | Live composition root: `createDefaultCapabilityRegistry` + `runTaskGraph`. Product UI “workloads” under `capabilities.ts` are **demo metadata**, not the OS registry. |
+| **Capability registry** | `createDefaultCapabilityRegistry` is wired in production for exactly one path: `planChosenPath` → `cap-plan`, after a collapse. `runTaskGraph` executes a full planner graph but has **no production caller** — it is exercised by tests only, so `roadmap.build` and the rest of the launch graph never run outside them. Product UI “workloads” under `capabilities.ts` are **demo metadata**, not the OS registry. |
 | **Repository ports** (`TaskGraphRepository`, `CapabilityRepository`, …) | Interface contracts; in-memory / Supabase adapters exist where tables do — ports are not proof that every OS table is product-wired. |
 
 When writing docs or marketing: prefer “deterministic multi-future engine; optional LLM for prose/research” over “AI agents decide for you.”

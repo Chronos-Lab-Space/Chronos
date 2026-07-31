@@ -103,6 +103,9 @@ describe("createDefaultCapabilityRegistry", () => {
     );
     expect(road.status).toBe("completed");
     expect(road.capabilityId).toBe("cap-roadmap");
+    // Registered but unimplemented. Mark it the way every other stub is marked,
+    // so a caller cannot mistake an empty roadmap for a computed one.
+    expect(road.output.source).toBe("stub");
   });
 
   it("reset clears the process singleton", () => {
