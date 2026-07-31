@@ -17,6 +17,34 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.10.0",
+    date: "2026-07-31",
+    tag: "minor",
+    title: "Chronos now shows what its confidence has been worth",
+    summary:
+      'Every collapsed run stored a confidence, and every logged outcome stored a verdict on how it landed. The two had never been compared, which made the confidence number decoration. Memory now opens with a calibration panel: each confidence band is drawn as the interval Chronos claimed, with a dot where those runs actually landed. Only runs you followed and gave a verdict are scored — a path you did not take measured a different world, so it is excluded rather than counted as a miss, and silence is never read as "as expected". A band under five runs reports no rate at all. This measures agreement with your own recollection, not independent accuracy, and the panel says so.',
+    highlights: [
+      {
+        label: "Calibration panel",
+        detail:
+          "deriveCalibration → bands, denominators, per-decision movement, on /workspace/memory",
+      },
+      {
+        label: "Honest denominators",
+        detail: "Not-followed runs excluded and counted separately; no rate without its n",
+      },
+      {
+        label: "Withheld under five runs",
+        detail:
+          "A rate over two runs is noise, so the band reports none rather than a precise number",
+      },
+      {
+        label: "Report, never an input",
+        detail: "Nothing reaches the engine — ranking, scoring and confidence are byte-identical",
+      },
+    ],
+  },
+  {
     version: "5.9.1",
     date: "2026-07-31",
     tag: "patch",
