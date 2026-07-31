@@ -59,7 +59,12 @@ export function LanguageSection() {
 
   const runEvaluate = () => {
     if (!engine) return;
-    // We use the engine's built-in scorer which weighs reward/risk/environment
+    // Built-in reward/risk/environment scorer. The program's own `score` block
+    // cannot be used yet: compile() maps agent/world/context onto a fixed
+    // robot/object/environment WorldState, so the namespaces the score body
+    // reads no longer exist by the time the engine holds the state. The authored
+    // env is built inside each action's apply() — exposing it is the unlock.
+    // Pinned by language.scoring.test.ts.
     setEngine(evaluate(engine));
   };
 
@@ -363,10 +368,18 @@ function Repl({
         </OutputPanel>
 
         {/* Score function */}
-        <OutputPanel title="Score" subtitle={scoreFnName ?? "—"}>
+        <OutputPanel title="Score" subtitle={scoreFnName ? `${scoreFnName} · parsed` : "—"}>
           {compileResult.ok && scoreFnName ? (
-            <div className="font-mono text-[11px] text-ink-dim">
-              score {scoreFnName}(state) {"{"} ... {"}"}
+            <div className="space-y-1.5">
+              <div className="font-mono text-[11px] text-ink-dim">
+                score {scoreFnName}(state) {"{"} ... {"}"}
+              </div>
+              {/* The branch numbers below come from the engine's built-in
+                  reward/risk scorer, not from this block. Saying so beats a
+                  panel that reads like the source of the scores beside it. */}
+              <div className="font-mono text-[10px] leading-[1.5] text-ink-faint">
+                parsed, not yet applied — branches are scored by the built-in reward/risk model
+              </div>
             </div>
           ) : (
             <div className="font-mono text-[11px] text-ink-faint">—</div>
