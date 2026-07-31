@@ -11,9 +11,15 @@ test.describe("Chronos user workflows", () => {
     await page.getByLabel("Simulation objective").fill("I want to build an AI meeting assistant");
     await page.getByRole("button", { name: /run simulation/i }).click();
 
-    await expect(page.getByText("Planner task graph", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Research competitors", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Financial simulation", { exact: true }).first()).toBeVisible();
+    // The stages shown are the ones simulate() performs. Planner task titles used
+    // to appear here for tasks the public path never executes.
+    await expect(page.getByText("Simulation pipeline", { exact: true }).first()).toBeVisible();
+    await expect(
+      page.getByText("Sampling futures per archetype", { exact: true }).first()
+    ).toBeVisible();
+    await expect(
+      page.getByText("Collapsing to the best path", { exact: true }).first()
+    ).toBeVisible();
     await expect(page.getByText(/best path/i).first()).toBeVisible({ timeout: 8_000 });
   });
 

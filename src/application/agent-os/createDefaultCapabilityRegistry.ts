@@ -147,7 +147,8 @@ export function createDefaultCapabilityRegistry(
       providerId: "chronos-coding",
       name: "Roadmap",
       taskKinds: ["roadmap.build"],
-      description: "Roadmap/coding capability stub (no code generation in beta).",
+      description:
+        "Registered but unimplemented — returns no roadmap (source: stub). Kept so planner graphs resolve; no production surface dispatches it.",
     }),
     handlerFromAgent(codingAgent)
   );

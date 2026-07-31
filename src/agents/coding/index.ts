@@ -12,6 +12,7 @@ export class CodingAgent implements Agent {
       data: {
         artifacts: [],
         summary: `Coding stub for capability ${task.capability}`,
+        source: "stub",
       },
     };
   }

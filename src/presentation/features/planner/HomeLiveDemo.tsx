@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { StartupLaunchPlanner } from "../../../application/planner/StartupLaunchPlanner";
+import { SIMULATION_STAGES } from "../../../domain/chronos/simulation-stages";
 import {
   createPublicStartupRequest,
   publicStartupSimulator,
@@ -40,16 +40,6 @@ export function HomeLiveDemo() {
   const [pipelineStep, setPipelineStep] = useState(0);
   const [futuresSeen, setFuturesSeen] = useState(0);
 
-  const graph = useMemo(
-    () =>
-      new StartupLaunchPlanner().decompose({
-        workspaceId: "public-startup-simulator",
-        decisionId: "public-launch-decision",
-        prompt,
-      }),
-    [prompt]
-  );
-
   // Animate task focus + pipeline while planning
   useEffect(() => {
     if (status !== "planning") return;
@@ -59,7 +49,7 @@ export function HomeLiveDemo() {
     setFuturesSeen(0);
 
     const taskTimers: number[] = [];
-    const taskCount = graph.tasks.length;
+    const taskCount = SIMULATION_STAGES.length;
     for (let i = 0; i < taskCount; i++) {
       taskTimers.push(
         window.setTimeout(
@@ -85,7 +75,7 @@ export function HomeLiveDemo() {
       for (const t of taskTimers) window.clearTimeout(t);
       window.clearTimeout(rankTimer);
     };
-  }, [status, graph.tasks.length]);
+  }, [status]);
 
   const run = async (event?: React.FormEvent, overridePrompt?: string) => {
     event?.preventDefault();
@@ -108,7 +98,7 @@ export function HomeLiveDemo() {
         await new Promise((resolve) => window.setTimeout(resolve, minShow - elapsed));
       }
       setPipelineStep(4);
-      setActiveTask(graph.tasks.length);
+      setActiveTask(SIMULATION_STAGES.length);
       setResult(response.result);
       setSource(response.source);
       setStatus("complete");
@@ -144,8 +134,8 @@ export function HomeLiveDemo() {
             </h2>
           </div>
           <p className="max-w-sm text-[14px] leading-[1.7] text-ink-dim">
-            Not a single chatbot answer. Chronos builds a task graph, simulates timelines, ranks
-            trade-offs, and recommends the strongest path.
+            Not a single chatbot answer. Chronos samples futures per archetype, scores them on
+            expected value, and collapses to the strongest path.
           </p>
         </div>
 
@@ -234,26 +224,26 @@ export function HomeLiveDemo() {
           </form>
 
           <div className="grid grid-cols-1 lg:grid-cols-12">
-            {/* Task graph */}
+            {/* Simulation pipeline */}
             <div className="border-b border-line p-5 lg:col-span-7 lg:border-b-0 lg:border-r lg:p-6">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div className="font-mono text-[10px] uppercase tracking-[0.23em] text-ink-faint">
-                  Planner task graph
+                  Simulation pipeline
                 </div>
                 <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-chronos">
                   {status === "planning"
-                    ? `${Math.min(activeTask + 1, graph.tasks.length)}/${graph.tasks.length} running`
-                    : `${graph.tasks.length} tasks`}
+                    ? `${Math.min(activeTask + 1, SIMULATION_STAGES.length)}/${SIMULATION_STAGES.length} running`
+                    : `${SIMULATION_STAGES.length} stages`}
                 </div>
               </div>
 
               <div className="space-y-0">
-                {graph.tasks.map((task, index) => {
+                {SIMULATION_STAGES.map((stage, index) => {
                   const isActive = status === "planning" && activeTask === index;
                   const isDone =
                     status === "complete" || (status === "planning" && activeTask > index);
                   return (
-                    <div key={task.id}>
+                    <div key={stage.id}>
                       <div className="flex items-center gap-4">
                         <span
                           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-bg font-mono text-[10px] transition ${
@@ -276,19 +266,14 @@ export function HomeLiveDemo() {
                           }`}
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <span className="font-serif text-xl text-ink">{task.title}</span>
+                            <span className="font-serif text-xl text-ink">{stage.label}</span>
                             <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">
-                              {isActive ? "running" : task.kind}
+                              {isActive ? "running" : stage.id}
                             </span>
                           </div>
-                          {task.dependencies.length > 0 && (
-                            <div className="mt-1 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
-                              waits for: {task.dependencies.join(" · ")}
-                            </div>
-                          )}
                         </div>
                       </div>
-                      {index < graph.tasks.length - 1 && (
+                      {index < SIMULATION_STAGES.length - 1 && (
                         <div
                           className={`ml-4 h-3 border-l border-dashed transition ${
                             isDone ? "border-chronos/40" : "border-line-strong"
@@ -372,8 +357,8 @@ function DemoEmpty({ onTry }: { onTry: () => void }) {
 
 function DemoPlanning({ futures, step }: { futures: number; step: number }) {
   const labels = [
-    "Building task graph…",
-    "Forking futures…",
+    "Classifying the idea…",
+    "Sampling futures…",
     "Scoring outcomes…",
     "Ranking paths…",
     "Selecting best path…",
