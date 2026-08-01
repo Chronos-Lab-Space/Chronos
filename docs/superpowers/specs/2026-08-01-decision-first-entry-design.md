@@ -67,10 +67,15 @@ Renamable afterwards through existing settings.
 
 ### Submit flow
 
-1. Create workspace with the derived name
+1. Create workspace with the derived name — the same
+   `WorkspaceContext.createWorkspace` the `name` step calls today. No workspace
+   exists before this point, so this is a create, not a rename.
 2. Create the decision from the entered objective
 3. Run the simulation
 4. Land on the result
+
+`WorkspaceService` also creates a workspace named `SAMPLE_WORKSPACE_NAME` in
+the sample-decision path. That is a separate flow and is not touched.
 
 Anonymous and signed-in visitors take the same path. Only the owner id differs,
 and `remote: null` already makes the anonymous case structural.
