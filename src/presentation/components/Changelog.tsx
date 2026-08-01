@@ -17,6 +17,30 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.11.0",
+    date: "2026-08-01",
+    tag: "minor",
+    title: "One field replaces the onboarding wizard",
+    summary:
+      'A new visitor used to answer four screens — welcome, name, goal, context — before seeing a result. WorkspaceStart now asks one thing: what are you deciding? Workspace creation, the decision, and the first simulation run all happen behind that single submit, landing straight on a ranked result. The context ask is not gone: it moves to after a result exists, where a source is motivated by a recommendation just read, reusing the existing note fields. It now asks once per decision rather than once ever — a single "Not now" used to silence it permanently, on every future decision, the first time it appeared. The demo sample decision, reachable only through a window the wizard\'s separate goal step opened, is retired along with it.',
+    highlights: [
+      {
+        label: "One-step entry",
+        detail: "WorkspaceStart: one field, one submit → workspace, decision, and first run",
+      },
+      {
+        label: "Context, once per decision",
+        detail:
+          "contextPromptDismissedFor tracks decisions already answered; a legacy blanket dismissal is honoured for everything that existed when it was made, then expanded and retired — not carried forward forever",
+      },
+      {
+        label: "Sample retired",
+        detail:
+          "seedSampleDecision deleted with the wizard step that was its only reachable window",
+      },
+    ],
+  },
+  {
     version: "5.10.0",
     date: "2026-07-31",
     tag: "minor",
