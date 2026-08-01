@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
-import { isSampleSimulation } from "../../domain/workspace/sampleDecision";
 import { WorkspaceService } from "./WorkspaceService";
 
 const OWNER = "anon-11111111-1111-4111-8111-111111111111";
@@ -32,21 +31,6 @@ describe("futures freshness", () => {
     expect(home.futuresBySimulation[first.id]!.map((f) => f.id)).toEqual(
       firstFutures.map((f) => f.id)
     );
-  });
-
-  it("does not leave the sample's futures attached to a real run", async () => {
-    await service.seedSampleDecision(OWNER);
-    const seeded = await service.load(OWNER);
-    const sampleId = seeded!.recentSimulations.find(isSampleSimulation)!.id;
-
-    await service.setGoal(OWNER, "My own goal");
-    const home = await service.runSimulation(OWNER, "What should we actually decide?");
-    const real = home.recentSimulations[0];
-
-    // Sample purged, and its relations went with it — no orphaned futures.
-    expect(home.recentSimulations.some(isSampleSimulation)).toBe(false);
-    expect(home.futuresBySimulation[sampleId]).toBeUndefined();
-    expect(home.futuresBySimulation[real.id]!.length).toBeGreaterThanOrEqual(2);
   });
 
   it("re-running the same objective produces a fresh record, not a cached one", async () => {

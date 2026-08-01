@@ -250,47 +250,10 @@ test.describe("Decision Workspace (authenticated)", () => {
     // The durability limit must be stated, not implied.
     await expect(page.getByTestId("anonymous-banner")).toContainText(/this device only/i);
 
-    // Asked for their own decision first. The seeded sample is an example to
-    // look at, not the visitor's identity — it must not answer "what are you
-    // deciding?" on their behalf.
+    // Asked for their own decision first — nothing answers it on their behalf.
     const decisionField = page.getByLabel(/what are you deciding/i);
     await expect(decisionField).toBeVisible({ timeout: 15_000 });
     await expect(decisionField).toHaveValue("");
-
-    // KNOWN GAP — see task-5-report.md. seedSampleDecision's own docstring
-    // promises "a worked example a new visitor can explore immediately," but
-    // there is no reachable route to it: WorkspaceShell only mounts the
-    // Outlet (so any nested route, including this one) once
-    // isWorkspaceOnboarded(home) is true, which requires a goal; and the only
-    // way an anonymous visitor sets one is WorkspaceStart's single submit,
-    // which sets the goal and runs their own simulation in the same action —
-    // unconditionally dropping any sample first (WorkspaceService.
-    // runSimulation: "the demo has served its purpose and must not sit
-    // beside real work"). There is therefore no point where a "ready"
-    // workspace still has a sample in it. Asserting the intended behaviour
-    // rather than working around it: this should find the sample.
-    await page.goto("/workspace/simulations");
-    const sampleRun = page.getByRole("link", { name: /launch our public beta/i }).first();
-    await expect(sampleRun).toBeVisible({ timeout: 15_000 });
-    await sampleRun.click();
-
-    // Labelled as a sample — it must never read as the visitor's own run.
-    await expect(page.getByTestId("sample-banner")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 15_000 });
-
-    // And removable in one click.
-    await page.getByTestId("remove-sample").click();
-    await expect(page.getByTestId("sample-banner")).toHaveCount(0, { timeout: 10_000 });
-
-    // Now their own decision — one field, one action, straight to a result.
-    // Their decision is the workspace's, not the sample's.
-    await page.goto("/workspace");
-    await page.getByLabel(/what are you deciding/i).fill("My own beta decision");
-    await page.getByRole("button", { name: /simulate/i }).click();
-    await expect(page).toHaveURL(/\/workspace\/simulations\/.+/, { timeout: 15_000 });
-    await expect(page.getByText("My own beta decision").first()).toBeVisible({
-      timeout: 15_000,
-    });
   });
 
   test("an off-domain objective is refused rather than dressed up as a SaaS play", async ({

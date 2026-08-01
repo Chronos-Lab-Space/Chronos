@@ -1,8 +1,4 @@
-import {
-  SimulationEngine,
-  type SimulationConstraint,
-  type SimulationEngineOutput,
-} from "../simulation/SimulationEngine";
+import type { SimulationConstraint, SimulationEngineOutput } from "../simulation/SimulationEngine";
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
 import { attachDecisions, decisionIdForSimulation } from "../../domain/workspace/decision";
@@ -30,13 +26,6 @@ import type {
   WorkspaceRecord,
 } from "../../domain/workspace/types";
 import { hasLocalMemory, mergeWorkspaceHomes } from "../../domain/workspace/sync";
-import {
-  isSampleSimulation,
-  SAMPLE_NOTE_BODY,
-  SAMPLE_NOTE_TITLE,
-  SAMPLE_OBJECTIVE,
-  SAMPLE_WORKSPACE_NAME,
-} from "../../domain/workspace/sampleDecision";
 
 function engineOutputFromAgent(data: Record<string, unknown>): SimulationEngineOutput {
   const engine = data.engine;
@@ -66,12 +55,6 @@ export type WorkspaceCloudStore = {
   save(home: WorkspaceHome): Promise<void>;
   deleteKnowledge?(knowledgeId: string): Promise<void>;
   deleteNote?(noteId: string): Promise<void>;
-  /**
-   * Deliberate removals only. `save` upserts and never deletes, so without
-   * this a locally-dropped simulation survives in the cloud and `load`'s
-   * merge brings it back on the next visit.
-   */
-  deleteSimulations?(simulationIds: readonly string[]): Promise<void>;
 };
 
 function nowIso() {
@@ -89,23 +72,6 @@ function uuid(): string {
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
-}
-
-/** Remove simulations and every relation keyed by their ids. */
-function dropSimulations(home: WorkspaceHome, ids: readonly string[]): WorkspaceHome {
-  const drop = new Set(ids);
-  const futuresBySimulation = { ...home.futuresBySimulation };
-  const timelineBySimulation = { ...home.timelineBySimulation };
-  for (const id of drop) {
-    delete futuresBySimulation[id];
-    delete timelineBySimulation[id];
-  }
-  return {
-    ...home,
-    recentSimulations: home.recentSimulations.filter((s) => !drop.has(s.id)),
-    futuresBySimulation,
-    timelineBySimulation,
-  };
 }
 
 function emptyRelations(): Pick<WorkspaceHome, "futuresBySimulation" | "timelineBySimulation"> {
@@ -436,17 +402,9 @@ export class WorkspaceService {
     constraintLines: string[] = [],
     options: { parentSimulationId?: string } = {}
   ): Promise<WorkspaceHome> {
-    const required = await this.require(ownerId);
+    const home = await this.require(ownerId);
     const title = objective.trim();
     if (!title) throw new Error("Simulation objective is required.");
-
-    // The user is running their own decision now; the demo has served its
-    // purpose and must not sit beside real work.
-    const sampleIds = required.recentSimulations.filter(isSampleSimulation).map((s) => s.id);
-    const home =
-      sampleIds.length > 0
-        ? await this.dropSimulationsEverywhere(ownerId, required, sampleIds)
-        : required;
 
     const parent = options.parentSimulationId
       ? home.recentSimulations.find((s) => s.id === options.parentSimulationId)
@@ -1119,131 +1077,6 @@ export class WorkspaceService {
       }));
   }
 
-  /**
-   * Seed a worked example a new visitor can explore immediately.
-   *
-   * Runs the **real engine** and collapses through the ordinary chooseBestPath
-   * path, so the sample's futures and ranking are exactly what Chronos would
-   * produce for that objective. Hand-written fixtures would be a fabricated
-   * ranking in a product whose entire claim is deterministic ranking.
-   *
-   * No-ops when the workspace already holds any simulation — a sample is for an
-   * empty workspace, and must never appear beside real work.
-   */
-  async seedSampleDecision(ownerId: string): Promise<WorkspaceHome> {
-    let home = this.local.get(ownerId) ?? (await this.load(ownerId));
-
-    if (home) {
-      const sims = home.recentSimulations;
-      // Any real work at all means no sample.
-      if (sims.some((s) => !isSampleSimulation(s))) return this.normalize(home);
-      // A completed sample is already seeded.
-      if (sims.some((s) => isSampleSimulation(s) && s.status === "completed")) {
-        return this.normalize(home);
-      }
-      // A sample left mid-flight — the visitor navigated while it was seeding —
-      // would otherwise be treated as "already seeded" and stay stuck running
-      // forever. Drop it and seed again.
-      const stale = sims.filter(isSampleSimulation).map((s) => s.id);
-      if (stale.length > 0) {
-        home = await this.dropSimulationsEverywhere(ownerId, home, stale);
-      }
-    }
-
-    if (!home) {
-      home = await this.createWorkspace(ownerId, SAMPLE_WORKSPACE_NAME, "");
-    }
-    if (home.knowledge.length === 0 && home.notes.length === 0) {
-      home = await this.addNote(ownerId, SAMPLE_NOTE_TITLE, SAMPLE_NOTE_BODY);
-    }
-
-    // Deliberately does NOT set the workspace goal. The sample is an example to
-    // look at, not the visitor's decision — claiming the goal made
-    // isWorkspaceOnboarded true, so a first-time visitor skipped the wizard
-    // entirely and landed on someone else's objective in a workspace named
-    // after the sample. Leaving the goal unset keeps "What decision are you
-    // trying to make?" as the first thing they are asked.
-
-    // Run the engine directly rather than through runSimulation.
-    //
-    // Same engine, same ranking — but SimulationEngine.run is synchronous,
-    // whereas runSimulation drives the async agent runtime and persists a
-    // "running" record partway through. That intermediate state is abortable:
-    // a visitor who navigates while the sample is seeding leaves a stuck run
-    // behind, and the next load treats it as already-seeded. Building the
-    // finished record and persisting once removes the window entirely.
-    const simId = uuid();
-    const createdAt = nowIso();
-    const output = new SimulationEngine().run({
-      simulationId: simId,
-      workspaceId: home.workspace.id,
-      // No goal: the sample stands on its own objective and must not depend on
-      // (or imply) a goal the visitor has not set yet.
-      goal: null,
-      objective: SAMPLE_OBJECTIVE,
-      knowledge: home.knowledge,
-      notes: home.notes,
-      constraints: [],
-    });
-
-    const chosen = output.futures[0] ?? output.best;
-    const sample: SimulationRecord = {
-      id: simId,
-      workspace_id: home.workspace.id,
-      goal_id: null,
-      title: SAMPLE_OBJECTIVE,
-      status: "completed",
-      confidence: output.confidence,
-      result: {
-        is_sample: true,
-        futures_count: output.futures.length,
-        best_future: output.best.name,
-        recommendation: output.recommendation,
-        recommendation_body: output.recommendationBody ?? null,
-        risks: output.risks,
-        tasks: output.tasks,
-        paths_evaluated: output.pathsEvaluated,
-        path_archetypes: output.pathArchetypes,
-        disqualified_count: output.disqualifiedCount,
-        graph_branch_ids: output.futures.map((f) => f.id),
-        // Collapsed, so the visitor sees the whole loop rather than a half-run.
-        chosen_future_id: chosen.id,
-        chosen_future_name: chosen.name,
-        chosen_summary: chosen.summary,
-        chosen_at: createdAt,
-        graph_shape: "collapsed",
-        graph_op: "collapse",
-        graph_active_node: "n2-collapsed",
-        graph_collapsed_future_id: chosen.id,
-      },
-      created_at: createdAt,
-      version: 1,
-      lineage_id: simId,
-      parent_simulation_id: null,
-      decision_id: simId,
-    };
-
-    return this.persist(ownerId, {
-      ...home,
-      recentSimulations: [sample, ...home.recentSimulations],
-      futuresBySimulation: { ...home.futuresBySimulation, [simId]: output.futures },
-      timelineBySimulation: { ...home.timelineBySimulation, [simId]: output.timeline },
-    });
-  }
-
-  /** Remove the sample and its relations, leaving no orphaned futures behind. */
-  async removeSampleDecision(ownerId: string): Promise<WorkspaceHome> {
-    const home = await this.require(ownerId);
-    const samples = home.recentSimulations.filter(isSampleSimulation);
-    if (samples.length === 0) return home;
-
-    return this.dropSimulationsEverywhere(
-      ownerId,
-      home,
-      samples.map((s) => s.id)
-    );
-  }
-
   private async require(ownerId: string): Promise<WorkspaceHome> {
     // Prefer local for require after mutations (already written); fall back to load
     const local = this.local.get(ownerId);
@@ -1251,35 +1084,6 @@ export class WorkspaceService {
     const loaded = await this.load(ownerId);
     if (!loaded) throw new Error("Create a workspace first.");
     return loaded;
-  }
-
-  /**
-   * Drop simulations from local *and* cloud.
-   *
-   * Only for deliberate removals — a sample the visitor has outgrown, or a
-   * half-seeded one. Retention trimming in `normalize` deliberately does not
-   * come through here: that bound exists to protect localStorage quota, and
-   * deleting a user's older decisions from durable storage to satisfy a cache
-   * limit would be irreversible. Since the dual-write became incremental, the
-   * cloud write no longer grows with history either.
-   *
-   * Cloud failure is swallowed, matching deleteKnowledge / deleteNote: the
-   * local copy is what the user's next action reads.
-   */
-  private async dropSimulationsEverywhere(
-    ownerId: string,
-    home: WorkspaceHome,
-    ids: readonly string[]
-  ): Promise<WorkspaceHome> {
-    const persisted = await this.persist(ownerId, dropSimulations(home, ids));
-    if (ids.length > 0 && this.remote?.deleteSimulations) {
-      try {
-        await this.remote.deleteSimulations(ids);
-      } catch (err) {
-        console.warn("[workspace] Supabase deleteSimulations failed; local updated.", err);
-      }
-    }
-    return persisted;
   }
 
   private async persist(ownerId: string, home: WorkspaceHome): Promise<WorkspaceHome> {

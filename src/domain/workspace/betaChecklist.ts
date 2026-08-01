@@ -4,7 +4,6 @@
  * Create first decision → Run first simulation → Save memory → Share workspace
  */
 import type { WorkspaceHome } from "./types";
-import { withoutSampleSimulations } from "./sampleDecision";
 
 export type BetaChecklistId = "decision" | "simulation" | "memory" | "share";
 
@@ -35,10 +34,7 @@ export function evaluateBetaChecklist(
   home: WorkspaceHome | null,
   prefs: UserPreferences = DEFAULT_PREFERENCES
 ): BetaChecklistItem[] {
-  // The seeded sample demonstrates the loop; it is not evidence the user ran
-  // it. Counting it would tell a new visitor they had finished onboarding they
-  // never did.
-  const ownSimulations = withoutSampleSimulations(home?.recentSimulations ?? []);
+  const ownSimulations = home?.recentSimulations ?? [];
   const hasDecision = Boolean(home?.goal?.title?.trim());
   const hasSimulation = ownSimulations.length > 0;
   const hasSavedMemory = ownSimulations.some(

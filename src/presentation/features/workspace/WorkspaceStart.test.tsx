@@ -7,9 +7,8 @@ import { WorkspaceStart } from "./WorkspaceStart";
 const calls: string[] = [];
 const runSimulation = vi.fn(async (_objective: string): Promise<string | null> => "sim-1");
 const navigate = vi.fn();
-// Anonymous visitors already have a seeded workspace by the time this screen
-// renders (WorkspaceContext.refresh seeds a sample decision) — tests flip
-// this to exercise that branch instead of the brand-new-visitor one.
+// A brand-new visitor has no workspace yet — tests flip this to exercise the
+// existing-workspace branch instead.
 let home: WorkspaceHome | null = null;
 
 vi.mock("./WorkspaceContext", () => ({

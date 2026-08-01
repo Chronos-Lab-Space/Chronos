@@ -28,11 +28,9 @@ export function WorkspaceStart() {
     setBusy(true);
     setLocalError(null);
     try {
-      // Anonymous visitors already have a workspace by the time this screen
-      // renders — WorkspaceContext seeds one with a sample decision on first
-      // load. createWorkspace never overwrites an existing one, so calling
-      // it unconditionally here would silently orphan that seed in a second,
-      // empty workspace instead of hanging the visitor's goal off the first.
+      // A first-time visitor has no workspace yet. createWorkspace never
+      // overwrites an existing one, so a returning visitor (workspace already
+      // set) skips straight to setGoal instead of getting a second, empty one.
       if (!home?.workspace?.id) {
         await createWorkspace(DEFAULT_WORKSPACE_NAME);
       }
