@@ -1,15 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createEngine, evaluate, fork } from "../../application/chronos/engine";
-import { compile } from "./language";
+import { compile, toAuthoredState } from "./language";
 
 /**
- * What a `score` block currently does, stated plainly so the playground copy
- * can be trusted.
+ * A `score` block decides the branch scores the playground shows.
  *
- * The compiler parses the block and exposes it on `scoreFns`. Nothing calls it:
- * `evaluate()` scores every branch with the engine's built-in reward/risk
- * scorer. These assertions fail the moment authored scoring is wired up, which
- * is the point — the UI text has to change in the same commit.
+ * It used to be parsed, exposed on `scoreFns`, and ignored: `evaluate()` scored
+ * every branch with the built-in reward/risk model, because `compile()` flattens
+ * the program's agent/world/context namespaces onto a fixed WorldState and the
+ * score body's fields were gone by the time the engine held the state.
  */
 const PROGRAM = `# Chronos Language v0.1
 
@@ -32,8 +31,8 @@ action "Beta" {
 }
 
 score utility(state) {
-  base = state.agent.runway * 0
-  return base + 0.777
+  base = state.reward * 0 + 0.777
+  return base
 }
 
 run {
@@ -43,37 +42,46 @@ run {
 }
 `;
 
-describe("authored score functions", () => {
-  it("are compiled and exposed", () => {
-    const compiled = compile(PROGRAM);
+function scoredWith(source: string, useAuthored: boolean) {
+  const compiled = compile(source);
+  const engine = fork(createEngine("custom", compiled.initialState, compiled.actions));
+  const score = compiled.scoreFns[compiled.run?.evaluate ?? ""];
+  const scorer = useAuthored
+    ? (branch: { state: typeof compiled.initialState; risk: number; reward: number }) =>
+        score({ ...toAuthoredState(branch.state), risk: branch.risk, reward: branch.reward })
+    : undefined;
+  return evaluate(engine, scorer).branches.map((b) => b.outcome?.score);
+}
 
-    expect(typeof compiled.scoreFns.utility).toBe("function");
-    expect(compiled.run?.evaluate).toBe("utility");
+describe("authored score functions", () => {
+  it("drive the branch scores when the program declares one", () => {
+    const scores = scoredWith(PROGRAM, true);
+
+    expect(scores.length).toBeGreaterThan(0);
+    for (const score of scores) {
+      expect(score).toBeCloseTo(0.777, 3);
+    }
   });
 
-  it("do not produce the branch scores the playground displays", () => {
-    const compiled = compile(PROGRAM);
-    const engine = evaluate(fork(createEngine("custom", compiled.initialState, compiled.actions)));
+  it("leave the built-in scorer in charge when no scorer is passed", () => {
+    // The product path calls evaluate() with one argument. Authored scoring is
+    // opt-in from the playground, so a change here cannot move product ranking.
+    const scores = scoredWith(PROGRAM, false);
 
-    const scores = engine.branches
-      .map((b) => b.outcome?.score)
-      .filter((s) => typeof s === "number");
-    expect(scores.length).toBeGreaterThan(0);
-
-    // The authored function returns a constant. If it were driving evaluation
-    // every branch would read 0.777.
     for (const score of scores) {
       expect(score).not.toBeCloseTo(0.777, 3);
     }
   });
 
-  it("cannot be called with the state the engine carries", () => {
+  it("hands the score body the namespaces the program declared", () => {
     const compiled = compile(PROGRAM);
-    const score = compiled.scoreFns.utility;
+    const authored = toAuthoredState(compiled.initialState);
 
-    // compile() maps agent/world/context onto a fixed robot/object/environment
-    // WorldState, so the namespaces the score body reads are gone by the time
-    // the engine holds the state. This is the blocker for wiring it up.
-    expect(() => score(compiled.initialState)).toThrow();
+    // The blocker this replaced: calling a compiled scoreFn with engine state
+    // threw "field 'agent' not found".
+    expect(authored.agent).toBeDefined();
+    expect(authored.world).toBeDefined();
+    expect(authored.context).toBeDefined();
+    expect(() => compiled.scoreFns.utility({ ...authored, risk: 0.5, reward: 0.9 })).not.toThrow();
   });
 });

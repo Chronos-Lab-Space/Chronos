@@ -655,6 +655,73 @@ export type CompileResult = {
   run: { fork: boolean; evaluate: string | null; collapse: string | null } | null;
 };
 
+/** Every WorldState field, back in the namespaces a program's `score` block reads. */
+export type AuthoredState = Record<string, any>;
+
+/**
+ * compile() flattens agent/world/context onto a fixed robot/object/environment
+ * WorldState, so a compiled scoreFn handed engine state threw "field 'agent' not
+ * found". This is the inverse, and it is what lets an authored score function run.
+ */
+export function toAuthoredState(s: WorldState): AuthoredState {
+  return {
+    agent: {
+      velocity: s.robot.x,
+      days_left: s.robot.y,
+      quality: s.robot.armAngle,
+      flag_ready: s.robot.gripOpen,
+      size: s.robot.x,
+      vol: s.robot.y,
+      conviction: s.robot.armAngle,
+      exposure: s.robot.gripOpen ? "flexible" : "locked",
+      runway: s.robot.x,
+      mrr: s.robot.y,
+      momentum: s.robot.armAngle,
+      optionality: s.robot.gripOpen ? "open" : "committed",
+    },
+    world: {
+      loc_target: s.object.x,
+      bugs: s.object.y,
+      coverage: s.object.stable ? "stable" : "fragile",
+      shipped: s.object.grasped,
+      minutes_to_print: s.object.x,
+      pnl: s.object.y,
+      tape: s.object.stable ? "thick" : "thin",
+      holding: s.object.grasped,
+      churn: s.object.x,
+      competitor: s.object.y,
+      market: s.object.stable ? "stable" : "shifting",
+      positioned: s.object.grasped,
+    },
+    context: {
+      stakeholder: s.environment.humanPresent ? "watching" : "clear",
+      debt_pressure: s.environment.wind,
+      morale:
+        s.environment.lighting === "bright"
+          ? "high"
+          : s.environment.lighting === "dim"
+            ? "medium"
+            : "low",
+      human_desk: s.environment.humanPresent ? "on" : "off",
+      macro_wind: s.environment.wind,
+      signals:
+        s.environment.lighting === "bright"
+          ? "clear"
+          : s.environment.lighting === "dim"
+            ? "mixed"
+            : "cloudy",
+      board: s.environment.humanPresent ? "watching" : "hands-off",
+      competitive_wind: s.environment.wind,
+      clarity:
+        s.environment.lighting === "bright"
+          ? "clear"
+          : s.environment.lighting === "dim"
+            ? "mixed"
+            : "cloudy",
+    },
+  };
+}
+
 export function compile(source: string): CompileResult {
   const tokens = tokenize(source);
   const parser = new Parser(tokens);
@@ -738,60 +805,7 @@ export function compile(source: string): CompileResult {
       apply: (s: WorldState) => {
         // Build an env from the current state
         const env: any = {
-          agent: {
-            velocity: s.robot.x,
-            days_left: s.robot.y,
-            quality: s.robot.armAngle,
-            flag_ready: s.robot.gripOpen,
-            size: s.robot.x,
-            vol: s.robot.y,
-            conviction: s.robot.armAngle,
-            exposure: s.robot.gripOpen ? "flexible" : "locked",
-            runway: s.robot.x,
-            mrr: s.robot.y,
-            momentum: s.robot.armAngle,
-            optionality: s.robot.gripOpen ? "open" : "committed",
-          },
-          world: {
-            loc_target: s.object.x,
-            bugs: s.object.y,
-            coverage: s.object.stable ? "stable" : "fragile",
-            shipped: s.object.grasped,
-            minutes_to_print: s.object.x,
-            pnl: s.object.y,
-            tape: s.object.stable ? "thick" : "thin",
-            holding: s.object.grasped,
-            churn: s.object.x,
-            competitor: s.object.y,
-            market: s.object.stable ? "stable" : "shifting",
-            positioned: s.object.grasped,
-          },
-          context: {
-            stakeholder: s.environment.humanPresent ? "watching" : "clear",
-            debt_pressure: s.environment.wind,
-            morale:
-              s.environment.lighting === "bright"
-                ? "high"
-                : s.environment.lighting === "dim"
-                  ? "medium"
-                  : "low",
-            human_desk: s.environment.humanPresent ? "on" : "off",
-            macro_wind: s.environment.wind,
-            signals:
-              s.environment.lighting === "bright"
-                ? "clear"
-                : s.environment.lighting === "dim"
-                  ? "mixed"
-                  : "cloudy",
-            board: s.environment.humanPresent ? "watching" : "hands-off",
-            competitive_wind: s.environment.wind,
-            clarity:
-              s.environment.lighting === "bright"
-                ? "clear"
-                : s.environment.lighting === "dim"
-                  ? "mixed"
-                  : "cloudy",
-          },
+          ...toAuthoredState(s),
           risk: a.body.risk ? evalExpression(a.body.risk, {}) : 0.5,
           reward: a.body.reward ? evalExpression(a.body.reward, {}) : 0.5,
         };
