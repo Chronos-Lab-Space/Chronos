@@ -13,8 +13,29 @@ function mockWorkspace(preferences: Partial<UserPreferences> = {}) {
       updatePreferences,
       addNote,
       addKnowledge: vi.fn(async () => {}),
+      researchObjective: vi.fn(async () => 0),
     }),
   }));
+}
+
+/** Mounts a fresh ContextPrompt against a workspace whose research returns `researchFindings`. */
+async function mountPrompt(options: {
+  researchFindings: number;
+  preferences?: Partial<UserPreferences>;
+}) {
+  const researchObjective = vi.fn(async (_objective: string) => options.researchFindings);
+  vi.resetModules();
+  vi.doMock("./WorkspaceContext", () => ({
+    useWorkspace: () => ({
+      preferences: { ...DEFAULT_PREFERENCES, ...options.preferences },
+      updatePreferences,
+      addNote,
+      addKnowledge: vi.fn(async () => {}),
+      researchObjective,
+    }),
+  }));
+  const { ContextPrompt } = await import("./ContextPrompt");
+  return { ContextPrompt, mocks: { researchObjective } };
 }
 
 // `useWorkspace` throws outside a `WorkspaceProvider`, so every test needs its
@@ -23,6 +44,31 @@ function mockWorkspace(preferences: Partial<UserPreferences> = {}) {
 // once loaded — so a static top-of-file import would forever bind to whichever
 // mock (or the real, throwing module) was active first. Reset the module
 // registry and re-import dynamically in each test instead.
+describe("ContextPrompt research", () => {
+  it("saves what research returned and says how much", async () => {
+    // Deleting the researchObjective call leaves the prompt looking identical,
+    // so assert on the call and on what the visitor is told, not on layout.
+    const { ContextPrompt: Prompt, mocks } = await mountPrompt({ researchFindings: 3 });
+    render(<Prompt decisionId="dec-1" objective="Launch in September" />);
+
+    await userEvent.click(screen.getByRole("button", { name: /research this/i }));
+
+    expect(mocks.researchObjective).toHaveBeenCalledWith("Launch in September");
+    expect(await screen.findByText(/added 3 findings/i)).toBeInTheDocument();
+  });
+
+  it("says nothing came back rather than implying it worked", async () => {
+    // With no provider configured the agent returns a stub and no findings.
+    // Silence here would read as success.
+    const { ContextPrompt: Prompt } = await mountPrompt({ researchFindings: 0 });
+    render(<Prompt decisionId="dec-1" objective="Launch in September" />);
+
+    await userEvent.click(screen.getByRole("button", { name: /research this/i }));
+
+    expect(await screen.findByText(/no research available/i)).toBeInTheDocument();
+  });
+});
+
 describe("ContextPrompt", () => {
   it("renders nothing once dismissed for this decision", async () => {
     vi.resetModules();
