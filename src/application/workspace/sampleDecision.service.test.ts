@@ -4,7 +4,7 @@ import {
   isSampleSimulation,
   withoutSampleSimulations,
 } from "../../domain/workspace/sampleDecision";
-import { isWorkspaceOnboarded, requiredOnboardingStep } from "../../domain/workspace/onboarding";
+import { isWorkspaceOnboarded } from "../../domain/workspace/onboarding";
 import { WorkspaceService } from "./WorkspaceService";
 
 const OWNER = "anon-11111111-1111-4111-8111-111111111111";
@@ -102,7 +102,6 @@ describe("sample decision seeding", () => {
 
     expect(home.goal).toBeNull();
     expect(isWorkspaceOnboarded(home)).toBe(false);
-    expect(requiredOnboardingStep(home)).toBe("goal");
     // The sample is still there to explore.
     expect(home.recentSimulations.some(isSampleSimulation)).toBe(true);
   });

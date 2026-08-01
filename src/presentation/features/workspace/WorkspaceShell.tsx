@@ -7,8 +7,8 @@ import { ChronosCMark } from "../../components/ChronosCMark";
 import { WorkspaceCommandPalette } from "./WorkspaceCommandPalette";
 import { WorkspaceContextRail } from "./WorkspaceContextRail";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
-import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 import { WorkspaceStageBand } from "./WorkspaceStageBand";
+import { WorkspaceStart } from "./WorkspaceStart";
 import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
@@ -313,7 +313,7 @@ function WorkspaceShellInner() {
             </div>
           ) : !ready ? (
             <div key="onboarding" className="page-enter">
-              <WorkspaceOnboarding />
+              <WorkspaceStart />
               {loading ? (
                 <p className="mt-4 text-center font-mono text-[10px] uppercase text-ink-faint">
                   Syncing…
