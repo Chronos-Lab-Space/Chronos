@@ -54,20 +54,17 @@ first screen rather than discovered after the visitor has invested work.
 
 ### Workspace naming
 
-New pure function in `domain/workspace/`:
+A fixed default name, renamable through existing settings.
 
-```
-deriveWorkspaceName(decisionText: string): string
-```
-
-Deterministic — same input, same name. Determinism is a stated product
-invariant and a name that changed between renders would be a bug. Truncates
-long input; returns a fixed default for empty or punctuation-only input.
-Renamable afterwards through existing settings.
+An earlier draft derived the name from the decision text. That is wrong: a
+workspace holds many decisions, so naming it after the first one is a label
+that becomes misleading through ordinary use — three decisions in, the
+workspace is still called "Launch CLAB on Kickstart". A constant plus rename
+costs nothing and cannot go stale.
 
 ### Submit flow
 
-1. Create workspace with the derived name — the same
+1. Create workspace with the default name — the same
    `WorkspaceContext.createWorkspace` the `name` step calls today. No workspace
    exists before this point, so this is a create, not a rename.
 2. Create the decision from the entered objective
@@ -88,6 +85,10 @@ isWorkspaceOnboarded = workspace exists AND goal is set
 
 Context stops gating anything. `OnboardingOptions.contextSkipped` is removed
 from the predicate.
+
+`hasWorkspaceContext` is deleted. It has no non-test consumer today, and
+leaving a second onboarding predicate that nothing calls in a file we are
+already editing is how the next reader gets misled.
 
 ### The context prompt
 
@@ -120,10 +121,12 @@ fail. Signed-in visitors use the existing dual-write path.
 
 **Unit**
 
-- `deriveWorkspaceName`: empty, whitespace-only, punctuation-only, very long,
-  and determinism (same input twice, same output).
 - `isWorkspaceOnboarded`: satisfied by workspace + goal; no longer satisfied by
   `contextSkipped`; no longer blocked by absent knowledge.
+- The sample-decision path still skips the wizard. `WorkspaceService:1162`
+  relies on `isWorkspaceOnboarded` being true for a first-time visitor given a
+  sample decision. It should still hold under the new predicate — that path
+  sets a goal — but it is asserted rather than assumed.
 - `userPreferencesStore`: a stored `onboardingContextSkipped: true` reads back
   as `contextPromptDismissed: true`.
 
