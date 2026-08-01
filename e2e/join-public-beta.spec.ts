@@ -14,6 +14,16 @@ test.describe("Join public beta", () => {
 
     await expect(page).toHaveURL(/\/workspace/, { timeout: 15_000 });
     await expect(page.getByTestId("sign-in-to-save")).toBeVisible({ timeout: 15_000 });
+
+    // Carry through to a ranked result without signing in — the whole point
+    // of the public beta is a result before an account.
+    await page.getByLabel(/what are you deciding/i).fill("Launch a developer tool");
+    await page.getByRole("button", { name: /simulate/i }).click();
+
+    // The report's own "Recommendation" section, not a guessed phrase — the
+    // rendered page has no literal "best path" text anywhere on it.
+    await expect(page.getByText(/recommendation/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("sign-in-to-save")).toBeVisible();
   });
 
   test("sign in is still one click away for people who want an account", async ({ page }) => {

@@ -104,59 +104,6 @@ describe("claimAnonymousWork", () => {
     expect(store.get(USER)).toBeNull();
   });
 
-  it("does not treat a seeded sample as work worth claiming", () => {
-    // The sample is a demo, not the visitor's decision. Claiming it would give
-    // every signed-up user a sample decision and a sample note they never made
-    // — and the note silently satisfies the onboarding context gate.
-    const seeded = home("Sample workspace", "How should we launch our public beta?");
-    seeded.recentSimulations[0]!.result = { is_sample: true };
-    store.save(ANON, seeded);
-
-    const result = claimAnonymousWork(store, ANON, USER);
-
-    expect(result.outcome).toBe("nothing-to-claim");
-    expect(store.get(USER)).toBeNull();
-  });
-
-  it("strips the sample when claiming real work alongside it", () => {
-    const bundle = home("Anon Lab", "Their own decision");
-    const real = { ...bundle.recentSimulations[0]!, decision_id: "dec-real" };
-    store.save(ANON, {
-      ...bundle,
-      recentSimulations: [
-        real,
-        { ...real, id: "sample-1", decision_id: "dec-sample", result: { is_sample: true } },
-      ],
-      decisions: [
-        {
-          id: "dec-real",
-          workspace_id: bundle.workspace.id,
-          title: "Their own decision",
-          description: "",
-          goal_id: null,
-          created_at: "2026-07-02T00:00:00.000Z",
-        },
-        {
-          id: "dec-sample",
-          workspace_id: bundle.workspace.id,
-          title: "Sample decision",
-          description: "",
-          goal_id: null,
-          created_at: "2026-07-02T00:00:00.000Z",
-        },
-      ],
-    });
-
-    const result = claimAnonymousWork(store, ANON, USER);
-
-    expect(result.outcome).toBe("claimed");
-    const claimed = store.get(USER)!;
-    expect(claimed.recentSimulations).toHaveLength(1);
-    expect(claimed.recentSimulations[0]!.title).toBe("Their own decision");
-    // The sample's question was never this account's, so it stays behind too.
-    expect(claimed.decisions.map((d) => d.id)).toEqual(["dec-real"]);
-  });
-
   it("refuses to claim into an anonymous target", () => {
     // Guard against a caller passing ids in the wrong order and re-keying real
     // work onto a throwaway identity.

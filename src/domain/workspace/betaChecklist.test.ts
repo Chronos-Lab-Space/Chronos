@@ -86,7 +86,8 @@ describe("betaChecklist", () => {
     const items = evaluateBetaChecklist(home(), {
       shareAcknowledged: true,
       preferredAuthProvider: "google",
-      onboardingContextSkipped: false,
+      contextPromptDismissedFor: [],
+      contextPromptDismissedAll: false,
     });
     // share is optional — no required items done without goal/sim/memory
     const p = betaChecklistProgress(items);

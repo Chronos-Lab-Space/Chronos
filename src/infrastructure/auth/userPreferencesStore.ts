@@ -24,15 +24,26 @@ function writeAll(store: StoreShape): void {
   }
 }
 
-function normalize(
-  raw: Partial<UserPreferences> | Record<string, unknown> | undefined
-): UserPreferences {
+/**
+ * Stored preferences are whatever an older build left behind, so this reads
+ * an open record rather than a `UserPreferences` — the keys it has to fall
+ * back on are ones the current type no longer has.
+ */
+function normalize(raw: Record<string, unknown> | undefined): UserPreferences {
   const r = raw ?? {};
   return {
     shareAcknowledged: Boolean(r.shareAcknowledged),
     preferredAuthProvider:
       typeof r.preferredAuthProvider === "string" ? r.preferredAuthProvider : null,
-    onboardingContextSkipped: Boolean(r.onboardingContextSkipped),
+    contextPromptDismissedFor: Array.isArray(r.contextPromptDismissedFor)
+      ? r.contextPromptDismissedFor.filter((id): id is string => typeof id === "string")
+      : [],
+    // Two dead keys, one meaning: the prompt was dismissed before it asked per
+    // decision. Read so an existing dismissal survives, then expanded into the
+    // decisions it covered — see `expandLegacyContextDismissal`.
+    contextPromptDismissedAll: Boolean(
+      r.contextPromptDismissedAll ?? r.contextPromptDismissed ?? r.onboardingContextSkipped
+    ),
   };
 }
 

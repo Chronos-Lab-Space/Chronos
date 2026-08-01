@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
-import { isWorkspaceOnboarded } from "../../../domain/workspace/onboarding";
+import { showsEntrySurface } from "../../../domain/workspace/onboarding";
 import { authService } from "../../../infrastructure/auth/SupabaseAuthService";
 import { ChronosCMark } from "../../components/ChronosCMark";
 import { WorkspaceCommandPalette } from "./WorkspaceCommandPalette";
 import { WorkspaceContextRail } from "./WorkspaceContextRail";
 import { WorkspaceProvider, useWorkspace } from "./WorkspaceContext";
-import { WorkspaceOnboarding } from "./WorkspaceOnboarding";
 import { WorkspaceStageBand } from "./WorkspaceStageBand";
+import { WorkspaceStart } from "./WorkspaceStart";
 import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
@@ -51,14 +51,14 @@ export function WorkspaceShell() {
 function WorkspaceShellInner() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { home, loading, ownerId, error, remoteError, notice, dismissNotice, preferences } =
+  const { home, loading, ownerId, error, remoteError, notice, dismissNotice, entrySubmitting } =
     useWorkspace();
   const [moreOpen, setMoreOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
-  const ready = isWorkspaceOnboarded(home, {
-    contextSkipped: preferences.onboardingContextSkipped,
-  });
+  // Not `isWorkspaceOnboarded` directly: the entry screen saves the goal
+  // before its run finishes, and swapping on that alone unmounted it mid-submit.
+  const ready = !showsEntrySurface(home, entrySubmitting);
   const initials = (ownerId ?? "You").slice(0, 2).toUpperCase();
   const anonymous = isAnonymousOwnerId(ownerId);
   const routeKey = location.pathname;
@@ -315,8 +315,8 @@ function WorkspaceShellInner() {
               </p>
             </div>
           ) : !ready ? (
-            <div key="onboarding" className="page-enter">
-              <WorkspaceOnboarding />
+            <div key="entry" className="page-enter">
+              <WorkspaceStart />
               {loading ? (
                 <p className="mt-4 text-center font-mono text-[10px] uppercase text-ink-faint">
                   Syncing…

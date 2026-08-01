@@ -3,10 +3,12 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { assessObjectiveScope } from "../../../domain/chronos/objectiveScope";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
+import { decisionIdForSimulation } from "../../../domain/workspace/decision";
 import { buildDecisionGraph } from "../../../domain/workspace/decisionGraph";
 import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
 import { groupSimulationsByHistory } from "../../../domain/workspace/simulationHistory";
 import { FutureTimelineCards } from "../timeline/FutureTimelineCards";
+import { ContextPrompt } from "../workspace/ContextPrompt";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { DecisionGraphPanel } from "./components/DecisionGraphPanel";
 import { DecisionPipelineStrip } from "./components/DecisionPipelineStrip";
@@ -15,7 +17,6 @@ import { FutureComparison } from "./components/FutureComparison";
 import { FutureGraph } from "./FutureGraph";
 import { OutcomeTracking } from "./components/OutcomeTracking";
 import { SurfaceLoading } from "../workspace/SurfaceLoading";
-import { isSampleSimulation } from "../../../domain/workspace/sampleDecision";
 
 export function SimulationsPage() {
   const { home, runSimulation, error } = useWorkspace();
@@ -263,7 +264,6 @@ export function SimulationDetailPage() {
     home,
     rerunSimulation,
     rebranchFromOpen,
-    removeSampleDecision,
     chooseBestPath,
     recordOutcomeFollowed,
     recordOutcomeResult,
@@ -484,30 +484,12 @@ export function SimulationDetailPage() {
         />
       )}
 
-      {/* Sample banner — a worked example must never read as the user's own run */}
-      {isSampleSimulation(sim) && (
-        <section
-          data-testid="sample-banner"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-chronos/30 bg-chronos/5 px-5 py-4"
-        >
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
-              Sample decision
-            </div>
-            <p className="mt-1 text-sm text-ink-dim">
-              A worked example, ranked by the same engine your own runs use. It disappears when you
-              run your first simulation.
-            </p>
-          </div>
-          <button
-            type="button"
-            data-testid="remove-sample"
-            onClick={() => void removeSampleDecision()}
-            className="shrink-0 rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-dim transition hover:border-chronos/40 hover:text-chronos"
-          >
-            Remove sample
-          </button>
-        </section>
+      {/* Ask for a source now that there is a recommendation to argue with —
+          not before, when it was skippable and mostly skipped. Keyed on the
+          decision, not the run: re-running the same question is not a reason
+          to ask again. */}
+      {decisionReport && (
+        <ContextPrompt decisionId={sim.decision_id ?? decisionIdForSimulation(sim)} />
       )}
 
       {/* Execution plan — steps for the path already committed to */}

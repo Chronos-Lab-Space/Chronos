@@ -4,7 +4,6 @@
  * Create first decision → Run first simulation → Save memory → Share workspace
  */
 import type { WorkspaceHome } from "./types";
-import { withoutSampleSimulations } from "./sampleDecision";
 
 export type BetaChecklistId = "decision" | "simulation" | "memory" | "share";
 
@@ -21,24 +20,31 @@ export type BetaChecklistItem = {
 export type UserPreferences = {
   shareAcknowledged: boolean;
   preferredAuthProvider: string | null;
-  /** Visitor chose "skip for now" on the onboarding context step. */
-  onboardingContextSkipped: boolean;
+  /**
+   * Decisions the visitor has already answered the post-result "add a source?"
+   * prompt for, by saving or by declining. Asked once per decision — see
+   * `contextPrompt.ts`.
+   */
+  contextPromptDismissedFor: readonly string[];
+  /**
+   * A dismissal from when this was one flag for the whole visitor. Held until
+   * a loaded workspace can say which decisions it was answering for.
+   */
+  contextPromptDismissedAll: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   shareAcknowledged: false,
   preferredAuthProvider: null,
-  onboardingContextSkipped: false,
+  contextPromptDismissedFor: [],
+  contextPromptDismissedAll: false,
 };
 
 export function evaluateBetaChecklist(
   home: WorkspaceHome | null,
   prefs: UserPreferences = DEFAULT_PREFERENCES
 ): BetaChecklistItem[] {
-  // The seeded sample demonstrates the loop; it is not evidence the user ran
-  // it. Counting it would tell a new visitor they had finished onboarding they
-  // never did.
-  const ownSimulations = withoutSampleSimulations(home?.recentSimulations ?? []);
+  const ownSimulations = home?.recentSimulations ?? [];
   const hasDecision = Boolean(home?.goal?.title?.trim());
   const hasSimulation = ownSimulations.length > 0;
   const hasSavedMemory = ownSimulations.some(

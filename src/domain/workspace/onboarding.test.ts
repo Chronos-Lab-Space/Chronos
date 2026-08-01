@@ -1,201 +1,56 @@
 import { describe, expect, it } from "vitest";
-import {
-  ONBOARDING_STEPS,
-  hasWorkspaceContext,
-  isWorkspaceOnboarded,
-  onboardingProgress,
-  onboardingStepIndex,
-  requiredOnboardingStep,
-} from "./onboarding";
+import { isWorkspaceOnboarded, showsEntrySurface } from "./onboarding";
 import type { WorkspaceHome } from "./types";
 
-function baseHome(overrides: Partial<WorkspaceHome> = {}): WorkspaceHome {
-  return {
-    workspace: {
-      id: "w1",
-      owner_id: "u1",
-      name: "Chronos Lab",
-      description: "",
-      created_at: "2026-01-01T00:00:00.000Z",
-    },
-    goal: null,
-    goalHistory: [],
-    decisions: [],
-    recentSimulations: [],
-    knowledge: [],
-    notes: [],
-    futuresBySimulation: {},
-    timelineBySimulation: {},
-    ...overrides,
-  };
-}
+describe("workspace onboarded predicate", () => {
+  it("is satisfied by a workspace and a goal, with no knowledge or notes", () => {
+    const home = {
+      workspace: { id: "ws-1", name: "Workspace" },
+      goal: { title: "Launch the beta" },
+      knowledge: [],
+      notes: [],
+    } as unknown as WorkspaceHome;
 
-describe("onboarding domain", () => {
-  it("exposes the mandatory steps in order", () => {
-    expect(ONBOARDING_STEPS).toEqual(["welcome", "name", "goal", "context", "dashboard"]);
+    // Context used to gate this. It no longer does: the first result is what
+    // motivates attaching a source, so requiring one first inverted the order.
+    expect(isWorkspaceOnboarded(home)).toBe(true);
   });
 
-  it("detects workspace context and onboarded state", () => {
-    expect(hasWorkspaceContext(null)).toBe(false);
+  it("is not satisfied by a workspace without a goal", () => {
+    const home = {
+      workspace: { id: "ws-1", name: "Workspace" },
+      goal: null,
+      knowledge: [],
+      notes: [],
+    } as unknown as WorkspaceHome;
+
+    expect(isWorkspaceOnboarded(home)).toBe(false);
+  });
+
+  it("is not satisfied without a workspace", () => {
     expect(isWorkspaceOnboarded(null)).toBe(false);
-
-    const wsOnly = baseHome();
-    expect(hasWorkspaceContext(wsOnly)).toBe(true);
-    expect(isWorkspaceOnboarded(wsOnly)).toBe(false);
-
-    const withGoal = baseHome({
-      goal: {
-        id: "g1",
-        workspace_id: "w1",
-        title: "Launch",
-        description: "",
-        status: "active",
-        priority: 1,
-        created_at: "2026-01-01T00:00:00.000Z",
-      },
-    });
-    expect(isWorkspaceOnboarded(withGoal)).toBe(false);
-
-    const ready = baseHome({
-      goal: withGoal.goal,
-      knowledge: [
-        {
-          id: "k1",
-          workspace_id: "w1",
-          type: "markdown",
-          title: "Brief",
-          content: "x",
-          metadata: {},
-          created_at: "2026-01-02T00:00:00.000Z",
-        },
-      ],
-    });
-    expect(isWorkspaceOnboarded(ready)).toBe(true);
-
-    const readyNotes = baseHome({
-      goal: withGoal.goal,
-      notes: [
-        {
-          id: "n1",
-          workspace_id: "w1",
-          title: "Note",
-          content: "body",
-          created_at: "2026-01-02T00:00:00.000Z",
-        },
-      ],
-    });
-    expect(isWorkspaceOnboarded(readyNotes)).toBe(true);
-  });
-
-  it("returns required step along the path", () => {
-    expect(requiredOnboardingStep(null)).toBe("welcome");
-    expect(requiredOnboardingStep(baseHome())).toBe("goal");
-    expect(
-      requiredOnboardingStep(
-        baseHome({
-          goal: {
-            id: "g1",
-            workspace_id: "w1",
-            title: "Launch",
-            description: "",
-            status: "active",
-            priority: 1,
-            created_at: "2026-01-01T00:00:00.000Z",
-          },
-        })
-      )
-    ).toBe("context");
-    expect(
-      requiredOnboardingStep(
-        baseHome({
-          goal: {
-            id: "g1",
-            workspace_id: "w1",
-            title: "Launch",
-            description: "",
-            status: "active",
-            priority: 1,
-            created_at: "2026-01-01T00:00:00.000Z",
-          },
-          knowledge: [
-            {
-              id: "k1",
-              workspace_id: "w1",
-              type: "note",
-              title: "n",
-              content: "c",
-              metadata: {},
-              created_at: "2026-01-02T00:00:00.000Z",
-            },
-          ],
-        })
-      )
-    ).toBe("dashboard");
-  });
-
-  it("indexes steps and reports progress", () => {
-    expect(onboardingStepIndex("welcome")).toBe(0);
-    expect(onboardingStepIndex("dashboard")).toBe(4);
-    expect(onboardingProgress(null)).toBe(0);
-    expect(onboardingProgress(baseHome())).toBeGreaterThan(0);
-    expect(onboardingProgress(baseHome())).toBeLessThan(1);
-
-    const ready = baseHome({
-      goal: {
-        id: "g1",
-        workspace_id: "w1",
-        title: "Launch",
-        description: "",
-        status: "active",
-        priority: 1,
-        created_at: "2026-01-01T00:00:00.000Z",
-      },
-      notes: [
-        {
-          id: "n1",
-          workspace_id: "w1",
-          title: "N",
-          content: "c",
-          created_at: "2026-01-02T00:00:00.000Z",
-        },
-      ],
-    });
-    expect(onboardingProgress(ready)).toBe(1);
   });
 });
 
-describe("skippable context step", () => {
-  const withGoal = () =>
-    baseHome({
-      goal: {
-        id: "g1",
-        title: "Launch the beta",
-        description: "",
-        status: "active",
-        created_at: "2026-01-01T00:00:00.000Z",
-      },
-    } as Partial<WorkspaceHome>);
+describe("entry surface", () => {
+  const onboarded = {
+    workspace: { id: "ws-1", name: "Workspace" },
+    goal: { title: "Launch the beta" },
+    knowledge: [],
+    notes: [],
+  } as unknown as WorkspaceHome;
 
-  it("still asks for context by default", () => {
-    // Knowledge genuinely improves ranking, so the step is still offered.
-    expect(requiredOnboardingStep(withGoal())).toBe("context");
-    expect(isWorkspaceOnboarded(withGoal())).toBe(false);
+  it("stays up while a submit it started is still running", () => {
+    // The goal is already saved here — that is exactly the mid-submit state
+    // that used to unmount the screen and strand the run.
+    expect(showsEntrySurface(onboarded, true)).toBe(true);
   });
 
-  it("unlocks the workspace when the visitor skips context", () => {
-    // The simulation form already tells users they can run without knowledge.
-    // Onboarding must not contradict it by refusing to let them through.
-    expect(requiredOnboardingStep(withGoal(), { contextSkipped: true })).toBe("dashboard");
-    expect(isWorkspaceOnboarded(withGoal(), { contextSkipped: true })).toBe(true);
+  it("gives way once the submit settles", () => {
+    expect(showsEntrySurface(onboarded, false)).toBe(false);
   });
 
-  it("does not let skipping stand in for a goal", () => {
-    // Skipping is about context only — the decision itself is the product.
-    expect(requiredOnboardingStep(baseHome(), { contextSkipped: true })).toBe("goal");
-    expect(isWorkspaceOnboarded(baseHome(), { contextSkipped: true })).toBe(false);
-  });
-
-  it("reports full progress once context is skipped", () => {
-    expect(onboardingProgress(withGoal(), { contextSkipped: true })).toBe(1);
+  it("is up for a visitor who has no decision yet", () => {
+    expect(showsEntrySurface(null, false)).toBe(true);
   });
 });

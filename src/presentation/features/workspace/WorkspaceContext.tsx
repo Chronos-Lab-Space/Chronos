@@ -23,6 +23,7 @@ import { claimAnonymousWork } from "../../../infrastructure/repositories/claimAn
 import { localWorkspaceStore } from "../../../infrastructure/repositories/LocalWorkspaceStore";
 import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
 import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
+import { expandLegacyContextDismissal } from "../../../domain/workspace/contextPrompt";
 import type {
   KnowledgeType,
   OutcomeFollowed,
@@ -51,6 +52,20 @@ type WorkspaceContextValue = {
   /** One-shot message after a sign-in that could not claim local work. */
   notice: string | null;
   dismissNotice: () => void;
+  /**
+   * True while the entry screen's one submit is still settling. It lives here
+   * because the component that owns the submit is not the one that decides
+   * whether it stays on screen — the shell swaps it out the moment the goal
+   * lands, which is mid-run. See `showsEntrySurface`.
+   */
+  entrySubmitting: boolean;
+  setEntrySubmitting: (value: boolean) => void;
+  /**
+   * Surface a failure that has to outlive the component that hit it. Most
+   * failures already arrive here through `withOwner`; this is for the ones a
+   * call site detects itself, on a screen that is about to be replaced.
+   */
+  reportError: (message: string) => void;
   createWorkspace: (name: string, description?: string) => Promise<void>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
   setGoal: (title: string, description?: string) => Promise<void>;
@@ -78,8 +93,6 @@ type WorkspaceContextValue = {
   /** Decision-graph rollback: fork next version from N0 Open. */
   rebranchFromOpen: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
   chooseBestPath: (simulationId: string, futureId: string) => Promise<void>;
-  /** Discard the seeded worked example. */
-  removeSampleDecision: () => Promise<void>;
   recordOutcomeFollowed: (simulationId: string, followed: OutcomeFollowed) => Promise<void>;
   recordOutcomeResult: (
     simulationId: string,
@@ -111,6 +124,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [entrySubmitting, setEntrySubmitting] = useState(false);
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   /** After first hydrate, background sync must not flip loading (unmounts forms). */
   const hasHydratedRef = useRef(false);
@@ -121,6 +135,21 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     setRemoteError(
       isAnonymousOwnerId(ownerIdRef.current) ? null : workspaceService.getRemoteError()
     );
+  }, []);
+
+  /**
+   * Preferences, plus the one upgrade that needs a loaded workspace: a
+   * dismissal stored before the context prompt asked per decision means "not
+   * for the decisions I already have", and only the workspace can say which
+   * those were.
+   */
+  const hydratePreferences = useCallback((id: string, loaded: WorkspaceHome | null) => {
+    const stored = loadUserPreferences(id);
+    const upgrade = expandLegacyContextDismissal(
+      stored,
+      (loaded?.decisions ?? []).map((decision) => decision.id)
+    );
+    setPreferences(upgrade ? saveUserPreferences(id, upgrade) : stored);
   }, []);
 
   const resolveOwnerId = useCallback(async (): Promise<string | null> => {
@@ -153,16 +182,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           // an empty shell. Signing in later claims this work.
           const anonId = getOrCreateAnonymousOwnerId();
           const anonService = serviceFor(anonId);
-          // A brand-new visitor gets a worked example rather than an empty
-          // workspace — the cold-start problem one step past the login wall.
-          // Seeding no-ops once any simulation exists, so a returning visitor
-          // never has one re-appear.
-          try {
-            await anonService.seedSampleDecision(anonId);
-          } catch (err) {
-            // A missing sample is cosmetic; never block the workspace on it.
-            console.warn("[chronos] sample decision seed skipped", err);
-          }
           const [anonHome, anonList] = await Promise.all([
             anonService.load(anonId),
             anonService.listWorkspaces(anonId),
@@ -171,7 +190,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           setOwnerId(anonId);
           setHome(anonHome);
           setWorkspaces(anonList);
-          setPreferences(loadUserPreferences(anonId));
+          hydratePreferences(anonId, anonHome);
           setRemoteError(null);
           hasHydratedRef.current = true;
           return;
@@ -193,6 +212,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         ]);
         setHome(loaded);
         setWorkspaces(list);
+        hydratePreferences(id, loaded);
         hasHydratedRef.current = true;
         syncRemoteError();
       } catch (err) {
@@ -202,7 +222,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     },
-    [syncRemoteError]
+    [syncRemoteError, hydratePreferences]
   );
 
   useEffect(() => {
@@ -308,6 +328,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       remoteError,
       notice,
       dismissNotice: () => setNotice(null),
+      entrySubmitting,
+      setEntrySubmitting,
+      reportError: setError,
       preferences,
       updatePreferences,
       markShareAcknowledged: () => updatePreferences({ shareAcknowledged: true }),
@@ -386,9 +409,6 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         const sim = next.recentSimulations[0];
         return sim?.id ?? null;
       },
-      removeSampleDecision: async () => {
-        await withOwner((id) => serviceFor(id).removeSampleDecision(id));
-      },
       chooseBestPath: async (simulationId, futureId) => {
         const saved = await withOwner((id) =>
           serviceFor(id).chooseBestPath(id, simulationId, futureId)
@@ -441,6 +461,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       error,
       remoteError,
       notice,
+      entrySubmitting,
       preferences,
       updatePreferences,
       refresh,

@@ -95,6 +95,14 @@ is nothing for RLS to protect.
 
 ## Sample decision
 
+> **Superseded.** Retired by
+> `docs/superpowers/specs/2026-08-01-decision-first-entry-design.md` ("The
+> seeded sample decision is retired"): decision-first entry fuses
+> goal-setting and running into one submit, which closed the only window in
+> which the sample was ever reachable. `sampleDecision.ts` and the sample
+> banner UI are deleted. Kept below for history — do not re-implement
+> against this section.
+
 A new anonymous workspace is empty, which is the same cold-start problem one
 step later. Seed one realistic worked example — objective, ranked futures, a
 collapse, a logged outcome — that a visitor can open and explore immediately.
@@ -115,7 +123,8 @@ Rules that keep it honest:
 1. **Anonymous workspace** — anon id, `remote: null`, route change, sign-in
    affordance, replaced E2E assertion.
 2. **Claim on sign-in** — the re-key, including the non-empty-account case.
-3. **Sample decision** — engine-generated, labelled, removable.
+3. **Sample decision** — engine-generated, labelled, removable. Superseded,
+   see "Sample decision" above.
 
 Ship in that order. Each is independently revertable, and slice 1 is useful
 alone.
@@ -143,5 +152,7 @@ engine.
 3. Signing in with a fresh account claims the local work; signing in with an
    account that already has work keeps both, loses neither.
 4. The sample decision is labelled, excluded from progress, and its ranking
-   matches what the engine produces for that objective.
+   matches what the engine produces for that objective. Superseded, see
+   "Sample decision" above — there is no sample decision to satisfy this
+   against.
 5. `tsc`, `biome ci`, unit and E2E green.

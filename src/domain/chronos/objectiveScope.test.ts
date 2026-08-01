@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { SAMPLE_OBJECTIVE } from "../workspace/sampleDecision";
 import { assessObjectiveScope } from "./objectiveScope";
 
 describe("assessObjectiveScope", () => {
@@ -16,12 +15,6 @@ describe("assessObjectiveScope", () => {
       "Should we pivot the product toward developers?",
     ])("accepts %j", (objective) => {
       expect(assessObjectiveScope(objective).inScope).toBe(true);
-    });
-
-    it("keeps the seeded sample decision in scope", () => {
-      // The sample is engine-generated at first visit. If the guard rejected
-      // it, a new visitor's worked example would break instead of seeding.
-      expect(assessObjectiveScope(SAMPLE_OBJECTIVE).inScope).toBe(true);
     });
   });
 
