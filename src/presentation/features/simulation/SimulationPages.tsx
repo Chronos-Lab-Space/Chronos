@@ -489,7 +489,10 @@ export function SimulationDetailPage() {
           decision, not the run: re-running the same question is not a reason
           to ask again. */}
       {decisionReport && (
-        <ContextPrompt decisionId={sim.decision_id ?? decisionIdForSimulation(sim)} />
+        <ContextPrompt
+          decisionId={sim.decision_id ?? decisionIdForSimulation(sim)}
+          objective={sim.title}
+        />
       )}
 
       {/* Execution plan — steps for the path already committed to */}
