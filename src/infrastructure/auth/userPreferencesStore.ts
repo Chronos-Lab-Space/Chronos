@@ -32,7 +32,11 @@ function normalize(
     shareAcknowledged: Boolean(r.shareAcknowledged),
     preferredAuthProvider:
       typeof r.preferredAuthProvider === "string" ? r.preferredAuthProvider : null,
-    onboardingContextSkipped: Boolean(r.onboardingContextSkipped),
+    // Old key kept as a fallback read so an existing dismissal survives the
+    // rename. No data migration; the new key wins once anything writes it.
+    contextPromptDismissed: Boolean(
+      r.contextPromptDismissed ?? (r as any).onboardingContextSkipped
+    ),
   };
 }
 

@@ -27,7 +27,7 @@ export function WorkspaceOnboarding() {
     preferences,
     updatePreferences,
   } = useWorkspace();
-  const onboardingOptions = { contextSkipped: preferences.onboardingContextSkipped };
+  const onboardingOptions = { contextSkipped: preferences.contextPromptDismissed };
   const required = requiredOnboardingStep(home, onboardingOptions);
 
   const [localStep, setLocalStep] = useState<"welcome" | "name">("welcome");
@@ -324,7 +324,7 @@ export function WorkspaceOnboarding() {
               <button
                 type="button"
                 data-testid="skip-context"
-                onClick={() => updatePreferences({ onboardingContextSkipped: true })}
+                onClick={() => updatePreferences({ contextPromptDismissed: true })}
                 className="w-full rounded-full border border-line px-4 py-3 text-sm text-ink-dim transition hover:border-chronos/40 hover:text-ink"
               >
                 Skip for now — add sources later
