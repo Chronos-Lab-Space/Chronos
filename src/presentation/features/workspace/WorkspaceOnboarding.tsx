@@ -42,7 +42,7 @@ export function WorkspaceOnboarding() {
   const [noteTitle, setNoteTitle] = useState("Decision context");
   const [noteBody, setNoteBody] = useState("");
 
-  if (isWorkspaceOnboarded(home, onboardingOptions)) return null;
+  if (isWorkspaceOnboarded(home)) return null;
 
   const active: OnboardingStep =
     required === "welcome" || required === "name"

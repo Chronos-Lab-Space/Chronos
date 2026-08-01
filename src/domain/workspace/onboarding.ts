@@ -19,23 +19,14 @@ export type OnboardingOptions = {
   contextSkipped?: boolean;
 };
 
-/** Workspace exists (name set). */
-export function hasWorkspaceContext(home: WorkspaceHome | null): boolean {
-  return Boolean(home?.workspace?.id && home.workspace.name?.trim());
-}
-
 /**
- * Fully onboarded = workspace + goal + at least one knowledge item or note.
- * Dashboard unlocks only when this is true.
+ * Onboarded = there is a workspace and a decision. Context is not a gate:
+ * a source is worth attaching once you have seen a recommendation, so
+ * requiring one first put forms between a visitor and their first result.
  */
-export function isWorkspaceOnboarded(
-  home: WorkspaceHome | null,
-  options: OnboardingOptions = {}
-): boolean {
+export function isWorkspaceOnboarded(home: WorkspaceHome | null): boolean {
   if (!home?.workspace?.id) return false;
-  if (!home.goal?.title?.trim()) return false;
-  if (options.contextSkipped) return true;
-  return home.knowledge.length > 0 || home.notes.length > 0;
+  return Boolean(home.goal?.title?.trim());
 }
 
 /**
@@ -72,7 +63,7 @@ export function onboardingProgress(
   home: WorkspaceHome | null,
   options: OnboardingOptions = {}
 ): number {
-  if (isWorkspaceOnboarded(home, options)) return 1;
+  if (isWorkspaceOnboarded(home)) return 1;
   const step = requiredOnboardingStep(home, options);
   // If we're still on welcome/name with no workspace, progress is low
   if (!home?.workspace?.id) {

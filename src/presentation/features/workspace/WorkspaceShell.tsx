@@ -51,14 +51,11 @@ export function WorkspaceShell() {
 function WorkspaceShellInner() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { home, loading, ownerId, error, remoteError, notice, dismissNotice, preferences } =
-    useWorkspace();
+  const { home, loading, ownerId, error, remoteError, notice, dismissNotice } = useWorkspace();
   const [moreOpen, setMoreOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
-  const ready = isWorkspaceOnboarded(home, {
-    contextSkipped: preferences.onboardingContextSkipped,
-  });
+  const ready = isWorkspaceOnboarded(home);
   const initials = (ownerId ?? "You").slice(0, 2).toUpperCase();
   const anonymous = isAnonymousOwnerId(ownerId);
   const routeKey = location.pathname;

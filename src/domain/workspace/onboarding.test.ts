@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   ONBOARDING_STEPS,
-  hasWorkspaceContext,
   isWorkspaceOnboarded,
   onboardingProgress,
   onboardingStepIndex,
@@ -35,12 +34,10 @@ describe("onboarding domain", () => {
     expect(ONBOARDING_STEPS).toEqual(["welcome", "name", "goal", "context", "dashboard"]);
   });
 
-  it("detects workspace context and onboarded state", () => {
-    expect(hasWorkspaceContext(null)).toBe(false);
+  it("detects onboarded state by workspace and goal", () => {
     expect(isWorkspaceOnboarded(null)).toBe(false);
 
     const wsOnly = baseHome();
-    expect(hasWorkspaceContext(wsOnly)).toBe(true);
     expect(isWorkspaceOnboarded(wsOnly)).toBe(false);
 
     const withGoal = baseHome({
@@ -54,37 +51,7 @@ describe("onboarding domain", () => {
         created_at: "2026-01-01T00:00:00.000Z",
       },
     });
-    expect(isWorkspaceOnboarded(withGoal)).toBe(false);
-
-    const ready = baseHome({
-      goal: withGoal.goal,
-      knowledge: [
-        {
-          id: "k1",
-          workspace_id: "w1",
-          type: "markdown",
-          title: "Brief",
-          content: "x",
-          metadata: {},
-          created_at: "2026-01-02T00:00:00.000Z",
-        },
-      ],
-    });
-    expect(isWorkspaceOnboarded(ready)).toBe(true);
-
-    const readyNotes = baseHome({
-      goal: withGoal.goal,
-      notes: [
-        {
-          id: "n1",
-          workspace_id: "w1",
-          title: "Note",
-          content: "body",
-          created_at: "2026-01-02T00:00:00.000Z",
-        },
-      ],
-    });
-    expect(isWorkspaceOnboarded(readyNotes)).toBe(true);
+    expect(isWorkspaceOnboarded(withGoal)).toBe(true);
   });
 
   it("returns required step along the path", () => {
@@ -164,6 +131,32 @@ describe("onboarding domain", () => {
   });
 });
 
+describe("workspace onboarded predicate", () => {
+  it("is satisfied by a workspace and a goal, with no knowledge or notes", () => {
+    const home = {
+      workspace: { id: "ws-1", name: "Workspace" },
+      goal: { title: "Launch the beta" },
+      knowledge: [],
+      notes: [],
+    } as unknown as WorkspaceHome;
+
+    // Context used to gate this. It no longer does: the first result is what
+    // motivates attaching a source, so requiring one first inverted the order.
+    expect(isWorkspaceOnboarded(home)).toBe(true);
+  });
+
+  it("is not satisfied by a workspace without a goal", () => {
+    const home = {
+      workspace: { id: "ws-1", name: "Workspace" },
+      goal: null,
+      knowledge: [],
+      notes: [],
+    } as unknown as WorkspaceHome;
+
+    expect(isWorkspaceOnboarded(home)).toBe(false);
+  });
+});
+
 describe("skippable context step", () => {
   const withGoal = () =>
     baseHome({
@@ -179,20 +172,17 @@ describe("skippable context step", () => {
   it("still asks for context by default", () => {
     // Knowledge genuinely improves ranking, so the step is still offered.
     expect(requiredOnboardingStep(withGoal())).toBe("context");
-    expect(isWorkspaceOnboarded(withGoal())).toBe(false);
   });
 
-  it("unlocks the workspace when the visitor skips context", () => {
+  it("navigates to dashboard when the visitor skips context", () => {
     // The simulation form already tells users they can run without knowledge.
     // Onboarding must not contradict it by refusing to let them through.
     expect(requiredOnboardingStep(withGoal(), { contextSkipped: true })).toBe("dashboard");
-    expect(isWorkspaceOnboarded(withGoal(), { contextSkipped: true })).toBe(true);
   });
 
   it("does not let skipping stand in for a goal", () => {
     // Skipping is about context only — the decision itself is the product.
     expect(requiredOnboardingStep(baseHome(), { contextSkipped: true })).toBe("goal");
-    expect(isWorkspaceOnboarded(baseHome(), { contextSkipped: true })).toBe(false);
   });
 
   it("reports full progress once context is skipped", () => {
