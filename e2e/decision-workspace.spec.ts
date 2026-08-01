@@ -263,11 +263,21 @@ test.describe("Decision Workspace (authenticated)", () => {
     // "Bottom-up SaaS · want cook boiled", scored and ranked as if it meant
     // something. The catalog is startup scenarios only, so the honest answer
     // is to say so rather than staple the user's words onto a template.
-    // Onboard first — the run form is not reachable before the workspace has
-    // a goal, same path as the anonymous-visitor test above. Decision-first
-    // entry runs a simulation on submit, so this also produces a first result.
+    // The refusal has to hold on the *first* screen too. Decision-first entry
+    // runs the engine straight from this field, so a guard that only lived on
+    // the run form behind it was a guard no first-time visitor ever met.
     await page.goto("/workspace");
-    await page.getByLabel(/what are you deciding/i).fill("My own beta decision");
+    const firstDecision = page.getByLabel(/what are you deciding/i);
+    await firstDecision.fill("I want to cook boiled egg");
+    await expect(page.getByText(/startup and business decisions/i)).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole("button", { name: /simulate/i })).toBeDisabled();
+
+    // A real business objective clears it, and produces the first result the
+    // rest of this test needs.
+    await firstDecision.fill("My own beta decision");
+    await expect(page.getByText(/startup and business decisions/i)).toHaveCount(0);
     await page.getByRole("button", { name: /simulate/i }).click();
     await expect(page).toHaveURL(/\/workspace\/simulations\/.+/, { timeout: 15_000 });
 

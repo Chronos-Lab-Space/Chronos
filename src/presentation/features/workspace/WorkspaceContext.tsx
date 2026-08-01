@@ -51,6 +51,20 @@ type WorkspaceContextValue = {
   /** One-shot message after a sign-in that could not claim local work. */
   notice: string | null;
   dismissNotice: () => void;
+  /**
+   * True while the entry screen's one submit is still settling. It lives here
+   * because the component that owns the submit is not the one that decides
+   * whether it stays on screen — the shell swaps it out the moment the goal
+   * lands, which is mid-run. See `showsEntrySurface`.
+   */
+  entrySubmitting: boolean;
+  setEntrySubmitting: (value: boolean) => void;
+  /**
+   * Surface a failure that has to outlive the component that hit it. Most
+   * failures already arrive here through `withOwner`; this is for the ones a
+   * call site detects itself, on a screen that is about to be replaced.
+   */
+  reportError: (message: string) => void;
   createWorkspace: (name: string, description?: string) => Promise<void>;
   switchWorkspace: (workspaceId: string) => Promise<void>;
   setGoal: (title: string, description?: string) => Promise<void>;
@@ -109,6 +123,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [entrySubmitting, setEntrySubmitting] = useState(false);
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   /** After first hydrate, background sync must not flip loading (unmounts forms). */
   const hasHydratedRef = useRef(false);
@@ -296,6 +311,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       remoteError,
       notice,
       dismissNotice: () => setNotice(null),
+      entrySubmitting,
+      setEntrySubmitting,
+      reportError: setError,
       preferences,
       updatePreferences,
       markShareAcknowledged: () => updatePreferences({ shareAcknowledged: true }),
@@ -426,6 +444,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       error,
       remoteError,
       notice,
+      entrySubmitting,
       preferences,
       updatePreferences,
       refresh,
