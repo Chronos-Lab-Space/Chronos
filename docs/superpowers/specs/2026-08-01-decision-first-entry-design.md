@@ -140,6 +140,36 @@ fail. Signed-in visitors use the existing dual-write path.
 
 ---
 
+## The seeded sample decision is retired
+
+Discovered during implementation, not anticipated by this spec.
+
+`seedSampleDecision` builds a worked example for new visitors and promises "a
+worked example a new visitor can explore immediately." It deliberately does not
+set the workspace goal — claiming the goal made a visitor land on someone
+else's objective.
+
+That left exactly one window in which the sample was reachable, and this spec
+closes it:
+
+- `WorkspaceShell` mounts `/workspace/*` routes only when
+  `isWorkspaceOnboarded(home)` is true, which requires a goal.
+- On the wizard, the separate `goal` step set one. Routes mounted while the
+  sample was still present, so it could be opened.
+- Decision-first fuses goal-setting and running into one submit, and
+  `runSimulation` drops any sample first — "the demo has served its purpose and
+  must not sit beside real work".
+
+So there is no longer a state where the workspace is reachable and the sample
+still exists. Rather than leave a feature reachable only by a path this spec
+removes, the sample is deleted: `sampleDecision.ts`, `seedSampleDecision`,
+`removeSampleDecision`, `isSampleSimulation`, their tests, and the UI that
+renders the sample banner.
+
+The sample existed to fill the gap before a visitor had a result of their own.
+Decision-first closes that gap in one action, which is what makes deleting it
+the honest option rather than a loss.
+
 ## Out of scope
 
 - Any gate on entry. This is the **public** beta; there is no invite code,
