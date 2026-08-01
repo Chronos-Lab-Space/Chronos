@@ -104,6 +104,46 @@ does. `userPreferencesStore` reads
 `r.contextPromptDismissed ?? r.onboardingContextSkipped` so existing dismissals
 survive. No data migration.
 
+#### Asked once per decision, not once per visitor
+
+Discovered once this landed as the only in-flow context ask left: a single
+boolean per owner meant the first Save or "Not now" — on whichever decision the
+visitor happened to be looking at — silenced the prompt for every decision they
+would ever open afterward, including ones that did not exist yet. That is not
+"dismissed," it is a bug wearing a boolean.
+
+`contextPromptDismissed: boolean` becomes `contextPromptDismissedFor:
+readonly string[]` — decision ids the visitor has answered the prompt for, by
+saving a note or declining. `ContextPrompt` takes a `decisionId` prop and
+`isContextPromptDismissed` checks membership, so a decision not yet answered
+for asks again regardless of what any other decision decided.
+`domain/workspace/contextPrompt.ts` owns this predicate and the update.
+
+**Migrating the old boolean.** A stored `contextPromptDismissed: true` (or the
+still-older `onboardingContextSkipped: true`) cannot name which decisions it
+was answering for — at write time there was only one flag for the whole
+visitor. Two readings are possible:
+
+- Read it as "dismissed for nothing" and let every decision ask again. Wrong:
+  it resurrects a question the visitor already answered, for every decision
+  that already existed, which is the one outcome a dismissal preference must
+  never produce.
+- Read it as "dismissed for everything that existed at that point," and freeze
+  that into `contextPromptDismissedFor` the moment it can be computed.
+  **Chosen.**
+
+`contextPromptDismissedAll: boolean` carries the legacy flag forward
+unexpanded — until it can be expanded, `isContextPromptDismissed` honours it
+for every decision id, because re-asking someone who already said no is worse
+than staying quiet on a decision made after their answer. `WorkspaceContext`
+expands it exactly once, the first time a loaded `WorkspaceHome` is available:
+`expandLegacyContextDismissal` turns it into the concrete list of decision ids
+that existed in that workspace at load time, clears the flag, and the result is
+persisted. A decision opened after that point is a question nobody asked the
+visitor about yet, so it asks. This is a one-way upgrade — `contextPromptDismissedAll`
+never turns back on — done in `contextPrompt.ts`, unit-tested independently of
+the React layer that triggers it.
+
 ---
 
 ## Error handling
@@ -124,8 +164,16 @@ fail. Signed-in visitors use the existing dual-write path.
 
 - `isWorkspaceOnboarded`: satisfied by workspace + goal; no longer satisfied by
   `contextSkipped`; no longer blocked by absent knowledge.
-- `userPreferencesStore`: a stored `onboardingContextSkipped: true` reads back
-  as `contextPromptDismissed: true`.
+- `userPreferencesStore`: a stored `onboardingContextSkipped: true` or
+  `contextPromptDismissed: true` reads back as `contextPromptDismissedAll: true`;
+  `contextPromptDismissedFor` round-trips a list of decision ids.
+- `contextPrompt.ts`: dismissing one decision does not dismiss another; a
+  legacy `contextPromptDismissedAll` is honoured for every decision until
+  `expandLegacyContextDismissal` freezes it into the concrete ids that existed
+  at that point, after which a decision opened later asks again.
+- `ContextPrompt`: renders for a `decisionId` not yet in
+  `contextPromptDismissedFor`; stays hidden for one that is; "Not now" persists
+  that decision's id without touching any other.
 
 **E2E**
 
