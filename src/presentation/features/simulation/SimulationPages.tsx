@@ -7,6 +7,7 @@ import { buildDecisionGraph } from "../../../domain/workspace/decisionGraph";
 import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
 import { groupSimulationsByHistory } from "../../../domain/workspace/simulationHistory";
 import { FutureTimelineCards } from "../timeline/FutureTimelineCards";
+import { ContextPrompt } from "../workspace/ContextPrompt";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { DecisionGraphPanel } from "./components/DecisionGraphPanel";
 import { DecisionPipelineStrip } from "./components/DecisionPipelineStrip";
@@ -483,6 +484,10 @@ export function SimulationDetailPage() {
           }
         />
       )}
+
+      {/* Ask for a source now that there is a recommendation to argue with —
+          not before, when it was skippable and mostly skipped. */}
+      {decisionReport && <ContextPrompt />}
 
       {/* Sample banner — a worked example must never read as the user's own run */}
       {isSampleSimulation(sim) && (
