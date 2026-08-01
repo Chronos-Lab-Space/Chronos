@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { compile, presetPrograms } from "../../domain/chronos/language";
+import { compile, presetPrograms, toAuthoredState } from "../../domain/chronos/language";
 import {
   fork,
   evaluate,
@@ -59,13 +59,24 @@ export function LanguageSection() {
 
   const runEvaluate = () => {
     if (!engine) return;
-    // Built-in reward/risk/environment scorer. The program's own `score` block
-    // cannot be used yet: compile() maps agent/world/context onto a fixed
-    // robot/object/environment WorldState, so the namespaces the score body
-    // reads no longer exist by the time the engine holds the state. The authored
-    // env is built inside each action's apply() — exposing it is the unlock.
-    // Pinned by language.scoring.test.ts.
-    setEngine(evaluate(engine));
+    // The program's own `score` block decides these numbers when it declares
+    // one — toAuthoredState puts the state back in the namespaces the score
+    // body reads. With no score block, or one that returns a non-number, the
+    // built-in reward/risk model stays in charge.
+    const score = scoreFnName ? compileResult.compiled?.scoreFns[scoreFnName] : undefined;
+    setEngine(
+      evaluate(
+        engine,
+        score
+          ? (branch) =>
+              score({
+                ...toAuthoredState(branch.state),
+                risk: branch.risk,
+                reward: branch.reward,
+              })
+          : undefined
+      )
+    );
   };
 
   const runCollapse = () => {
@@ -368,21 +379,20 @@ function Repl({
         </OutputPanel>
 
         {/* Score function */}
-        <OutputPanel title="Score" subtitle={scoreFnName ? `${scoreFnName} · parsed` : "—"}>
+        <OutputPanel title="Score" subtitle={scoreFnName ? `${scoreFnName} · applied` : "—"}>
           {compileResult.ok && scoreFnName ? (
             <div className="space-y-1.5">
               <div className="font-mono text-[11px] text-ink-dim">
                 score {scoreFnName}(state) {"{"} ... {"}"}
               </div>
-              {/* The branch numbers below come from the engine's built-in
-                  reward/risk scorer, not from this block. Saying so beats a
-                  panel that reads like the source of the scores beside it. */}
               <div className="font-mono text-[10px] leading-[1.5] text-ink-faint">
-                parsed, not yet applied — branches are scored by the built-in reward/risk model
+                scores the branches below
               </div>
             </div>
           ) : (
-            <div className="font-mono text-[11px] text-ink-faint">—</div>
+            <div className="font-mono text-[10px] leading-[1.5] text-ink-faint">
+              no score block — built-in reward/risk model
+            </div>
           )}
         </OutputPanel>
 

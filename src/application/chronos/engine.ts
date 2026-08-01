@@ -300,11 +300,27 @@ export function scoreBranch(branch: Branch, scenarioId: string): ScoreBreakdown 
   }
 }
 
-export function evaluate(engine: Engine): Engine {
+/**
+ * Scores a branch in place of the built-in model. Returning a non-finite value
+ * falls back rather than writing NaN into a ranking.
+ */
+export type BranchScorer = (branch: Branch) => number;
+
+/**
+ * @param scorer Optional. The Chronos Language playground passes the program's
+ *   own `score` block here. Omitting it — which every product path does — keeps
+ *   the built-in reward/risk model, so an authored score can never reach the
+ *   ranking the product publishes.
+ */
+export function evaluate(engine: Engine, scorer?: BranchScorer): Engine {
   if (engine.phase !== "forked") return engine;
 
   const branches = engine.branches.map((branch) => {
-    const { score, reasons } = scoreBranch(branch, engine.scenarioId);
+    const built = scoreBranch(branch, engine.scenarioId);
+    const authored = scorer ? scorer(branch) : Number.NaN;
+    const useAuthored = Number.isFinite(authored);
+    const score = useAuthored ? clamp01(authored) : built.score;
+    const reasons = useAuthored ? ["authored score"] : built.reasons;
     const outcome = new Outcome({
       branchId: branch.id,
       score,
