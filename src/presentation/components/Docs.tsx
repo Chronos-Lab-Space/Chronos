@@ -767,11 +767,9 @@ function GettingStarted() {
 
       <DocSub>1. Join public beta</DocSub>
       <DocBody>
-        From the landing page choose <strong className="text-ink">Join public beta</strong> or{" "}
-        <strong className="text-ink">Get started</strong>. Prefer{" "}
-        <strong className="text-ink">Google or GitHub</strong> for the fastest path; email may
-        require confirmation. Chronos creates your profile and a personal workspace with owner
-        membership automatically.
+        From the landing page choose <strong className="text-ink">Join public beta</strong>. No
+        account is needed to start: Chronos creates a workspace on this device and takes you
+        straight to the decision. Signing in is how work becomes durable, not how it begins.
       </DocBody>
       <div className="mt-4 flex flex-wrap gap-2">
         <Link
@@ -788,43 +786,35 @@ function GettingStarted() {
         </Link>
       </div>
 
-      <DocSub>2. Create workspace</DocSub>
+      <DocSub>2. State the decision</DocSub>
       <DocBody>
-        A workspace is the container for everything related to a decision surface: goals, knowledge,
-        simulations, timeline, and memory. Create one for a company, product, research question, or
-        personal project.
+        One field: what are you deciding? Submitting runs the simulation — Chronos scores strategy
+        futures against an honest sample budget and opens the Decision Report. An objective the
+        catalog cannot model is refused rather than answered confidently.
       </DocBody>
 
-      <DocSub>3. Set goal</DocSub>
-      <DocBody>
-        Write a clear goal in plain language. Add priorities, constraints, and what “success” looks
-        like. Better goals produce more useful futures.
-      </DocBody>
-
-      <DocSub>4. Add knowledge</DocSub>
-      <DocBody>
-        Ground the simulation with PDFs, markdown, notes, or imported URLs. Chronos uses this
-        library when generating and ranking futures. Onboarding requires at least one source before
-        the dashboard unlocks.
-      </DocBody>
-
-      <DocSub>5. Run simulation</DocSub>
-      <DocBody>
-        From Simulations, state the decision and optional hard/soft constraints. Chronos scores
-        strategy futures (honest sample budget), disqualifies paths that violate hard constraints,
-        and opens the Decision Report.
-      </DocBody>
-
-      <DocSub>6. Keep the Decision Report</DocSub>
+      <DocSub>3. Keep the Decision Report</DocSub>
       <DocBody>
         The report is the product: Goal · Recommendation · Confidence · Evidence · Trade-offs ·
         Risks · Next steps. Copy or download markdown, choose a path to save, then log whether you
         followed it and how it turned out.
       </DocBody>
 
+      <DocSub>4. Add context, once you have something to argue with</DocSub>
+      <DocBody>
+        Under the report, add a note or import a source — facts, constraints, assumptions. Chronos
+        weighs them on the next run. Optional, asked once per decision, and dismissible.
+      </DocBody>
+
+      <DocSub>5. Sign in to save</DocSub>
+      <DocBody>
+        Until you sign in, the workspace lives on this device only. Signing in claims the work you
+        have already done and makes it durable across devices.
+      </DocBody>
+
       <Callout tone="info" title="First simulation checklist">
-        Goal defined · at least one knowledge source · constraints listed · then run — leave with a
-        report you can keep.
+        State the decision · run · leave with a report you can keep. Context and an account are
+        additions, not prerequisites.
       </Callout>
     </div>
   );
