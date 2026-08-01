@@ -16,9 +16,12 @@ import { useWorkspace } from "./WorkspaceContext";
 export function ContextPrompt({
   decisionId,
   objective,
+  decisionCreatedAt,
 }: {
   decisionId: string;
   objective?: string;
+  /** Lets a legacy global dismissal cover everything that predates it. */
+  decisionCreatedAt?: string;
 }) {
   const { preferences, updatePreferences, addNote, researchObjective } = useWorkspace();
   const [title, setTitle] = useState("Decision context");
@@ -27,7 +30,7 @@ export function ContextPrompt({
   const [researching, setResearching] = useState(false);
   const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
-  if (isContextPromptDismissed(preferences, decisionId)) return null;
+  if (isContextPromptDismissed(preferences, decisionId, decisionCreatedAt)) return null;
 
   const dismiss = () => updatePreferences(dismissContextPromptFor(preferences, decisionId));
 
