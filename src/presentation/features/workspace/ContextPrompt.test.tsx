@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 const updatePreferences = vi.fn();
-const addNote = vi.fn(async () => {});
+const addNote = vi.fn(async (_title: string, _content: string) => {});
 
 function mockWorkspace(contextPromptDismissed: boolean) {
   vi.doMock("./WorkspaceContext", () => ({
@@ -30,6 +30,24 @@ describe("ContextPrompt", () => {
     const { container } = render(<ContextPrompt />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("saves what the visitor wrote", async () => {
+    // Dismissing on save hides the form either way, so every other assertion
+    // here — and the E2E — stays green with the addNote call deleted and the
+    // note silently dropped. This is the one that does not.
+    vi.resetModules();
+    addNote.mockClear();
+    mockWorkspace(false);
+    const { ContextPrompt } = await import("./ContextPrompt");
+    render(<ContextPrompt />);
+
+    await userEvent.clear(screen.getByLabelText(/note title/i));
+    await userEvent.type(screen.getByLabelText(/note title/i), "Runway");
+    await userEvent.type(screen.getByLabelText(/note content/i), "Nine months of cash left.");
+    await userEvent.click(screen.getByRole("button", { name: /^save$/i }));
+
+    expect(addNote).toHaveBeenCalledWith("Runway", "Nine months of cash left.");
   });
 
   it("remembers a dismissal", async () => {
