@@ -1,20 +1,27 @@
 import { useState } from "react";
+import {
+  dismissContextPromptFor,
+  isContextPromptDismissed,
+} from "../../../domain/workspace/contextPrompt";
 import { useWorkspace } from "./WorkspaceContext";
 
 /**
  * Asks for a source *after* a recommendation exists, where a note is
  * motivated by something the visitor has just read. Onboarding used to ask
  * first, which is why it was skippable and mostly skipped.
+ *
+ * Once per decision: what the visitor knows about launching in September is
+ * not what they know about their next hire.
  */
-export function ContextPrompt() {
+export function ContextPrompt({ decisionId }: { decisionId: string }) {
   const { preferences, updatePreferences, addNote } = useWorkspace();
   const [title, setTitle] = useState("Decision context");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
 
-  if (preferences.contextPromptDismissed) return null;
+  if (isContextPromptDismissed(preferences, decisionId)) return null;
 
-  const dismiss = () => updatePreferences({ contextPromptDismissed: true });
+  const dismiss = () => updatePreferences(dismissContextPromptFor(preferences, decisionId));
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();

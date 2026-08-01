@@ -20,14 +20,24 @@ export type BetaChecklistItem = {
 export type UserPreferences = {
   shareAcknowledged: boolean;
   preferredAuthProvider: string | null;
-  /** Visitor dismissed the post-result "add a source?" prompt. */
-  contextPromptDismissed: boolean;
+  /**
+   * Decisions the visitor has already answered the post-result "add a source?"
+   * prompt for, by saving or by declining. Asked once per decision — see
+   * `contextPrompt.ts`.
+   */
+  contextPromptDismissedFor: readonly string[];
+  /**
+   * A dismissal from when this was one flag for the whole visitor. Held until
+   * a loaded workspace can say which decisions it was answering for.
+   */
+  contextPromptDismissedAll: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   shareAcknowledged: false,
   preferredAuthProvider: null,
-  contextPromptDismissed: false,
+  contextPromptDismissedFor: [],
+  contextPromptDismissedAll: false,
 };
 
 export function evaluateBetaChecklist(

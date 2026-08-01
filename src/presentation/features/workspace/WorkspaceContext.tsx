@@ -23,6 +23,7 @@ import { claimAnonymousWork } from "../../../infrastructure/repositories/claimAn
 import { localWorkspaceStore } from "../../../infrastructure/repositories/LocalWorkspaceStore";
 import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
 import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
+import { expandLegacyContextDismissal } from "../../../domain/workspace/contextPrompt";
 import type {
   KnowledgeType,
   OutcomeFollowed,
@@ -136,6 +137,21 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  /**
+   * Preferences, plus the one upgrade that needs a loaded workspace: a
+   * dismissal stored before the context prompt asked per decision means "not
+   * for the decisions I already have", and only the workspace can say which
+   * those were.
+   */
+  const hydratePreferences = useCallback((id: string, loaded: WorkspaceHome | null) => {
+    const stored = loadUserPreferences(id);
+    const upgrade = expandLegacyContextDismissal(
+      stored,
+      (loaded?.decisions ?? []).map((decision) => decision.id)
+    );
+    setPreferences(upgrade ? saveUserPreferences(id, upgrade) : stored);
+  }, []);
+
   const resolveOwnerId = useCallback(async (): Promise<string | null> => {
     const session = await authService.currentSession();
     if (session?.user?.id) return session.user.id;
@@ -174,7 +190,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           setOwnerId(anonId);
           setHome(anonHome);
           setWorkspaces(anonList);
-          setPreferences(loadUserPreferences(anonId));
+          hydratePreferences(anonId, anonHome);
           setRemoteError(null);
           hasHydratedRef.current = true;
           return;
@@ -196,6 +212,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         ]);
         setHome(loaded);
         setWorkspaces(list);
+        hydratePreferences(id, loaded);
         hasHydratedRef.current = true;
         syncRemoteError();
       } catch (err) {
@@ -205,7 +222,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     },
-    [syncRemoteError]
+    [syncRemoteError, hydratePreferences]
   );
 
   useEffect(() => {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { assessObjectiveScope } from "../../../domain/chronos/objectiveScope";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import type { SimulationTaskRecord } from "../../../domain/workspace/types";
+import { decisionIdForSimulation } from "../../../domain/workspace/decision";
 import { buildDecisionGraph } from "../../../domain/workspace/decisionGraph";
 import { buildDecisionReport } from "../../../domain/workspace/decisionReport";
 import { groupSimulationsByHistory } from "../../../domain/workspace/simulationHistory";
@@ -484,8 +485,12 @@ export function SimulationDetailPage() {
       )}
 
       {/* Ask for a source now that there is a recommendation to argue with —
-          not before, when it was skippable and mostly skipped. */}
-      {decisionReport && <ContextPrompt />}
+          not before, when it was skippable and mostly skipped. Keyed on the
+          decision, not the run: re-running the same question is not a reason
+          to ask again. */}
+      {decisionReport && (
+        <ContextPrompt decisionId={sim.decision_id ?? decisionIdForSimulation(sim)} />
+      )}
 
       {/* Execution plan — steps for the path already committed to */}
       {planSteps.length > 0 && (
