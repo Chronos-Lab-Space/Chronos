@@ -492,6 +492,7 @@ export function SimulationDetailPage() {
         <ContextPrompt
           decisionId={sim.decision_id ?? decisionIdForSimulation(sim)}
           objective={sim.title}
+          decisionCreatedAt={sim.created_at}
         />
       )}
 

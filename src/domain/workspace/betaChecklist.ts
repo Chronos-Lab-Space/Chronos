@@ -31,6 +31,12 @@ export type UserPreferences = {
    * a loaded workspace can say which decisions it was answering for.
    */
   contextPromptDismissedAll: boolean;
+  /**
+   * Upgrade of a legacy global dismissal: everything created before this
+   * moment counts as declined, in every workspace. Null once nothing legacy
+   * is outstanding.
+   */
+  contextPromptDismissedBefore: string | null;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -38,6 +44,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   preferredAuthProvider: null,
   contextPromptDismissedFor: [],
   contextPromptDismissedAll: false,
+  contextPromptDismissedBefore: null,
 };
 
 export function evaluateBetaChecklist(

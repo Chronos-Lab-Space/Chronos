@@ -44,6 +44,8 @@ function normalize(raw: Record<string, unknown> | undefined): UserPreferences {
     contextPromptDismissedAll: Boolean(
       r.contextPromptDismissedAll ?? r.contextPromptDismissed ?? r.onboardingContextSkipped
     ),
+    contextPromptDismissedBefore:
+      typeof r.contextPromptDismissedBefore === "string" ? r.contextPromptDismissedBefore : null,
   };
 }
 

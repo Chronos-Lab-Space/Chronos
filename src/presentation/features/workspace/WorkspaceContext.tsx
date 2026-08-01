@@ -24,7 +24,7 @@ import { claimAnonymousWork } from "../../../infrastructure/repositories/claimAn
 import { localWorkspaceStore } from "../../../infrastructure/repositories/LocalWorkspaceStore";
 import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
 import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
-import { expandLegacyContextDismissal } from "../../../domain/workspace/contextPrompt";
+import { upgradeLegacyContextDismissal } from "../../../domain/workspace/contextPrompt";
 import type {
   KnowledgeType,
   OutcomeFollowed,
@@ -141,17 +141,15 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Preferences, plus the one upgrade that needs a loaded workspace: a
-   * dismissal stored before the context prompt asked per decision means "not
-   * for the decisions I already have", and only the workspace can say which
-   * those were.
+   * Preferences, plus the upgrade of a legacy global dismissal into a cutoff
+   * moment. It deliberately does not consult the loaded workspace: reading the
+   * decisions that happened to be loaded recorded only that workspace's, and a
+   * half-failed cloud load froze an incomplete list — both permanent, because
+   * the legacy flag clears one-way.
    */
-  const hydratePreferences = useCallback((id: string, loaded: WorkspaceHome | null) => {
+  const hydratePreferences = useCallback((id: string, _loaded: WorkspaceHome | null) => {
     const stored = loadUserPreferences(id);
-    const upgrade = expandLegacyContextDismissal(
-      stored,
-      (loaded?.decisions ?? []).map((decision) => decision.id)
-    );
+    const upgrade = upgradeLegacyContextDismissal(stored, new Date().toISOString());
     setPreferences(upgrade ? saveUserPreferences(id, upgrade) : stored);
   }, []);
 

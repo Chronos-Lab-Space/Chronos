@@ -12,13 +12,22 @@ import type { UserPreferences } from "./betaChecklist";
  */
 
 /** Dismissed for this decision — saved a note, or declined. */
-export function isContextPromptDismissed(prefs: UserPreferences, decisionId: string): boolean {
+export function isContextPromptDismissed(
+  prefs: UserPreferences,
+  decisionId: string,
+  decisionCreatedAt?: string
+): boolean {
   // A pre-per-decision dismissal cannot name the decisions it answered for.
-  // Honouring it for everything until `expandLegacyContextDismissal` runs is
-  // the safe direction: re-asking someone who already said no is the failure
-  // that matters.
+  // Honouring it for everything until the upgrade runs is the safe direction:
+  // re-asking someone who already said no is the failure that matters.
   if (prefs.contextPromptDismissedAll) return true;
-  return prefs.contextPromptDismissedFor.includes(decisionId);
+  if (prefs.contextPromptDismissedFor.includes(decisionId)) return true;
+
+  // Everything that existed when the visitor said no, in every workspace.
+  // A missing timestamp is never read as "before" — that would dismiss the
+  // prompt for a decision nobody declined.
+  const before = prefs.contextPromptDismissedBefore;
+  return Boolean(before && decisionCreatedAt && decisionCreatedAt < before);
 }
 
 export function dismissContextPromptFor(
@@ -32,20 +41,23 @@ export function dismissContextPromptFor(
 
 /**
  * Reads a legacy global dismissal as "dismissed for everything that existed
- * at that point", and writes down what that turned out to be: the decisions
- * in the workspace the first time it loads under per-decision semantics.
- * Anything opened after is a new question, and gets asked.
+ * when I said no", and records that as a moment rather than a list of ids.
  *
- * Returns null when there is nothing to upgrade, so callers can skip the
- * write.
+ * The first version listed the decisions in the workspace that happened to be
+ * loaded, then cleared the flag one-way — so a visitor with a second workspace
+ * was asked again there, and a cloud load that half-failed froze an incomplete
+ * list permanently. A timestamp needs no enumeration, so neither failure has
+ * anywhere to happen.
+ *
+ * Returns null when there is nothing to upgrade, so callers can skip the write.
  */
-export function expandLegacyContextDismissal(
+export function upgradeLegacyContextDismissal(
   prefs: UserPreferences,
-  decisionIds: readonly string[]
+  now: string
 ): Partial<UserPreferences> | null {
   if (!prefs.contextPromptDismissedAll) return null;
   return {
-    contextPromptDismissedFor: [...new Set([...prefs.contextPromptDismissedFor, ...decisionIds])],
+    contextPromptDismissedBefore: now,
     contextPromptDismissedAll: false,
   };
 }

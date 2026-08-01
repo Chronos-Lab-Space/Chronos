@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_PREFERENCES, type UserPreferences } from "./betaChecklist";
-import {
-  dismissContextPromptFor,
-  expandLegacyContextDismissal,
-  isContextPromptDismissed,
-} from "./contextPrompt";
+import { dismissContextPromptFor, isContextPromptDismissed } from "./contextPrompt";
 
 function prefs(patch: Partial<UserPreferences> = {}): UserPreferences {
   return { ...DEFAULT_PREFERENCES, ...patch };
@@ -46,29 +42,5 @@ describe("legacy global dismissal", () => {
     // already said no is the one outcome that must not happen.
     expect(isContextPromptDismissed(legacy, "decision-1")).toBe(true);
     expect(isContextPromptDismissed(legacy, "decision-2")).toBe(true);
-  });
-
-  it("becomes the decisions that existed when it was expanded", () => {
-    const upgraded = prefs(
-      expandLegacyContextDismissal(legacy, ["decision-1", "decision-2"]) ?? {}
-    );
-
-    expect(isContextPromptDismissed(upgraded, "decision-1")).toBe(true);
-    expect(isContextPromptDismissed(upgraded, "decision-2")).toBe(true);
-    // A decision opened after the expansion is a question nobody was asked
-    // about, so it gets asked.
-    expect(isContextPromptDismissed(upgraded, "decision-3")).toBe(false);
-  });
-
-  it("keeps per-decision answers made alongside it", () => {
-    const mixed = prefs({ contextPromptDismissedAll: true, contextPromptDismissedFor: ["kept"] });
-
-    const upgraded = prefs(expandLegacyContextDismissal(mixed, ["decision-1"]) ?? {});
-
-    expect(upgraded.contextPromptDismissedFor).toEqual(["kept", "decision-1"]);
-  });
-
-  it("has nothing to expand when there was no global dismissal", () => {
-    expect(expandLegacyContextDismissal(prefs(), ["decision-1"])).toBeNull();
   });
 });

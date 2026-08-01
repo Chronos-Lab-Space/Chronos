@@ -88,6 +88,7 @@ describe("betaChecklist", () => {
       preferredAuthProvider: "google",
       contextPromptDismissedFor: [],
       contextPromptDismissedAll: false,
+      contextPromptDismissedBefore: null,
     });
     // share is optional — no required items done without goal/sim/memory
     const p = betaChecklistProgress(items);
