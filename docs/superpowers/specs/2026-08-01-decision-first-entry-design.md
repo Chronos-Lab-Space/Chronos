@@ -123,10 +123,6 @@ fail. Signed-in visitors use the existing dual-write path.
 
 - `isWorkspaceOnboarded`: satisfied by workspace + goal; no longer satisfied by
   `contextSkipped`; no longer blocked by absent knowledge.
-- The sample-decision path still skips the wizard. `WorkspaceService:1162`
-  relies on `isWorkspaceOnboarded` being true for a first-time visitor given a
-  sample decision. It should still hold under the new predicate — that path
-  sets a goal — but it is asserted rather than assumed.
 - `userPreferencesStore`: a stored `onboardingContextSkipped: true` reads back
   as `contextPromptDismissed: true`.
 
