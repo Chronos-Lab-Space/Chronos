@@ -71,8 +71,9 @@ costs nothing and cannot go stale.
 3. Run the simulation
 4. Land on the result
 
-`WorkspaceService` also creates a workspace named `SAMPLE_WORKSPACE_NAME` in
-the sample-decision path. That is a separate flow and is not touched.
+The sample-decision path used to create a second, separately-named workspace
+here too — see "The seeded sample decision is retired" below; it no longer
+exists.
 
 Anonymous and signed-in visitors take the same path. Only the owner id differs,
 and `remote: null` already makes the anonymous case structural.
@@ -170,5 +171,7 @@ the honest option rather than a loss.
 
 - Any gate on entry. This is the **public** beta; there is no invite code,
   waitlist, or `access_requests` queue, and one was deliberately removed before.
-- Changes to `claimAnonymousWork` or the sign-in claim path. It works.
+- Changes to `claimAnonymousWork` or the sign-in claim path. It works. (The
+  sample retirement below removed its now-dead sample-filtering branch — no
+  claim behaviour changed.)
 - Changes to ranking, scoring, or the engine.
