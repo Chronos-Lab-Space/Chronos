@@ -13,11 +13,19 @@ import { useWorkspace } from "./WorkspaceContext";
  * Once per decision: what the visitor knows about launching in September is
  * not what they know about their next hire.
  */
-export function ContextPrompt({ decisionId }: { decisionId: string }) {
-  const { preferences, updatePreferences, addNote } = useWorkspace();
+export function ContextPrompt({
+  decisionId,
+  objective,
+}: {
+  decisionId: string;
+  objective?: string;
+}) {
+  const { preferences, updatePreferences, addNote, researchObjective } = useWorkspace();
   const [title, setTitle] = useState("Decision context");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [researching, setResearching] = useState(false);
+  const [researchNotice, setResearchNotice] = useState<string | null>(null);
 
   if (isContextPromptDismissed(preferences, decisionId)) return null;
 
@@ -33,6 +41,24 @@ export function ContextPrompt({ decisionId }: { decisionId: string }) {
       dismiss();
     } finally {
       setBusy(false);
+    }
+  };
+
+  const research = async () => {
+    if (!objective) return;
+    setResearching(true);
+    setResearchNotice(null);
+    try {
+      const added = await researchObjective(objective);
+      // Offline, the research agent returns a stub with no findings. Saying so
+      // beats silence, which would read as "done".
+      setResearchNotice(
+        added > 0
+          ? `Added ${added} findings as a note.`
+          : "No research available — needs a configured AI provider."
+      );
+    } finally {
+      setResearching(false);
     }
   };
 
@@ -66,6 +92,16 @@ export function ContextPrompt({ decisionId }: { decisionId: string }) {
           >
             {busy ? "Saving…" : "Save"}
           </button>
+          {objective && (
+            <button
+              type="button"
+              onClick={research}
+              disabled={researching}
+              className="rounded-full border border-line px-4 py-2 text-sm text-ink-dim transition hover:border-chronos/50 hover:text-chronos disabled:opacity-50"
+            >
+              {researching ? "Researching…" : "Research this"}
+            </button>
+          )}
           <button
             type="button"
             onClick={dismiss}
@@ -74,6 +110,11 @@ export function ContextPrompt({ decisionId }: { decisionId: string }) {
             Not now
           </button>
         </div>
+        {researchNotice && (
+          <p role="status" className="text-sm text-ink-dim">
+            {researchNotice}
+          </p>
+        )}
       </form>
     </section>
   );
