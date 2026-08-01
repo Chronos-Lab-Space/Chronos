@@ -8,13 +8,13 @@ decision rules independent from React, Supabase, routing, and rendering.
 Treat Chronos as three products under one tree when choosing where to change code:
 
 ```text
-app/        → presentation/features/* (Workspace HQ, dashboard, onboarding, reports UI)
+app/        → presentation/features/* (Workspace HQ, dashboard, entry, reports UI)
 engine/     → application/simulation + application/chronos + domain/chronos (sim, evaluate, timeline)
 platform/   → infrastructure/* + .agents/skills + APIs/SDK later
 ```
 
 Evolve the **engine** without UI churn; evolve the **app** without rewiring scoring.
-Do not add new domains until Decision Report · Pulse · Comparison · History · Onboarding feel finished.
+Do not add new domains until Decision Report · Pulse · Comparison · History · Entry feel finished.
 
 ```text
 src/
