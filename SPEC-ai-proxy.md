@@ -331,9 +331,16 @@ Never `VITE_`-prefixed. Never in `.env.production`. Never in `config.toml`. `SUP
 
 ---
 
-## Part 2 — `AnthropicAIProvider` (client adapter)
+## Part 2 — `ProxyAIProvider` (client adapter)
 
-`src/infrastructure/ai/AnthropicAIProvider.ts`, same shape as `OllamaAIProvider`:
+> **Shipped as `ProxyAIProvider`, not `AnthropicAIProvider`.** This section was
+> written when Anthropic was the assumed upstream. The adapter never names one:
+> the model is a server secret, and the upstream actually configured is Mistral
+> via the OpenAI-compatible path. The names below are kept as written so the
+> reasoning stays readable — read `Anthropic*` as `Proxy*` throughout, and
+> `readonly id = "anthropic"` as `readonly id = "proxy"`.
+
+`src/infrastructure/ai/ProxyAIProvider.ts`, same shape as `OllamaAIProvider`:
 
 ```ts
 export type AnthropicAIProviderOptions = {
