@@ -12,7 +12,7 @@ const DEFAULT_WORKSPACE_NAME = "My workspace";
  * "four forms between a new user and their first simulation".
  */
 export function WorkspaceStart() {
-  const { createWorkspace, setGoal, runSimulation, error } = useWorkspace();
+  const { home, createWorkspace, setGoal, runSimulation, error } = useWorkspace();
   const navigate = useNavigate();
   const [decision, setDecision] = useState("");
   const [busy, setBusy] = useState(false);
@@ -28,12 +28,24 @@ export function WorkspaceStart() {
     setBusy(true);
     setLocalError(null);
     try {
-      await createWorkspace(DEFAULT_WORKSPACE_NAME);
+      // Anonymous visitors already have a workspace by the time this screen
+      // renders — WorkspaceContext seeds one with a sample decision on first
+      // load. createWorkspace never overwrites an existing one, so calling
+      // it unconditionally here would silently orphan that seed in a second,
+      // empty workspace instead of hanging the visitor's goal off the first.
+      if (!home?.workspace?.id) {
+        await createWorkspace(DEFAULT_WORKSPACE_NAME);
+      }
       await setGoal(objective);
       const simulationId = await runSimulation(objective);
-      // A failed run must not cost the decision — it is saved either way, and
-      // the workspace renders with the error rather than an empty start screen.
-      if (simulationId) navigate(`/workspace/simulations/${simulationId}`);
+      if (simulationId) {
+        navigate(`/workspace/simulations/${simulationId}`);
+      } else {
+        // runSimulation fails open (returns null) rather than throwing, so
+        // the catch below never runs — without this the visitor would land
+        // on the dashboard with no result and no sign anything went wrong.
+        setLocalError("Could not start the simulation.");
+      }
     } catch (err) {
       setLocalError((err as Error).message || "Could not start the simulation.");
     } finally {
