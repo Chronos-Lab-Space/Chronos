@@ -38,59 +38,16 @@ test.describe("Decision Workspace (authenticated)", () => {
     await enableE2EAuth(page);
     await page.goto("/workspace");
 
-    // Bootstrap creates a personal workspace on first session → wizard lands on
-    // "What decision are you trying to make?" Older path: Create workspace → Name.
-    const createHeading = page.getByRole("heading", { name: /create workspace/i });
-    const decisionHeading = page.getByRole("heading", {
-      name: /what decision are you trying to make|what are you trying to decide|current goal/i,
-    });
-    await expect(createHeading.or(decisionHeading)).toBeVisible({ timeout: 15_000 });
+    // Bootstrap creates a personal workspace on first session, but it has no
+    // goal yet, so decision-first entry is the first thing rendered: one
+    // field, one action, straight to a ranked result. The wizard this
+    // replaced took a "Create workspace" and "Name this workspace" step to
+    // reach the same point.
+    await page.getByLabel(/what are you deciding/i).fill("Launch CLAB public beta");
+    await page.getByRole("button", { name: /simulate/i }).click();
 
-    if (await createHeading.isVisible().catch(() => false)) {
-      await page.getByRole("button", { name: /begin/i }).click();
-      await expect(page.getByRole("heading", { name: /name this workspace/i })).toBeVisible();
-      await page.getByLabel(/workspace name/i).fill("E2E Chronos Lab");
-      await page.getByRole("button", { name: /continue/i }).click();
-    }
-
-    await expect(decisionHeading).toBeVisible({ timeout: 10_000 });
-    await page.getByLabel(/first decision|decision \/ goal/i).fill("Launch CLAB public beta");
-    await page.getByRole("button", { name: /continue/i }).click();
-
-    // --- Add knowledge (note) ---
-    await expect(page.getByRole("heading", { name: /add knowledge/i })).toBeVisible({
-      timeout: 10_000,
-    });
-    await page.getByRole("button", { name: /^note$/i }).click();
-    await page.getByLabel(/note title/i).fill("Beta constraints");
-    await page.locator("textarea").fill("Small team, limited runway, prefer bootstrap path.");
-    await page.getByRole("button", { name: /add knowledge/i }).click();
-
-    // --- Workspace home is the Decision Brief (draft stage, no run yet) ---
-    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("Launch CLAB public beta").first()).toBeVisible();
-    await expect(page.getByText(/no recommendation available/i)).toBeVisible();
-
-    // HQ dashboard moved to /workspace/hq and keeps the Decision Card
-    await page.goto("/workspace/hq");
-    await expect(page.getByTestId("decision-card")).toBeVisible({ timeout: 15_000 });
-
-    // --- Generate futures ---
-    await page
-      .getByRole("link", { name: /^simulations$/i })
-      .first()
-      .click();
-    await expect(page.getByRole("heading", { name: /^simulations$/i })).toBeVisible({
-      timeout: 10_000,
-    });
-
-    // First-time form should auto-open (aria-label on objective input)
-    const objective = page.getByLabel(/what should chronos decide/i);
-    await expect(objective).toBeVisible({ timeout: 15_000 });
-    await objective.fill("How should we launch the public beta with a small team?");
-    await page.getByRole("button", { name: /^generate futures$/i }).click();
-
-    // Land on simulation detail
+    // Land directly on simulation detail — no separate "generate futures"
+    // step stands between the goal and the first result anymore.
     await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i, {
       timeout: 20_000,
     });
@@ -99,6 +56,19 @@ test.describe("Decision Workspace (authenticated)", () => {
     // --- Decision pipeline + report contract ---
     await expect(page.getByTestId("decision-pipeline")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByTestId("decision-report")).toBeVisible();
+
+    // --- Add knowledge now that there is a recommendation to argue with.
+    // Onboarding used to ask for a source before the first result; the
+    // context prompt now asks after, on the report it exists to inform.
+    await expect(page.getByRole("heading", { name: /add what you know/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await page.getByLabel(/note title/i).fill("Beta constraints");
+    await page
+      .getByLabel(/note content/i)
+      .fill("Small team, limited runway, prefer bootstrap path.");
+    await page.getByRole("button", { name: /^save$/i }).click();
+    await expect(page.getByRole("heading", { name: /add what you know/i })).toHaveCount(0);
 
     // --- Decision graph MVP: open → branches → compare ---
     await expect(page.getByTestId("decision-graph-panel")).toBeVisible({ timeout: 10_000 });
@@ -283,20 +253,22 @@ test.describe("Decision Workspace (authenticated)", () => {
     // Asked for their own decision first. The seeded sample is an example to
     // look at, not the visitor's identity — it must not answer "what are you
     // deciding?" on their behalf.
-    await expect(
-      page.getByRole("heading", {
-        name: /what decision are you trying to make|what are you trying to decide|current goal/i,
-      })
-    ).toBeVisible({ timeout: 15_000 });
+    const decisionField = page.getByLabel(/what are you deciding/i);
+    await expect(decisionField).toBeVisible({ timeout: 15_000 });
+    await expect(decisionField).toHaveValue("");
 
-    await page.getByLabel(/first decision|decision \/ goal/i).fill("My own beta decision");
-    await page.getByRole("button", { name: /continue/i }).click();
-
-    // Their decision is the workspace's, not the sample's.
-    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("My own beta decision").first()).toBeVisible();
-
-    // And the sample is still there to explore.
+    // KNOWN GAP — see task-5-report.md. seedSampleDecision's own docstring
+    // promises "a worked example a new visitor can explore immediately," but
+    // there is no reachable route to it: WorkspaceShell only mounts the
+    // Outlet (so any nested route, including this one) once
+    // isWorkspaceOnboarded(home) is true, which requires a goal; and the only
+    // way an anonymous visitor sets one is WorkspaceStart's single submit,
+    // which sets the goal and runs their own simulation in the same action —
+    // unconditionally dropping any sample first (WorkspaceService.
+    // runSimulation: "the demo has served its purpose and must not sit
+    // beside real work"). There is therefore no point where a "ready"
+    // workspace still has a sample in it. Asserting the intended behaviour
+    // rather than working around it: this should find the sample.
     await page.goto("/workspace/simulations");
     const sampleRun = page.getByRole("link", { name: /launch our public beta/i }).first();
     await expect(sampleRun).toBeVisible({ timeout: 15_000 });
@@ -309,6 +281,16 @@ test.describe("Decision Workspace (authenticated)", () => {
     // And removable in one click.
     await page.getByTestId("remove-sample").click();
     await expect(page.getByTestId("sample-banner")).toHaveCount(0, { timeout: 10_000 });
+
+    // Now their own decision — one field, one action, straight to a result.
+    // Their decision is the workspace's, not the sample's.
+    await page.goto("/workspace");
+    await page.getByLabel(/what are you deciding/i).fill("My own beta decision");
+    await page.getByRole("button", { name: /simulate/i }).click();
+    await expect(page).toHaveURL(/\/workspace\/simulations\/.+/, { timeout: 15_000 });
+    await expect(page.getByText("My own beta decision").first()).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test("an off-domain objective is refused rather than dressed up as a SaaS play", async ({
@@ -319,11 +301,12 @@ test.describe("Decision Workspace (authenticated)", () => {
     // something. The catalog is startup scenarios only, so the honest answer
     // is to say so rather than staple the user's words onto a template.
     // Onboard first — the run form is not reachable before the workspace has
-    // a decision, same path as the anonymous-visitor test above.
+    // a goal, same path as the anonymous-visitor test above. Decision-first
+    // entry runs a simulation on submit, so this also produces a first result.
     await page.goto("/workspace");
-    await page.getByLabel(/first decision|decision \/ goal/i).fill("My own beta decision");
-    await page.getByRole("button", { name: /continue/i }).click();
-    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
+    await page.getByLabel(/what are you deciding/i).fill("My own beta decision");
+    await page.getByRole("button", { name: /simulate/i }).click();
+    await expect(page).toHaveURL(/\/workspace\/simulations\/.+/, { timeout: 15_000 });
 
     await page.goto("/workspace/simulations?new=1");
 
@@ -340,39 +323,18 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByRole("button", { name: /generate futures/i })).toBeEnabled();
   });
 
-  test("a new user can skip context and reach the workspace in three steps", async ({ page }) => {
-    // Onboarding used to hard-gate on knowledge while the simulation form said
-    // "you can still run without it". Skipping resolves that contradiction and
-    // removes a form from the path to a first decision.
-    await enableE2EAuth(page);
+  test("a new user reaches a ranked result in one step", async ({ page }) => {
+    // Replaces the four-screen wizard's "skip context" test. Decision-first
+    // entry has no context step to skip — one field, one action, a result.
     await page.goto("/workspace");
 
-    const createHeading = page.getByRole("heading", { name: /create workspace/i });
-    const decisionHeading = page.getByRole("heading", {
-      name: /what decision are you trying to make|what are you trying to decide|current goal/i,
-    });
-    await expect(createHeading.or(decisionHeading)).toBeVisible({ timeout: 15_000 });
+    await page.getByLabel(/what are you deciding/i).fill("Launch an AI meeting assistant");
+    await page.getByRole("button", { name: /simulate/i }).click();
 
-    if (await createHeading.isVisible().catch(() => false)) {
-      await page.getByRole("button", { name: /begin/i }).click();
-      await expect(page.getByRole("heading", { name: /name this workspace/i })).toBeVisible();
-      await page.getByLabel(/workspace name/i).fill("Skip Lab");
-      await page.getByRole("button", { name: /continue/i }).click();
-    }
-
-    await expect(decisionHeading).toBeVisible({ timeout: 10_000 });
-    await page.getByLabel(/first decision|decision \/ goal/i).fill("Ship without a source");
-    await page.getByRole("button", { name: /continue/i }).click();
-
-    // Context step offers a way past itself.
-    await expect(page.getByRole("heading", { name: /add knowledge/i })).toBeVisible({
-      timeout: 10_000,
-    });
-    await page.getByTestId("skip-context").click();
-
-    // Workspace unlocks with no knowledge and no notes.
-    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("Ship without a source").first()).toBeVisible();
+    await expect(page).toHaveURL(/\/workspace\/simulations\/.+/, { timeout: 15_000 });
+    // The report's own "Recommendation" section, not a guessed phrase — the
+    // rendered page has no literal "best path" text anywhere on it.
+    await expect(page.getByText(/recommendation/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test("settings asks an anonymous visitor to sign in rather than ejecting them", async ({
