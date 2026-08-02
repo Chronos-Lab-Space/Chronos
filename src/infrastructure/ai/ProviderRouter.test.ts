@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import type { AIPort } from "../../domain/ai/AIPort";
 import { buildTaskMessages } from "../../domain/ai/taskPrompts";
-import type {
-  GenerateRequest,
-  GenerateResult,
-  TaskGenerateRequest,
-} from "../../domain/ai/types";
+import type { GenerateRequest, GenerateResult, TaskGenerateRequest } from "../../domain/ai/types";
 import { ProviderRouter } from "./ProviderRouter";
 
 class StubAI implements AIPort {
