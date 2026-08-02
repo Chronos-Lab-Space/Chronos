@@ -1,6 +1,6 @@
 # Spec: Platform AI — capability interface + provider router
 
-**Status:** Approved for implementation (slice 1)  
+**Status:** Shipped (slice 1) — AIPort, ProviderRouter, Noop default, Ollama + Proxy adapters. Hosted path is `VITE_AI_PROVIDER=proxy` → `ai-generate` (see `SPEC-ai-proxy.md`).  
 **Scope:** Provider-agnostic **capability port** + **router** + first adapters (**Noop**, **Ollama**).  
 **Out of scope:** Multi-agent runtime, coding agent loop, OpenAI/Qwen/OpenRouter adapters, changing deterministic sim scoring.
 

@@ -655,7 +655,7 @@ function BetaLimitationsDocs() {
           },
           {
             title: "Outcome tracking",
-            body: "Follow-through (Yes / Partially / No) and free-text outcomes are stored; they do not yet reweight the engine for the next run.",
+            body: "Follow-through, free-text notes, and better/as-predicted/worse verdicts are stored. Verdicts reweight the next run as soft constraints (missed predictions stop steering; proven ones rank first). They never change confidence or hard-disqualify futures.",
           },
           {
             title: "Cloud dual-write",
