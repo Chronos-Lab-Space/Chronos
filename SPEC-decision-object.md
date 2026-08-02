@@ -1,6 +1,7 @@
 # Spec: decisions as first-class objects
 
-**Status:** Shipped — all three slices. One success criterion is unverified;
+**Status:** Shipped — all three slices. Criterion 1 verified on the live project
+2026-08-02 (49 sims, 0 unlinked, 21 decisions) after a hosted data repair —
 see "What shipped" at the end.
 **Scope:** A `Decision` entity that owns its simulation versions, a backfill for
 existing data, and the read surface that makes the product's existing claim true.
@@ -166,17 +167,30 @@ constructor. A second one would be free to drift from the first.
 (unit *and* E2E); anonymous visitors get decisions with `remote: null`;
 ranking is untouched — nothing in this change reaches the engine.
 
-**Criterion 1 is not verified.** "All 49 hosted simulations have a non-null
-`decision_id`, and exactly 21 decisions exist" needs a query against the live
-project, which was not run. The backfill is asserted against fixtures covering
-multi-version lineages, single-version lineages, non-uuid lineages and empty
-titles, and it is idempotent — but the hosted counts are a prediction until
-somebody runs:
+**Criterion 1 — verified 2026-08-02 against the live project.** First probe was
+a hard fail: **49 unlinked, 0 decisions**. Migration
+`20260730202201_decisions_from_lineages` (SQL backfill + `save_workspace_home`
+decisions payload) had not repaired production data — either never applied or
+rows predated a working write path. A service-role repair matching
+`decisionIdForSimulation` / `private.backfill_decisions_from_lineages` inserted
+21 decisions and linked all 49 sims. Re-probe:
 
-```sql
-select count(*) filter (where decision_id is null) as unlinked,
-       count(distinct decision_id) as decisions
-from public.simulations;
+```
+simulations: 49  unlinked: 0  distinct decision_id: 21  decisions rows: 21
 ```
 
-Treat 49/21 as the expectation to check, not a result.
+Exact match to the original expectation. Re-check anytime:
+
+```bash
+SUPABASE_SECRET_KEY=… node scripts/verify-decision-objects-hosted.mjs
+# if unlinked > 0 again:
+SUPABASE_SECRET_KEY=… node scripts/backfill-decision-objects-hosted.mjs
+```
+
+**Follow-up (still open):** migration `20260730202201` does **not** appear
+applied on hosted. Evidence 2026-08-02: PostgREST OpenAPI describes
+`save_workspace_home` as *"Atomic upsert of a whole workspace snapshot"* —
+the post-migration comment is *"…snapshot, decisions included."* Data is
+repaired via service-role backfill; until that migration (or an equivalent
+function replace) lands, dual-write can re-create orphans. Apply with the
+usual hosted migration path (`supabase db push` / dashboard SQL for that file).
