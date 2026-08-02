@@ -156,9 +156,10 @@ rejected in review.
 3. ~~**Caveat displayed confidence.**~~ *Shipped.* `caveatForConfidence` +
    `formatConfidenceCaveat` look up the band for a claimed confidence and, only
    when that band has ≥ `CALIBRATION_MIN_SAMPLE` measured runs, surface the
-   historical rate next to the number on the Decision Report and simulation
-   detail (`ConfidenceCaveatNote`). The engine number is unchanged; empty band
-   → nothing rendered (no invented rate).
+   historical rate next to the number on the Decision Report, simulation
+   detail, HQ Decision Card, and HQ decision-confidence rail
+   (`ConfidenceCaveatNote`). The engine number is unchanged; empty band →
+   nothing rendered (no invented rate).
 
 ---
 

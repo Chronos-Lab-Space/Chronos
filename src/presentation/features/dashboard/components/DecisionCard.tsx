@@ -5,6 +5,7 @@ import {
 } from "../../../../domain/workspace/decisionCard";
 import { confidencePercent } from "../../../../domain/workspace/seed";
 import type { WorkspaceHome } from "../../../../domain/workspace/types";
+import { ConfidenceCaveatNote } from "../../memory/components/ConfidenceCaveatNote";
 
 /**
  * HQ hero — recommendation + next action.
@@ -12,10 +13,17 @@ import type { WorkspaceHome } from "../../../../domain/workspace/types";
  */
 export function DecisionCard({ home }: { home: WorkspaceHome }) {
   const card = deriveDecisionCard(home);
-  return <DecisionCardView card={card} />;
+  return <DecisionCardView card={card} home={home} />;
 }
 
-export function DecisionCardView({ card }: { card: DecisionCardModel }) {
+export function DecisionCardView({
+  card,
+  home,
+}: {
+  card: DecisionCardModel;
+  /** When present, measured band history can caveat the claimed confidence. */
+  home?: WorkspaceHome;
+}) {
   const conf = card.confidence != null ? confidencePercent(card.confidence) : "—";
 
   return (
@@ -58,8 +66,13 @@ export function DecisionCardView({ card }: { card: DecisionCardModel }) {
         )}
 
         {card.confidence != null ? (
-          <div className="mt-4 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-            Confidence <span className="text-chronos">{conf}</span>
+          <div className="mt-4">
+            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+              Confidence <span className="text-chronos">{conf}</span>
+            </div>
+            {home && (
+              <ConfidenceCaveatNote home={home} confidence={card.confidence} className="mt-1.5" />
+            )}
           </div>
         ) : null}
 
