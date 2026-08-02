@@ -55,7 +55,10 @@ jobs:
           # every VITE_* is inlined into the public bundle. "proxy" only says
           # "route AI through the ai-generate function"; the function picks
           # the upstream from AI_UPSTREAM / AI_BASE_URL / AI_MODEL.
-          VITE_AI_PROVIDER: 
+          # Restored after #87 accidentally blanked the value set in #77 —
+          # empty string → createAIPortFromEnv falls through to noop, so the
+          # live ai-generate function was unreachable from the shipped SPA.
+          VITE_AI_PROVIDER: proxy
         run: |
           if [ -n "$SECRET_SUPABASE_URL" ]; then
             export VITE_SUPABASE_URL="$SECRET_SUPABASE_URL"

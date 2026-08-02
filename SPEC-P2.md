@@ -1,6 +1,6 @@
 # Spec: P2 — Decision HQ (Decision Card + hierarchy)
 
-**Status:** Approved (product decisions locked) — ready for `/plan`  
+**Status:** Shipped (Decision HQ on main — hero card, demoted goal, shared timeline).  
 **Depends on:** P1 shipped ([SPEC.md](./SPEC.md)) — simulation result contract  
 **Scope:** Workspace **dashboard / HQ** + **shared decision history model** (HQ preview + Timeline page). No new engines, no migrations.
 

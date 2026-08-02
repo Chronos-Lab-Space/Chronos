@@ -1,6 +1,6 @@
 # Spec: hosted AI behind AIPort, via a Supabase Edge Function key proxy
 
-**Status:** Implemented in 5.6.0, second upstream added in 5.7.0, live on the hosted project and smoke-verified end-to-end against Mistral (`AI_UPSTREAM=openai`). `ai_usage` is applied and `ai-generate` is deployed (v2, `verify_jwt` enabled). Only rollout step 4 is outstanding: `VITE_AI_PROVIDER` reaches the build in this PR, so until it merges the product path is unchanged.
+**Status:** Shipped. Implemented in 5.6.0, second upstream in 5.7.0, smoke-verified end-to-end against Mistral (`AI_UPSTREAM=openai`). `ai_usage` applied, `ai-generate` deployed (v2, `verify_jwt` enabled). Rollout step 4 (`VITE_AI_PROVIDER=proxy` in `deploy-pages.yml`) landed in #77, was accidentally blanked by #87 (empty string → noop), and is restored so the shipped SPA can reach the function again.
 **Scope:** One new Edge Function (`ai-generate`) with two interchangeable upstreams, one new adapter (`ProxyAIProvider`), one usage/quota table, env + secret wiring.
 **Out of scope:** Changing simulation scoring, futures, ranking, or confidence. Streaming. Embeddings. Agent loops. Replacing Ollama or Noop.
 
@@ -442,7 +442,7 @@ Everything above the Edge Function row runs in CI. The Edge Function rows need D
 1. ~~Merge the function + adapter with `VITE_AI_PROVIDER` **unset**. Zero production change; the function is deployed but unreachable from the app.~~ **Done.**
 2. ~~Owner picks an upstream and sets its secrets.~~ **Done** — Mistral, via the OpenAI-compatible upstream: `AI_UPSTREAM=openai`, `AI_BASE_URL=https://api.mistral.ai/v1`, `AI_MODEL=mistral-medium-latest`, `AI_API_KEY`. All four are Edge Function secrets, read per invocation by `resolveUpstream()`; none is a build value.
 3. ~~`supabase db push` for `ai_usage`, then `supabase functions deploy ai-generate`.~~ **Done and fully smoke-verified** against the hosted project with a real session token: unauthenticated 401, malformed bearer 401, CORS preflight 204, oversize prompt 400, malformed JSON 400, seventh call in a minute 429 `rate_limited`, and a 200 returning `mistral-medium-latest` prose. Six `ai_usage` rows landed with correct `user_id`, model, and token counts. The 503 `service_disabled` path was observed for real before the secrets were set — worth noting that `resolveUpstream()` short-circuits ahead of body parsing and the quota counters, so an unconfigured deployment can only ever answer 503.
-4. Flip `VITE_AI_PROVIDER=proxy` in the GitHub Actions build env — a plain value in the `env:` block of `deploy-pages.yml`, not a secret. **This PR.** Watch `ai_usage` for a week.
+4. ~~Flip `VITE_AI_PROVIDER=proxy` in the GitHub Actions build env — a plain value in the `env:` block of `deploy-pages.yml`, not a secret.~~ **Done in #77**; accidentally blanked by #87 (empty string resolves to noop); restored so the SPA can reach `ai-generate` again. Watch `ai_usage` for a week after redeploy.
 5. If moving to a paid upstream later, run `messages.countTokens` against three saved simulations first and replace the estimated caps with measured ones.
 6. Rollback is unsetting one build var — the deterministic path never went away.
 
