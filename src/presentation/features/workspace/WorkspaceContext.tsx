@@ -88,7 +88,7 @@ type WorkspaceContextValue = {
   deleteKnowledge: (knowledgeId: string) => Promise<void>;
   addNote: (title: string, content: string) => Promise<void>;
   /** Findings count, so a caller can say "nothing came back" rather than guess. */
-  researchObjective: (objective: string) => Promise<number>;
+  researchObjective: (objective: string) => Promise<{ findings: number; source: "ai" | "stub" }>;
   deleteNote: (noteId: string) => Promise<void>;
   /** Returns the new simulation id so the UI can open Compare → Report → Save. */
   runSimulation: (objective: string, constraints?: string[]) => Promise<string | null>;
@@ -391,17 +391,23 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         // are the same action. Findings are labelled at the source so nobody
         // mistakes generated prose for something the user wrote.
         const research = await researchDecision(getDefaultCapabilityRegistry(), { objective });
-        if (research.findings.length === 0) return 0;
+        if (research.findings.length === 0) {
+          return { findings: 0, source: research.source };
+        }
 
-        await withOwner((id) =>
-          serviceFor(id).addNote(
-            id,
-            "Research context",
-            research.findings.map((f) => `- ${f}`).join("\n")
-          )
-        );
+        const label =
+          research.source === "ai" ? "Research context (AI)" : "Research context (stub)";
+        const body = [
+          research.source === "ai"
+            ? "_Prose from the configured AIPort — not engine ranking._"
+            : "_Stub findings — no model call was made._",
+          "",
+          ...research.findings.map((f) => `- ${f}`),
+        ].join("\n");
+
+        await withOwner((id) => serviceFor(id).addNote(id, label, body));
         trackProductEvent("knowledge_added", { type: "note" });
-        return research.findings.length;
+        return { findings: research.findings.length, source: research.source };
       },
       deleteNote: async (noteId) => {
         await withOwner((id) => serviceFor(id).deleteNote(id, noteId));

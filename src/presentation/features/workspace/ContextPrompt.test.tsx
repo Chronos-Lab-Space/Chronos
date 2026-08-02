@@ -13,7 +13,7 @@ function mockWorkspace(preferences: Partial<UserPreferences> = {}) {
       updatePreferences,
       addNote,
       addKnowledge: vi.fn(async () => {}),
-      researchObjective: vi.fn(async () => 0),
+      researchObjective: vi.fn(async () => ({ findings: 0, source: "stub" as const })),
     }),
   }));
 }
@@ -21,9 +21,13 @@ function mockWorkspace(preferences: Partial<UserPreferences> = {}) {
 /** Mounts a fresh ContextPrompt against a workspace whose research returns `researchFindings`. */
 async function mountPrompt(options: {
   researchFindings: number;
+  source?: "ai" | "stub";
   preferences?: Partial<UserPreferences>;
 }) {
-  const researchObjective = vi.fn(async (_objective: string) => options.researchFindings);
+  const researchObjective = vi.fn(async (_objective: string) => ({
+    findings: options.researchFindings,
+    source: options.source ?? "ai",
+  }));
   vi.resetModules();
   vi.doMock("./WorkspaceContext", () => ({
     useWorkspace: () => ({

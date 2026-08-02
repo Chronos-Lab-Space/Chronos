@@ -52,13 +52,13 @@ export function ContextPrompt({
     setResearching(true);
     setResearchNotice(null);
     try {
-      const added = await researchObjective(objective);
+      const result = await researchObjective(objective);
       // Offline, the research agent returns a stub with no findings. Saying so
-      // beats silence, which would read as "done".
+      // beats silence, which would read as "done". Source is always labelled.
       setResearchNotice(
-        added > 0
-          ? `Added ${added} findings as a note.`
-          : "No research available — needs a configured AI provider."
+        result.findings > 0
+          ? `Added ${result.findings} findings as a note (${result.source === "ai" ? "AI" : "stub — no model"}).`
+          : "No research available — needs a configured AI provider (or the model returned nothing)."
       );
     } finally {
       setResearching(false);

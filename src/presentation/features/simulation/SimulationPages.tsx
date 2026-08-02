@@ -16,6 +16,7 @@ import { ConfidenceCaveatNote } from "../memory/components/ConfidenceCaveatNote"
 import { DecisionReportCard } from "./components/DecisionReportCard";
 import { FutureComparison } from "./components/FutureComparison";
 import { FutureGraph } from "./FutureGraph";
+import { KnowledgeDeltaPanel } from "./components/KnowledgeDeltaPanel";
 import { OutcomeTracking } from "./components/OutcomeTracking";
 import { SurfaceLoading } from "../workspace/SurfaceLoading";
 
@@ -501,7 +502,7 @@ export function SimulationDetailPage() {
         />
       )}
 
-      {/* Execution plan — steps for the path already committed to */}
+      {/* Execution plan — steps for the path already committed to (LLM prose surface) */}
       {planSteps.length > 0 && (
         <section
           data-testid="execution-plan"
@@ -511,13 +512,16 @@ export function SimulationDetailPage() {
             <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
               Execution plan
             </h2>
-            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-              {sim.result.plan_source === "ai" ? "AI-drafted" : "Draft"}
+            <span
+              data-testid="execution-plan-source"
+              className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint"
+            >
+              {sim.result.plan_source === "ai" ? "AI · fail-open prose" : "Stub · no model call"}
             </span>
           </div>
           <p className="mt-1 text-sm text-ink-dim">
             Steps for {String(sim.result.chosen_future_name ?? "the chosen path")}. The decision is
-            already made — these do not change the ranking.
+            already made — these do not change the ranking, scores, or confidence.
           </p>
           <ol className="mt-4 space-y-2">
             {planSteps.map((step, i) => (
@@ -530,6 +534,16 @@ export function SimulationDetailPage() {
             ))}
           </ol>
         </section>
+      )}
+
+      {/* Knowledge-diff replay — re-run only meaningful when the library moved */}
+      {sim.status === "completed" && (
+        <KnowledgeDeltaPanel
+          home={home}
+          simulation={sim}
+          onRerun={() => void handleRerun()}
+          rerunning={rerunning}
+        />
       )}
 
       {/* Future graph — signature branching visualization */}

@@ -310,6 +310,29 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByText(/recommendation/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
+  test("sim detail shows knowledge-delta and confidence surfaces", async ({ page }) => {
+    await enableE2EAuth(page);
+    await page.goto("/workspace");
+    await page.getByLabel(/what are you deciding/i).fill("How should we price the public beta?");
+    await page.getByRole("button", { name: /simulate/i }).click();
+    await expect(page).toHaveURL(/\/workspace\/simulations\/.+/i, { timeout: 20_000 });
+
+    // Knowledge-diff panel always mounts on completed runs (empty or with delta).
+    await expect(page.getByTestId("knowledge-delta")).toBeVisible({ timeout: 15_000 });
+    // Fresh run: library matches snapshot (or empty both sides) — honest empty state.
+    await expect(
+      page.getByTestId("knowledge-delta-empty").or(page.getByTestId("knowledge-delta-added"))
+    ).toBeVisible();
+
+    // Calibration empty on Memory when no followed verdicts yet (not zeros).
+    await page.goto("/workspace/memory");
+    await expect(
+      page.getByTestId("calibration-empty").or(page.getByTestId("calibration-bands"))
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
   test("settings asks an anonymous visitor to sign in rather than ejecting them", async ({
     page,
   }) => {
