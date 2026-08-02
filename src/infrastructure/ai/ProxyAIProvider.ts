@@ -7,6 +7,7 @@ import type {
   GenerateRequest,
   GenerateResult,
   ReasonRequest,
+  TaskGenerateRequest,
 } from "../../domain/ai/types";
 
 /**
@@ -89,6 +90,24 @@ export class ProxyAIProvider implements AIPort {
   }
 
   async generate(req: GenerateRequest): Promise<GenerateResult> {
+    // Legacy free-text relay — prefer generateTask for product call sites.
+    return this.postJson({
+      prompt: req.prompt,
+      ...(req.system ? { system: req.system } : {}),
+      ...(req.maxTokens != null ? { maxTokens: req.maxTokens } : {}),
+    });
+  }
+
+  async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
+    // Task-shaped: the Edge Function owns the prompt; we only send fields.
+    return this.postJson({
+      task: req.task,
+      fields: req.fields,
+      ...(req.maxTokens != null ? { maxTokens: req.maxTokens } : {}),
+    });
+  }
+
+  private async postJson(body: Record<string, unknown>): Promise<GenerateResult> {
     if (!this.proxyUrl) {
       const message = "No AI proxy URL configured (VITE_SUPABASE_URL unset).";
       this.report({ stage: "config", message });
@@ -103,15 +122,6 @@ export class ProxyAIProvider implements AIPort {
       throw new AIProviderError(this.id, "No Supabase session — cannot call the AI proxy.");
     }
 
-    // Deliberately omits `temperature`: sampling params are rejected with
-    // a 400 on Opus 5, and GenerateRequest still carries one because the
-    // Ollama adapter uses it. Also omits `model` — the proxy decides.
-    const body = JSON.stringify({
-      prompt: req.prompt,
-      ...(req.system ? { system: req.system } : {}),
-      ...(req.maxTokens != null ? { maxTokens: req.maxTokens } : {}),
-    });
-
     let res: Response;
     try {
       res = await this.fetchImpl(this.proxyUrl, {
@@ -120,7 +130,7 @@ export class ProxyAIProvider implements AIPort {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body,
+        body: JSON.stringify(body),
       });
     } catch (err) {
       const message = `Cannot reach the AI proxy: ${err instanceof Error ? err.message : String(err)}`;

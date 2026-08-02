@@ -31,6 +31,7 @@ import {
   chatCompletionsUrl,
   parseChatCompletion,
 } from "../_shared/openaiCompatible.ts";
+import { buildTaskMessages, isAITaskKind } from "../_shared/taskPrompts.ts";
 
 /** Anthropic default. Override with ANTHROPIC_MODEL — never from the client. */
 const DEFAULT_ANTHROPIC_MODEL = "claude-opus-5";
@@ -93,17 +94,6 @@ function parseBody(raw: unknown): ParsedBody | string {
   }
   const body = raw as Record<string, unknown>;
 
-  const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
-  if (!prompt) return "`prompt` is required.";
-  if (prompt.length > MAX_PROMPT_CHARS) {
-    return `\`prompt\` exceeds ${MAX_PROMPT_CHARS} characters.`;
-  }
-
-  const system = typeof body.system === "string" ? body.system.trim() : "";
-  if (system.length > MAX_SYSTEM_CHARS) {
-    return `\`system\` exceeds ${MAX_SYSTEM_CHARS} characters.`;
-  }
-
   // Clamp rather than reject: an out-of-range value is a client bug, not
   // an attack, and the ceiling is what actually bounds the spend.
   let maxTokens = DEFAULT_OUTPUT_TOKENS;
@@ -111,6 +101,42 @@ function parseBody(raw: unknown): ParsedBody | string {
     const n = Number(body.maxTokens);
     if (!Number.isFinite(n) || n < 1) return "`maxTokens` must be a positive number.";
     maxTokens = Math.min(Math.floor(n), MAX_OUTPUT_TOKENS);
+  }
+
+  // Preferred: task-shaped — function owns the prompt (SPEC-ai-proxy later slice).
+  if (body.task != null) {
+    if (!isAITaskKind(body.task)) {
+      return `Unknown task "${String(body.task)}". Allowed: sim.recommendation, plan.steps, research.findings.`;
+    }
+    const fields =
+      typeof body.fields === "object" && body.fields !== null && !Array.isArray(body.fields)
+        ? (body.fields as Record<string, unknown>)
+        : {};
+    const built = buildTaskMessages({ task: body.task, fields, maxTokens });
+    if (typeof built === "string") return built;
+    if (built.prompt.length > MAX_PROMPT_CHARS) {
+      return `Built prompt exceeds ${MAX_PROMPT_CHARS} characters.`;
+    }
+    if (built.system.length > MAX_SYSTEM_CHARS) {
+      return `Built system exceeds ${MAX_SYSTEM_CHARS} characters.`;
+    }
+    return {
+      system: built.system,
+      prompt: built.prompt,
+      maxTokens: Math.min(built.maxTokens, MAX_OUTPUT_TOKENS),
+    };
+  }
+
+  // Legacy free-text relay — still accepted so old clients fail open.
+  const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
+  if (!prompt) return "`task`+`fields` or `prompt` is required.";
+  if (prompt.length > MAX_PROMPT_CHARS) {
+    return `\`prompt\` exceeds ${MAX_PROMPT_CHARS} characters.`;
+  }
+
+  const system = typeof body.system === "string" ? body.system.trim() : "";
+  if (system.length > MAX_SYSTEM_CHARS) {
+    return `\`system\` exceeds ${MAX_SYSTEM_CHARS} characters.`;
   }
 
   return { system, prompt, maxTokens };

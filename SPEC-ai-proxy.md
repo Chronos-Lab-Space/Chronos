@@ -466,10 +466,15 @@ Everything above the Edge Function row runs in CI. The Edge Function rows need D
 
 ---
 
-## Later slices (not this PR)
+## Later slices
 
-- Task-shaped endpoint (`{task, fields}`) that removes the free-text relay surface.
+- ~~Task-shaped endpoint (`{task, fields}`)~~ **Shipped (5.14.0):**
+  `generateTask` + Edge Function `task`/`fields` body; free-text `prompt` still
+  accepted for old clients. Templates: `sim.recommendation`, `plan.steps`,
+  `research.findings` (mirror in `src/domain/ai/taskPrompts.ts` and
+  `supabase/functions/_shared/taskPrompts.ts`).
+- ~~Usage panel~~ **Shipped (5.13.0)** — settings `AiUsagePanel`.
 - In-browser inference (WebGPU) for a genuinely key-free, request-free path — no proxy, no quota, no third party seeing the prompt. Costs a large model download and rules out most mobile, so it is an option, not a replacement.
 - `embed` via the proxy, once retrieval over knowledge actually needs vectors.
 - Prompt caching, if the stable prefix ever clears 512 tokens.
-- A usage panel in the workspace reading `ai_usage` under its select-own policy.
+- Optionally reject free-text bodies once all clients use `generateTask`.

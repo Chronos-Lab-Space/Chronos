@@ -18,6 +18,7 @@ import { FutureComparison } from "./components/FutureComparison";
 import { FutureGraph } from "./FutureGraph";
 import { KnowledgeDeltaPanel } from "./components/KnowledgeDeltaPanel";
 import { OutcomeTracking } from "./components/OutcomeTracking";
+import { ReplayComparisonPanel } from "./components/ReplayComparisonPanel";
 import { SurfaceLoading } from "../workspace/SurfaceLoading";
 
 export function SimulationsPage() {
@@ -545,6 +546,22 @@ export function SimulationDetailPage() {
           rerunning={rerunning}
         />
       )}
+
+      {/* Deeper replay: parent version vs this re-run */}
+      {sim.status === "completed" &&
+        sim.parent_simulation_id &&
+        (() => {
+          const parent = home.recentSimulations.find((s) => s.id === sim.parent_simulation_id);
+          if (!parent) return null;
+          return (
+            <ReplayComparisonPanel
+              before={parent}
+              after={sim}
+              beforeFutures={home.futuresBySimulation[parent.id] ?? []}
+              afterFutures={futures}
+            />
+          );
+        })()}
 
       {/* Future graph — signature branching visualization */}
       {sim.status === "completed" && futures.length > 0 && (

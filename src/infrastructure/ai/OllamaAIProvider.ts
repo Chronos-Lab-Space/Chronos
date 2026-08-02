@@ -1,5 +1,6 @@
 import type { AIPort } from "../../domain/ai/AIPort";
 import { AICapabilityError, AIProviderError } from "../../domain/ai/errors";
+import { buildTaskMessages } from "../../domain/ai/taskPrompts";
 import type {
   CodeRequest,
   EmbedRequest,
@@ -7,6 +8,7 @@ import type {
   GenerateRequest,
   GenerateResult,
   ReasonRequest,
+  TaskGenerateRequest,
 } from "../../domain/ai/types";
 
 export type OllamaAIProviderOptions = {
@@ -53,6 +55,15 @@ export class OllamaAIProvider implements AIPort {
       model: typeof data.model === "string" ? data.model : model,
       provider: this.id,
     };
+  }
+
+  async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
+    const built = buildTaskMessages(req);
+    return this.generate({
+      system: built.system,
+      prompt: built.prompt,
+      maxTokens: built.maxTokens,
+    });
   }
 
   async embed(req: EmbedRequest): Promise<EmbedResult> {

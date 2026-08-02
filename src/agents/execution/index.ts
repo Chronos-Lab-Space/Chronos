@@ -38,14 +38,13 @@ export class ExecutionAgent implements Agent {
 
     if (!isNoop(this.ai) && objective) {
       try {
-        const generated = await this.ai.generate({
-          system:
-            "You turn a product decision into a short execution plan. " +
-            "Return 3–6 concrete steps, one per line, imperative mood. " +
-            "No preamble, no invented metrics, no recommendation between options — " +
-            "the path has already been chosen.",
-          prompt: `Execution plan for this objective:\n${objective}`,
-          temperature: 0.3,
+        const researchContext = String(task.input.researchContext ?? "").trim();
+        const generated = await this.ai.generateTask({
+          task: "plan.steps",
+          fields: {
+            objective,
+            ...(researchContext ? { researchContext } : {}),
+          },
           maxTokens: 400,
         });
         const text = generated.text?.trim() ?? "";

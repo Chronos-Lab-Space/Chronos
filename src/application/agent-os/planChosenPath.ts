@@ -17,6 +17,8 @@ export type ChosenPath = {
   objective: string;
   pathName: string;
   pathSummary: string;
+  /** Optional research note body — multi-cap chain: research → plan. */
+  researchContext?: string;
 };
 
 export type PlanResult = {
@@ -52,6 +54,10 @@ export async function planChosenPath(
           ]
             .filter(Boolean)
             .join("\n"),
+          // Multi-cap: research findings feed plan context without re-ranking.
+          ...(chosen.researchContext?.trim()
+            ? { researchContext: chosen.researchContext.trim() }
+            : {}),
         },
       })
     );

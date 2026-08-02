@@ -11,6 +11,20 @@ export type GenerateRequest = {
   maxTokens?: number;
 };
 
+/**
+ * Task-shaped generation — the host owns the prompt text.
+ * Prefer this over free-text `generate` for any production call site.
+ * See SPEC-ai-proxy.md later slice.
+ */
+export type AITaskKind = "sim.recommendation" | "plan.steps" | "research.findings";
+
+export type TaskGenerateRequest = {
+  task: AITaskKind;
+  /** Allowlisted string fields for the task template. */
+  fields: Record<string, string>;
+  maxTokens?: number;
+};
+
 export type GenerateResult = {
   text: string;
   model: string;

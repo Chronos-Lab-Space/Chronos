@@ -55,6 +55,9 @@ describe("SimulationEngine", () => {
         called = true;
         return { text: "should never be used", model: "counting", provider: "counting" };
       }
+      async generateTask(): Promise<GenerateResult> {
+        return this.generate();
+      }
       async embed() {
         return { vectors: [], model: "counting", provider: "counting" };
       }
@@ -113,6 +116,9 @@ describe("SimulationEngine", () => {
       readonly id = "fake";
       async generate(_req: GenerateRequest): Promise<GenerateResult> {
         return { text: "  AI polished recommendation.  ", model: "fake", provider: "fake" };
+      }
+      async generateTask(): Promise<GenerateResult> {
+        return this.generate({ prompt: "" });
       }
       async embed() {
         return { vectors: [], model: "fake", provider: "fake" };
