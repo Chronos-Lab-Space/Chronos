@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
+import { buildTaskMessages } from "../../domain/ai/taskPrompts";
 import type {
   CodeRequest,
   EmbedRequest,
@@ -8,6 +9,7 @@ import type {
   GenerateRequest,
   GenerateResult,
   ReasonRequest,
+  TaskGenerateRequest,
 } from "../../domain/ai/types";
 import { ExecutionAgent } from "./index";
 
@@ -21,6 +23,14 @@ class StubAI implements AIPort {
   async generate(_req: GenerateRequest): Promise<GenerateResult> {
     if (this.shouldThrow) throw new Error("upstream down");
     return { text: this.text, model: "stub-model", provider: this.id };
+  }
+  async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
+    const built = buildTaskMessages(req);
+    return this.generate({
+      system: built.system,
+      prompt: built.prompt,
+      maxTokens: built.maxTokens,
+    });
   }
   async embed(_req: EmbedRequest): Promise<EmbedResult> {
     return { vectors: [], model: "stub-model", provider: this.id };
@@ -92,9 +102,9 @@ describe("ExecutionAgent", () => {
     // owner for a guess. Stub without touching the port.
     let called = false;
     class SpyAI extends StubAI {
-      override async generate(req: GenerateRequest): Promise<GenerateResult> {
+      override async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
         called = true;
-        return super.generate(req);
+        return super.generateTask(req);
       }
     }
     const agent = new ExecutionAgent(new SpyAI("1. Something"));

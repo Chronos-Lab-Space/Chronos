@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AIPort } from "../../domain/ai/AIPort";
 import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
+import { buildTaskMessages } from "../../domain/ai/taskPrompts";
 import type {
   CodeRequest,
   EmbedRequest,
@@ -8,6 +9,7 @@ import type {
   GenerateRequest,
   GenerateResult,
   ReasonRequest,
+  TaskGenerateRequest,
 } from "../../domain/ai/types";
 import { CapabilityRegistry } from "./AgentOperatingSystem";
 import { createDefaultCapabilityRegistry } from "./createDefaultCapabilityRegistry";
@@ -22,6 +24,14 @@ class StubAI implements AIPort {
   async generate(_req: GenerateRequest): Promise<GenerateResult> {
     if (this.shouldThrow) throw new Error("upstream down");
     return { text: this.text, model: "stub-model", provider: this.id };
+  }
+  async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
+    const built = buildTaskMessages(req);
+    return this.generate({
+      system: built.system,
+      prompt: built.prompt,
+      maxTokens: built.maxTokens,
+    });
   }
   async embed(_req: EmbedRequest): Promise<EmbedResult> {
     return { vectors: [], model: "stub-model", provider: this.id };
@@ -83,9 +93,9 @@ describe("planChosenPath", () => {
     // objective would plan for the decision again instead of its outcome.
     let seenPrompt = "";
     class SpyAI extends StubAI {
-      override async generate(req: GenerateRequest): Promise<GenerateResult> {
-        seenPrompt = `${req.prompt}`;
-        return super.generate(req);
+      override async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
+        seenPrompt = JSON.stringify(req.fields);
+        return super.generateTask(req);
       }
     }
     const registry = createDefaultCapabilityRegistry({ ai: new SpyAI("1. Do the thing") });

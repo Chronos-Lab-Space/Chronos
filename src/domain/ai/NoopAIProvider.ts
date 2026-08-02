@@ -6,6 +6,7 @@ import type {
   GenerateRequest,
   GenerateResult,
   ReasonRequest,
+  TaskGenerateRequest,
 } from "./types";
 
 /** Pure domain default — no I/O. Safe for tests and public beta sims. */
@@ -13,6 +14,10 @@ export class NoopAIProvider implements AIPort {
   readonly id = "noop";
 
   async generate(_req: GenerateRequest): Promise<GenerateResult> {
+    return { text: "", model: "noop", provider: this.id };
+  }
+
+  async generateTask(_req: TaskGenerateRequest): Promise<GenerateResult> {
     return { text: "", model: "noop", provider: this.id };
   }
 

@@ -31,13 +31,9 @@ export class ResearchAgent implements Agent {
 
     if (!isNoop(this.ai) && prompt) {
       try {
-        const generated = await this.ai.generate({
-          system:
-            "You are a concise research analyst for product decisions. " +
-            "Return 3–6 short bullets of competitive or market context. " +
-            "No invented metrics, no hype, no recommendation of a single path.",
-          prompt: `Research context for this decision objective:\n${prompt}`,
-          temperature: 0.3,
+        const generated = await this.ai.generateTask({
+          task: "research.findings",
+          fields: { objective: prompt },
           maxTokens: 400,
         });
         const text = generated.text?.trim() ?? "";

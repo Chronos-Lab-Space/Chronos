@@ -453,38 +453,25 @@ export class SimulationEngine {
     if (output.confidence <= 0 || output.best.score <= 0) return output;
 
     try {
-      const result = await this.ai.generate({
-        system:
-          "You write decision briefs for founders and PMs. No hype, no invented metrics. " +
-          "Preserve the chosen path name. " +
-          "Answer as exactly two blocks separated by one blank line. " +
-          "First block: a single sentence stating the call. " +
-          "Second block: 2–4 sentences on why this path beats the alternatives given " +
-          "the evidence, what it costs, and the single next action.",
-        prompt: [
-          `Objective: ${input.objective}`,
-          input.goal?.title ? `Goal: ${input.goal.title}` : null,
-          `Chosen path: ${output.best.name}`,
-          `Path summary: ${output.best.summary}`,
-          `Deterministic recommendation: ${output.recommendation}`,
-          `Deterministic thesis: ${output.thesis}`,
-          // Naming the runners-up is what lets the body compare rather than
-          // paraphrase — the old prompt could only restate one sentence.
-          `Alternatives considered: ${
+      // Task-shaped: proxy owns the prompt; free-text generate is legacy only.
+      const result = await this.ai.generateTask({
+        task: "sim.recommendation",
+        fields: {
+          objective: input.objective,
+          ...(input.goal?.title ? { goalTitle: input.goal.title } : {}),
+          pathName: output.best.name,
+          pathSummary: output.best.summary,
+          deterministicRecommendation: output.recommendation,
+          deterministicThesis: output.thesis,
+          alternatives:
             output.futures
               .filter((f) => f.id !== output.best.id)
               .slice(0, 3)
               .map((f) => `${f.name} (${(f.score * 100).toFixed(0)}%)`)
-              .join("; ") || "none"
-          }`,
-          `Risks: ${output.risks.slice(0, 4).join("; ") || "none listed"}`,
-          `Confidence: ${(output.confidence * 100).toFixed(0)}%`,
-          "",
-          "Write the brief for this specific decision. Do not change the chosen path, the scores, or the confidence.",
-        ]
-          .filter(Boolean)
-          .join("\n"),
-        temperature: 0.4,
+              .join("; ") || "none",
+          risks: output.risks.slice(0, 4).join("; ") || "none listed",
+          confidence: `${(output.confidence * 100).toFixed(0)}%`,
+        },
         maxTokens: 420,
       });
       const { headline, body } = splitBrief(result.text);

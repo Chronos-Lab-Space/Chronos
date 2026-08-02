@@ -39,6 +39,9 @@ function engineReturning(text: string) {
     async generate(): Promise<GenerateResult> {
       return { text, model: "fake", provider: "fake" };
     }
+    async generateTask(): Promise<GenerateResult> {
+      return this.generate();
+    }
     async embed() {
       return { vectors: [], model: "fake", provider: "fake" };
     }

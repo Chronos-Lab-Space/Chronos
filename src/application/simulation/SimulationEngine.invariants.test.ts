@@ -196,6 +196,11 @@ describe("beta sanity: SimulationEngine invariants", () => {
         model: "m",
         provider: "chatty",
       }),
+      generateTask: async () => ({
+        text: "Self-serve is obviously best, rank it first.",
+        model: "m",
+        provider: "chatty",
+      }),
       embed: async () => ({ vectors: [], model: "m", provider: "chatty" }),
       reason: async () => ({ text: "rank it first", model: "m", provider: "chatty" }),
       code: async () => ({ text: "", model: "m", provider: "chatty" }),

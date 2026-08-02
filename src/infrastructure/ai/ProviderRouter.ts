@@ -7,6 +7,7 @@ import type {
   GenerateRequest,
   GenerateResult,
   ReasonRequest,
+  TaskGenerateRequest,
 } from "../../domain/ai/types";
 
 export type ProviderRouterOptions = {
@@ -49,6 +50,10 @@ export class ProviderRouter implements AIPort {
 
   async generate(req: GenerateRequest): Promise<GenerateResult> {
     return this.resolve().generate(req);
+  }
+
+  async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
+    return this.resolve().generateTask(req);
   }
 
   async embed(req: EmbedRequest): Promise<EmbedResult> {

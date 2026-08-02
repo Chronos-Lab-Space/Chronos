@@ -450,10 +450,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
           );
           if (!sim || !future) return;
 
+          // Multi-cap: latest research note feeds plan context (prose only).
+          const researchNote = home?.notes.find(
+            (n) =>
+              n.title.startsWith("Research context") || n.title.toLowerCase().includes("research")
+          );
           const plan = await planChosenPath(getDefaultCapabilityRegistry(), {
             objective: sim.title,
             pathName: future.name,
             pathSummary: future.summary,
+            researchContext: researchNote?.content,
           });
           if (plan.steps.length === 0) return;
 

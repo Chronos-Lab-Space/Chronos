@@ -17,6 +17,33 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.14.0",
+    date: "2026-08-02",
+    tag: "minor",
+    title: "Task-shaped AI proxy, multi-cap plan chain, deeper replay",
+    summary:
+      "Product AI calls send task + fields; the Edge Function owns the prompt (legacy free-text still accepted). Plan can consume research notes. Re-runs show a parent→child recommendation comparison. Smoke checklist and ai_usage verify scripts for ops.",
+    highlights: [
+      {
+        label: "generateTask / task prompts",
+        detail:
+          "sim.recommendation · plan.steps · research.findings — proxy builds messages server-side",
+      },
+      {
+        label: "runCapabilityChain",
+        detail: "Ordered prose capabilities; research context feeds plan without re-ranking",
+      },
+      {
+        label: "ReplayComparisonPanel",
+        detail: "On re-run detail: recommendation/confidence moved or stayed",
+      },
+      {
+        label: "Ops smoke",
+        detail: "scripts/smoke-production-checklist.mjs + verify-ai-usage-hosted.mjs",
+      },
+    ],
+  },
+  {
     version: "5.13.0",
     date: "2026-08-02",
     tag: "minor",
