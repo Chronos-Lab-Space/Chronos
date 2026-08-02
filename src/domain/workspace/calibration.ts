@@ -221,3 +221,41 @@ function point(run: MeasurableRun): CalibrationVersionPoint {
     verdict: run.verdict,
   };
 }
+
+/**
+ * Slice 3 — caveat a displayed confidence with measured band history.
+ *
+ * Returns null when the band lacks enough followed, verdicted runs. Never
+ * invents a rate from noise, and never rewrites the engine's number: the
+ * caller shows both side by side. See SPEC-calibration.md slice 3.
+ */
+export type ConfidenceCaveat = {
+  /** Band label the claimed confidence falls in (e.g. "70–84%"). */
+  bandLabel: string;
+  /** Historical landed-as-predicted-or-better rate for that band. */
+  rate: number;
+  n: number;
+  landed: number;
+};
+
+export function caveatForConfidence(
+  calibration: Calibration,
+  confidence: number
+): ConfidenceCaveat | null {
+  if (!Number.isFinite(confidence)) return null;
+  const definition = bandFor(confidence);
+  const band = calibration.bands.find((b) => b.label === definition.label);
+  if (!band || !band.hasEnoughData || band.rate == null) return null;
+  return {
+    bandLabel: band.label,
+    rate: band.rate,
+    n: band.n,
+    landed: band.landed,
+  };
+}
+
+/** One-line copy for UI. Self-reported, not ground truth. */
+export function formatConfidenceCaveat(caveat: ConfidenceCaveat): string {
+  const pct = Math.round(caveat.rate * 100);
+  return `In the ${caveat.bandLabel} band, followed runs landed as predicted or better ${pct}% of the time (${caveat.n} measured). Self-reported.`;
+}

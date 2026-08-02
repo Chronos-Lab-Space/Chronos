@@ -12,6 +12,7 @@ import { ContextPrompt } from "../workspace/ContextPrompt";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { DecisionGraphPanel } from "./components/DecisionGraphPanel";
 import { DecisionPipelineStrip } from "./components/DecisionPipelineStrip";
+import { ConfidenceCaveatNote } from "../memory/components/ConfidenceCaveatNote";
 import { DecisionReportCard } from "./components/DecisionReportCard";
 import { FutureComparison } from "./components/FutureComparison";
 import { FutureGraph } from "./FutureGraph";
@@ -360,6 +361,9 @@ export function SimulationDetailPage() {
           </span>
           <span className="text-sm text-ink-dim">{formatCreatedAt(sim.created_at)}</span>
         </div>
+        {sim.confidence != null && (
+          <ConfidenceCaveatNote home={home} confidence={sim.confidence} className="mt-2" />
+        )}
 
         <div className="mt-5 flex flex-wrap gap-2">
           <button
@@ -452,6 +456,7 @@ export function SimulationDetailPage() {
       {decisionReport && (
         <DecisionReportCard
           report={decisionReport}
+          home={home}
           onSaveDecision={
             !chosenId && futures[0]
               ? async () => {
