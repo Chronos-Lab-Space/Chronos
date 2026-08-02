@@ -17,6 +17,30 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.12.2",
+    date: "2026-08-02",
+    tag: "patch",
+    title: "Bootstrap ports extracted; docs match the live agents",
+    summary:
+      "AccountBootstrapService no longer imports Supabase, localStorage preferences, or analytics directly — composition injects cloud, preferences, and analytics ports (E2E passes cloud: null). Docs and FAQ no longer call plan a stub or imply outcomes never reweight; they describe AIPort-backed plan/research, soft-constraint priors, and calibration caveats honestly.",
+    highlights: [
+      {
+        label: "AccountBootstrapService ports",
+        detail:
+          "AccountCloudPort · UserPreferencesPort · BootstrapAnalyticsPort; SupabaseAccountCloud adapter",
+      },
+      {
+        label: "Docs / FAQ honesty",
+        detail:
+          "Plan/research AIPort paths, outcome soft constraints, calibration, anonymous no-cloud-AI",
+      },
+      {
+        label: "ARCHITECTURE deviations",
+        detail: "Bootstrap removed from the known-deviations list",
+      },
+    ],
+  },
+  {
     version: "5.12.1",
     date: "2026-08-02",
     tag: "patch",

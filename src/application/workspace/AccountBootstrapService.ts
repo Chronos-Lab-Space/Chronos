@@ -2,22 +2,58 @@
  * Post-auth bootstrap for public beta:
  * Create Profile → Personal Workspace → Owner Membership → Preferences
  *
- * Best-effort against Supabase when online; always works local-first.
+ * Application layer: no Supabase client, no localStorage, no analytics singleton.
+ * Ports are injected; composition/workspaceService.ts supplies the adapters.
  */
 import type { User } from "@supabase/supabase-js";
-import {
-  loadUserPreferences,
-  saveUserPreferences,
-} from "../../infrastructure/auth/userPreferencesStore";
-import { isE2EAuthEnabled } from "../../infrastructure/auth/e2eAuth";
-import { supabase } from "../../infrastructure/supabase/client";
-import { trackProductEvent } from "../../infrastructure/analytics/productAnalytics";
+import type { UserPreferences } from "../../domain/workspace/betaChecklist";
 import type { WorkspaceHome } from "../../domain/workspace/types";
 
 export type BootstrapResult = {
   home: WorkspaceHome | null;
   profileCreated: boolean;
   workspaceBootstrapped: boolean;
+};
+
+/** The two workspace calls bootstrap makes. */
+export type BootstrapWorkspaces = {
+  load(ownerId: string): Promise<WorkspaceHome | null>;
+  createWorkspace(ownerId: string, name: string, description: string): Promise<WorkspaceHome>;
+};
+
+export type AccountProfileUpsert = {
+  id: string;
+  email: string | null;
+  display_name: string;
+  avatar_url: string | null;
+  preferred_auth_provider: string | null;
+  updated_at: string;
+};
+
+/**
+ * Cloud side of bootstrap: profile + owner membership.
+ * Pass `null` for local-only / E2E — no network path exists.
+ */
+export type AccountCloudPort = {
+  upsertProfile(profile: AccountProfileUpsert): Promise<boolean>;
+  upsertOwnerMembership(workspaceId: string, userId: string): Promise<void>;
+};
+
+export type UserPreferencesPort = {
+  load(userId: string): UserPreferences;
+  save(userId: string, patch: Partial<UserPreferences>): void;
+};
+
+export type BootstrapAnalyticsPort = {
+  trackWorkspaceCreated(props: { source: string; workspaceId: string }): void;
+};
+
+export type AccountBootstrapDeps = {
+  workspaces: BootstrapWorkspaces;
+  preferences: UserPreferencesPort;
+  analytics: BootstrapAnalyticsPort;
+  /** `null` skips all cloud profile/membership writes (E2E, offline tests). */
+  cloud: AccountCloudPort | null;
 };
 
 function displayNameFromUser(user: User): string {
@@ -36,81 +72,62 @@ function providerFromUser(user: User): string | null {
   return app?.provider ?? null;
 }
 
-/** The two calls bootstrap makes. Injected so this never names a singleton. */
-export type BootstrapWorkspaces = {
-  load(ownerId: string): Promise<WorkspaceHome | null>;
-  createWorkspace(ownerId: string, name: string, description: string): Promise<WorkspaceHome>;
-};
-
 export class AccountBootstrapService {
-  constructor(private readonly workspaces: BootstrapWorkspaces) {}
+  constructor(private readonly deps: AccountBootstrapDeps) {}
 
   /**
    * Ensure profile row + personal workspace + owner membership exist.
    * Safe to call on every session; idempotent.
    */
   async ensureAccount(user: User): Promise<BootstrapResult> {
+    const { workspaces, preferences, analytics, cloud } = this.deps;
     const userId = user.id;
     let profileCreated = false;
     let workspaceBootstrapped = false;
 
-    // Preferences seed
     const provider = providerFromUser(user);
     if (provider) {
-      saveUserPreferences(userId, { preferredAuthProvider: provider });
+      preferences.save(userId, { preferredAuthProvider: provider });
     } else {
-      loadUserPreferences(userId);
+      preferences.load(userId);
     }
 
-    // Cloud profile (best-effort)
-    if (!isE2EAuthEnabled()) {
+    if (cloud) {
       try {
         const displayName = displayNameFromUser(user);
-        const { error } = await supabase.from("profiles").upsert(
-          {
-            id: userId,
-            email: user.email ?? null,
-            display_name: displayName,
-            avatar_url:
-              typeof user.user_metadata?.avatar_url === "string"
-                ? user.user_metadata.avatar_url
-                : null,
-            preferred_auth_provider: provider,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" }
-        );
-        if (!error) profileCreated = true;
+        profileCreated = await cloud.upsertProfile({
+          id: userId,
+          email: user.email ?? null,
+          display_name: displayName,
+          avatar_url:
+            typeof user.user_metadata?.avatar_url === "string"
+              ? user.user_metadata.avatar_url
+              : null,
+          preferred_auth_provider: provider,
+          updated_at: new Date().toISOString(),
+        });
       } catch (err) {
         console.warn("[chronos] profile upsert failed; continuing local bootstrap.", err);
       }
     } else {
+      // E2E / local-only: treat profile as present so the rest of the funnel continues.
       profileCreated = true;
     }
 
-    // Workspace bootstrap
-    let home = await this.workspaces.load(userId);
+    let home = await workspaces.load(userId);
     if (!home) {
       const name = `${displayNameFromUser(user)}'s Workspace`;
-      home = await this.workspaces.createWorkspace(userId, name, "Personal Decision Workspace");
+      home = await workspaces.createWorkspace(userId, name, "Personal Decision Workspace");
       workspaceBootstrapped = true;
-      trackProductEvent("workspace_created", {
+      analytics.trackWorkspaceCreated({
         source: "bootstrap",
         workspaceId: home.workspace.id,
       });
     }
 
-    // Owner membership row (best-effort cloud)
-    if (!isE2EAuthEnabled() && home) {
+    if (cloud && home) {
       try {
-        await supabase.from("workspace_members").upsert(
-          {
-            workspace_id: home.workspace.id,
-            user_id: userId,
-            role: "owner",
-          },
-          { onConflict: "workspace_id,user_id" }
-        );
+        await cloud.upsertOwnerMembership(home.workspace.id, userId);
       } catch (err) {
         console.warn("[chronos] workspace_members upsert failed.", err);
       }

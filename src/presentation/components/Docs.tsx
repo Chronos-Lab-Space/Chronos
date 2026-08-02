@@ -631,11 +631,11 @@ function BetaLimitationsDocs() {
         items={[
           {
             title: "Simulation engine",
-            body: "Workspace sims are a deterministic multi-future engine (EV scoring, hard/soft constraints). The public /simulate demo is honest Monte Carlo over strategy archetypes (sample counts match what was scored). Neither path is an LLM “thinking” about your company. Optional AI polish only rewrites recommendation prose when a provider is configured — scores stay engine-owned. Useful for structured decisions; not a calibrated model of markets or codebases.",
+            body: "Workspace sims are a deterministic multi-future engine (EV scoring, hard/soft constraints). The public /simulate demo is honest Monte Carlo over strategy archetypes (sample counts match what was scored). Neither path is an LLM “thinking” about your company. Optional AI polish only rewrites recommendation prose when a provider is configured — scores stay engine-owned. Memory shows what confidence has been worth (self-reported outcomes); a band with enough data can caveat a displayed confidence without changing the engine number. Useful for structured decisions; not a calibrated model of markets or codebases.",
           },
           {
             title: "Agents & capabilities",
-            body: "Forge / Oracle / Atlas on marketing pages are scripted scenario demos, not live LLM agents. The Agent OS registers real handlers for research (optional AI, else stub), simulation, evaluation, and memory; coding/plan steps are stubs in this beta. Prefer “deterministic multi-future engine” over “AI agents decide for you.”",
+            body: "Forge / Oracle / Atlas on marketing pages are scripted scenario demos, not live LLM agents. The Agent OS registers real handlers for research and plan/execution (optional AI via AIPort, else structured stub, fail-open), plus deterministic simulation, evaluation, and memory. Coding generation is not in beta. Prefer “deterministic multi-future engine” over “AI agents decide for you.”",
           },
           {
             title: "Hard constraints",
@@ -708,7 +708,7 @@ function DocsFaq() {
     },
     {
       q: "Does Chronos use an LLM for every recommendation?",
-      a: "No. Ranking is deterministic by default. Optional AI polish (env-only) may rewrite recommendation wording; scores and futures stay engine-owned.",
+      a: "No. Ranking and expected-value scoring are deterministic. Optional AI (when a provider is configured — hosted proxy for signed-in users, or local Ollama) may polish recommendation wording, research notes, or post-collapse plan steps; it never invents scores, confidence, or which path wins. Anonymous workspace runs stay deterministic (no cloud AI call).",
     },
     {
       q: "Who is it for?",
