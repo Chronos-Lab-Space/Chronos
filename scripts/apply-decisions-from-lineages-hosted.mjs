@@ -27,27 +27,20 @@ let pg;
 try {
   pg = require("pg");
 } catch {
-  console.error(
-    "Missing package `pg`. Install once:\n  npm install pg --no-save\nthen re-run."
-  );
+  console.error("Missing package `pg`. Install once:\n  npm install pg --no-save\nthen re-run.");
   process.exit(1);
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..");
-const migration = path.join(
-  root,
-  "supabase/migrations/20260730202201_decisions_from_lineages.sql"
-);
+const migration = path.join(root, "supabase/migrations/20260730202201_decisions_from_lineages.sql");
 
 const password = process.env.SUPABASE_DB_PASSWORD || process.env.POSTGRES_PASSWORD;
 const ref = process.env.SUPABASE_PROJECT_REF || "gkyhqnjgwxlyzptpiiob";
 const host = process.env.SUPABASE_DB_HOST || "aws-1-ap-northeast-2.pooler.supabase.com";
 
 if (!password) {
-  console.error(
-    "Missing SUPABASE_DB_PASSWORD (Database settings password, not sb_secret_)."
-  );
+  console.error("Missing SUPABASE_DB_PASSWORD (Database settings password, not sb_secret_).");
   process.exit(1);
 }
 

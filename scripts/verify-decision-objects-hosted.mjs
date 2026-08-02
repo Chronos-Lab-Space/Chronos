@@ -56,9 +56,7 @@ async function main() {
   const decisions = await fetchAll("decisions?select=id");
 
   const unlinked = sims.filter((s) => s.decision_id == null).length;
-  const distinctLinked = new Set(
-    sims.map((s) => s.decision_id).filter((id) => id != null)
-  ).size;
+  const distinctLinked = new Set(sims.map((s) => s.decision_id).filter((id) => id != null)).size;
   const decisionRows = decisions.length;
 
   console.log("=== SPEC-decision-object criterion 1 ===");

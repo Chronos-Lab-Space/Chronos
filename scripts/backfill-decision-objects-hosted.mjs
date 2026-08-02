@@ -15,8 +15,7 @@ const SEC = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE
 const DRY = process.env.DRY_RUN === "1";
 
 // Same pattern as private.decision_id_for_simulation / isUuid in domain.
-const UUID =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 if (!SEC) {
   console.error("Need SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY) in env.");
