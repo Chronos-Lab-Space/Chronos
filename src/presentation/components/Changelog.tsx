@@ -17,6 +17,28 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.12.3",
+    date: "2026-08-02",
+    tag: "patch",
+    title: "Composition owns AI, cache, and analytics wiring",
+    summary:
+      "Agent OS registry singleton, public startup simulator, and product-event analytics no longer build their own infrastructure adapters inside application/. composition/agentOs and composition/publicStartupSimulator name the env AI and MemorySimulationCache; registerProductEventSubscribers takes a track sink. Dead browser download helper removed from domain simulationReport. ARCHITECTURE known-deviations list is empty.",
+    highlights: [
+      {
+        label: "composition/agentOs",
+        detail: "getDefaultCapabilityRegistry + createAIPortFromEnv live here",
+      },
+      {
+        label: "composition/publicStartupSimulator",
+        detail: "StartupSimulationService + MemorySimulationCache singleton",
+      },
+      {
+        label: "Injected event analytics",
+        detail: "registerProductEventSubscribers({ track }) — no adapter import for wiring",
+      },
+    ],
+  },
+  {
     version: "5.12.2",
     date: "2026-08-02",
     tag: "patch",

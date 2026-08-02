@@ -3,10 +3,8 @@ import { NoopAIProvider } from "../../domain/ai/NoopAIProvider";
 import { Task } from "../../domain/chronos/task-os";
 import { StartupLaunchPlanner } from "../planner/StartupLaunchPlanner";
 import { ExecutionRuntime } from "./AgentOperatingSystem";
-import {
-  createDefaultCapabilityRegistry,
-  resetDefaultCapabilityRegistryForTests,
-} from "./createDefaultCapabilityRegistry";
+import { resetDefaultCapabilityRegistryForTests } from "../../composition/agentOs";
+import { createDefaultCapabilityRegistry } from "./createDefaultCapabilityRegistry";
 
 describe("createDefaultCapabilityRegistry", () => {
   it("registers handlers for core product task kinds", async () => {

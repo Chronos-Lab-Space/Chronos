@@ -1,14 +1,20 @@
 import { eventBus } from "../../core/runtime";
 import { runtime } from "../../core/runtime";
-import { trackProductEvent } from "../../infrastructure/analytics/productAnalytics";
+import type { ProductEventName } from "../../infrastructure/analytics/productAnalytics";
 
 let registered = false;
+
+/** Analytics sink — composition supplies trackProductEvent. */
+export type ProductEventAnalytics = {
+  track: (event: ProductEventName, props?: Record<string, unknown>) => void;
+};
 
 /**
  * Side effects for product events: analytics + memory agent.
  * Services publish; they do not call analytics/memory directly.
+ * Analytics is injected so application/runtime does not import the adapter.
  */
-export function registerProductEventSubscribers(): void {
+export function registerProductEventSubscribers(analytics: ProductEventAnalytics): void {
   if (registered) return;
   registered = true;
 
@@ -20,7 +26,7 @@ export function registerProductEventSubscribers(): void {
       objectiveLength?: number;
       constraintCount?: number;
     };
-    trackProductEvent("simulation_started", {
+    analytics.track("simulation_started", {
       simulationId: p.simulationId,
       workspaceId: p.workspaceId,
       rerun: p.rerun ?? false,
@@ -40,7 +46,7 @@ export function registerProductEventSubscribers(): void {
       status?: string;
       futuresCount?: number;
     };
-    trackProductEvent("simulation_completed", {
+    analytics.track("simulation_completed", {
       simulationId: p.simulationId,
       workspaceId: p.workspaceId,
       confidence: p.confidence,
@@ -51,7 +57,6 @@ export function registerProductEventSubscribers(): void {
       source: "event_bus",
     });
   });
-
   eventBus.subscribe("DecisionRanked", (event) => {
     const p = event.payload as {
       simulationId?: string;

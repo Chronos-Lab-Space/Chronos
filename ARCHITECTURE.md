@@ -81,23 +81,21 @@ domain         -> nothing outside domain
 
 ### Known deviations (accepted for now)
 
-The rules above are the target, not yet fully enforced. Current exceptions:
+The rules above are the target. Recent closures (do not re-list as open):
 
-- `application/agent-os`, `application/planner`, and `application/runtime` build
-  their own adapters (`createAIPortFromEnv`, `MemorySimulationCache`,
-  `trackProductEvent`). The first two are themselves composition points and may
-  simply belong under `composition/`.
-- `domain/workspace/simulationReport.ts` contains a browser download helper
-  (guarded no-op outside the DOM).
+- Capability registry singleton + `createAIPortFromEnv` → `composition/agentOs.ts`
+- Public startup simulator + `MemorySimulationCache` →
+  `composition/publicStartupSimulator.ts`
+- Product event analytics → `registerProductEventSubscribers({ track })` from
+  composition
+- Account bootstrap cloud / preferences / analytics → injected ports
+  (`AccountCloudPort | null` for E2E)
+- Dead DOM download helper removed from `domain/workspace/simulationReport.ts`
 
-`WorkspaceService`, `SimulationEngine`, and `AccountBootstrapService` no longer
-deviate: each takes every adapter as a constructor argument (or a deps object),
-and `composition/` supplies them. Bootstrap cloud is `AccountCloudPort | null`
-— E2E passes `null` so no Supabase write path exists without composition.
-
-Shrink this list over time — do not grow it. New code should follow the rules;
-moving these dependencies behind injected ports is welcome refactoring.
-
+`WorkspaceService`, `SimulationEngine`, and `AccountBootstrapService` take
+every adapter as a constructor argument (or deps object); `composition/`
+supplies them. **No known deviations remain.** If a new one appears, list it
+here and shrink again — do not grow this list silently.
 ## Supabase Boundaries
 
 The former all-in-one Supabase module has been split by responsibility:

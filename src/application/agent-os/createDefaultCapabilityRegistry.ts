@@ -1,9 +1,8 @@
 /**
- * Composition root for the Agent OS capability registry.
+ * Build the Agent OS capability registry from specialist agents.
  *
- * Specialist agents in `src/agents/*` become registered handlers here so
- * `ExecutionRuntime` can resolve TaskKinds without call sites inventing
- * one-off stubs. Default AI is env-driven (usually noop); research fails open.
+ * Pure application: pass an AIPort (or omit for noop agent singletons).
+ * Env-driven AI and the process singleton live in `composition/agentOs.ts`.
  *
  * Product simulation scoring still lives in SimulationEngine — this registry
  * is the task-oriented entry for planner/runtime graphs.
@@ -21,11 +20,10 @@ import {
 } from "../../agents";
 import type { AIPort } from "../../domain/ai/AIPort";
 import { CapabilityRegistration, type Task, type TaskKind } from "../../domain/chronos/task-os";
-import { createAIPortFromEnv } from "../../infrastructure/ai/createAIPort";
 import { CapabilityRegistry, type TaskHandler } from "./AgentOperatingSystem";
 
 export type DefaultCapabilityRegistryOptions = {
-  /** Injected AI for research (tests / composition roots). When omitted, uses the noop research singleton. */
+  /** Injected AI for research/plan (tests / composition roots). When omitted, uses the noop agent singletons. */
   ai?: AIPort;
 };
 
@@ -141,22 +139,4 @@ export function createDefaultCapabilityRegistry(
   );
 
   return registry;
-}
-
-/** Process-wide default for SPA / runtime composition. */
-let defaultRegistry: CapabilityRegistry | null = null;
-
-export function getDefaultCapabilityRegistry(): CapabilityRegistry {
-  if (!defaultRegistry) {
-    // Research agent singleton uses Noop; inject env AI so research can enrich when configured.
-    defaultRegistry = createDefaultCapabilityRegistry({
-      ai: createAIPortFromEnv(),
-    });
-  }
-  return defaultRegistry;
-}
-
-/** Test helper — drop the singleton. */
-export function resetDefaultCapabilityRegistryForTests(): void {
-  defaultRegistry = null;
 }

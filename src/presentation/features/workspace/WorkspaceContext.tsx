@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { getDefaultCapabilityRegistry } from "../../../application/agent-os/createDefaultCapabilityRegistry";
+import { getDefaultCapabilityRegistry } from "../../../composition/agentOs";
 import { planChosenPath } from "../../../application/agent-os/planChosenPath";
 import { researchDecision } from "../../../application/agent-os/researchDecision";
 import {

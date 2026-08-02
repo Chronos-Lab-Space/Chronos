@@ -4,7 +4,7 @@ import { SIMULATION_STAGES } from "../../../domain/chronos/simulation-stages";
 import {
   createPublicStartupRequest,
   publicStartupSimulator,
-} from "../../../application/planner/publicStartupSimulator";
+} from "../../../composition/publicStartupSimulator";
 import { formatCurrency, formatPercent } from "../../../domain/chronos/startup-sim";
 import type { SimulationResult } from "../../../domain/chronos/startup-sim";
 
