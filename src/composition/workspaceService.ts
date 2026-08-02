@@ -14,9 +14,15 @@ import {
   WorkspaceService,
   type WorkspaceCloudStore,
 } from "../application/workspace/WorkspaceService";
+import { trackProductEvent } from "../infrastructure/analytics/productAnalytics";
 import { isE2EAuthEnabled } from "../infrastructure/auth/e2eAuth";
+import {
+  loadUserPreferences,
+  saveUserPreferences,
+} from "../infrastructure/auth/userPreferencesStore";
 import { learningMemoryStore } from "../infrastructure/memory/LearningMemoryStore";
 import { localWorkspaceStore } from "../infrastructure/repositories/LocalWorkspaceStore";
+import { supabaseAccountCloud } from "../infrastructure/repositories/SupabaseAccountCloud";
 import { supabaseWorkspaceRepository } from "../infrastructure/repositories/SupabaseWorkspaceRepository";
 
 // Side effects (analytics, memory) attach via the event bus once per process.
@@ -59,5 +65,18 @@ export const anonymousWorkspaceService = new WorkspaceService({
 /**
  * Post-auth bootstrap, wired to the signed-in service. Anonymous visitors
  * never bootstrap an account, so there is deliberately no anonymous variant.
+ *
+ * Cloud profile/membership is structural: E2E and unit paths pass `cloud: null`
+ * so no Supabase write is possible without going through composition.
  */
-export const accountBootstrapService = new AccountBootstrapService(workspaceService);
+export const accountBootstrapService = new AccountBootstrapService({
+  workspaces: workspaceService,
+  preferences: {
+    load: loadUserPreferences,
+    save: saveUserPreferences,
+  },
+  analytics: {
+    trackWorkspaceCreated: (props) => trackProductEvent("workspace_created", props),
+  },
+  cloud: isE2EAuthEnabled() ? null : supabaseAccountCloud,
+});

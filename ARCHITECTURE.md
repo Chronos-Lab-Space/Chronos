@@ -83,19 +83,17 @@ domain         -> nothing outside domain
 
 The rules above are the target, not yet fully enforced. Current exceptions:
 
-- `AccountBootstrapService` still calls Supabase, the preferences store, the
-  E2E auth flag, and analytics directly. Its workspace dependency is injected,
-  so what remains is the profile/membership upsert — a repository port waiting
-  to be extracted.
 - `application/agent-os`, `application/planner`, and `application/runtime` build
   their own adapters (`createAIPortFromEnv`, `MemorySimulationCache`,
   `trackProductEvent`). The first two are themselves composition points and may
   simply belong under `composition/`.
-
-`WorkspaceService` and `SimulationEngine` no longer deviate: both take every
-adapter as a constructor argument, and `composition/` supplies them.
 - `domain/workspace/simulationReport.ts` contains a browser download helper
   (guarded no-op outside the DOM).
+
+`WorkspaceService`, `SimulationEngine`, and `AccountBootstrapService` no longer
+deviate: each takes every adapter as a constructor argument (or a deps object),
+and `composition/` supplies them. Bootstrap cloud is `AccountCloudPort | null`
+— E2E passes `null` so no Supabase write path exists without composition.
 
 Shrink this list over time — do not grow it. New code should follow the rules;
 moving these dependencies behind injected ports is welcome refactoring.
