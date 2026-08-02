@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { SimulationEngine } from "../../application/simulation/SimulationEngine";
-import { CALIBRATION_BANDS, CALIBRATION_MIN_SAMPLE, deriveCalibration } from "./calibration";
+import {
+  CALIBRATION_BANDS,
+  CALIBRATION_MIN_SAMPLE,
+  caveatForConfidence,
+  deriveCalibration,
+  formatConfidenceCaveat,
+} from "./calibration";
 import type { OutcomeFollowed, OutcomeVerdict, SimulationRecord, WorkspaceHome } from "./types";
 
 const WS = "11111111-1111-4111-8111-111111111111";
@@ -446,5 +452,50 @@ describe("deriveCalibration — per-decision movement", () => {
 
     expect(result.movement).toHaveLength(1);
     expect(result.movement[0].decisionId).toBe(LINEAGE_A);
+  });
+});
+
+describe("caveatForConfidence — slice 3", () => {
+  it("returns null when the band lacks enough measured runs", () => {
+    // Four hits in 70–84% — below CALIBRATION_MIN_SAMPLE.
+    const cal = deriveCalibration(home(band(0.75, CALIBRATION_MIN_SAMPLE - 1, 3)));
+    expect(caveatForConfidence(cal, 0.78)).toBeNull();
+  });
+
+  it("returns the band's rate for a confidence that falls in a measured band", () => {
+    // 6 of 8 as_expected in 70–84%.
+    const cal = deriveCalibration(home(band(0.8, 8, 6)));
+    const caveat = caveatForConfidence(cal, 0.72);
+    expect(caveat).not.toBeNull();
+    expect(caveat!.bandLabel).toBe("70–84%");
+    expect(caveat!.n).toBe(8);
+    expect(caveat!.landed).toBe(6);
+    expect(caveat!.rate).toBeCloseTo(6 / 8, 10);
+  });
+
+  it("does not use another band's rate when this band is empty", () => {
+    // Plenty of 85–100% data; none in below 50%.
+    const cal = deriveCalibration(home(band(0.9, 8, 4)));
+    expect(caveatForConfidence(cal, 0.3)).toBeNull();
+    expect(caveatForConfidence(cal, 0.92)?.bandLabel).toBe("85–100%");
+  });
+
+  it("formats copy that states self-reported and shows denominator", () => {
+    const cal = deriveCalibration(home(band(0.8, 8, 6)));
+    const caveat = caveatForConfidence(cal, 0.8)!;
+    const text = formatConfidenceCaveat(caveat);
+    expect(text).toMatch(/70–84%/);
+    expect(text).toMatch(/75%/);
+    expect(text).toMatch(/8 measured/);
+    expect(text).toMatch(/Self-reported/);
+  });
+
+  it("never changes the confidence number it is asked about", () => {
+    const cal = deriveCalibration(home(band(0.8, 8, 2)));
+    const claimed = 0.81;
+    const caveat = caveatForConfidence(cal, claimed);
+    // The caveat reports history; the claimed value is the caller's input.
+    expect(caveat!.rate).not.toBe(claimed);
+    expect(claimed).toBe(0.81);
   });
 });

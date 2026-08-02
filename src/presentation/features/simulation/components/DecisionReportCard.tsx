@@ -4,12 +4,16 @@ import {
   type DecisionReport,
 } from "../../../../domain/workspace/decisionReport";
 import { confidencePercent } from "../../../../domain/workspace/seed";
+import type { WorkspaceHome } from "../../../../domain/workspace/types";
 import { trackProductEvent } from "../../../../infrastructure/analytics/productAnalytics";
+import { ConfidenceCaveatNote } from "../../memory/components/ConfidenceCaveatNote";
 
 type Props = {
   report: DecisionReport;
   compact?: boolean;
   href?: string;
+  /** Workspace home for measured confidence caveat (slice 3). */
+  home?: WorkspaceHome;
   /** Optional outcome-tracking block rendered after save decision */
   outcomeSlot?: React.ReactNode;
   /** Decide hard-gate actions */
@@ -28,6 +32,7 @@ export function DecisionReportCard({
   report,
   compact,
   href,
+  home,
   outcomeSlot,
   onSaveDecision,
   onCompare,
@@ -190,6 +195,9 @@ export function DecisionReportCard({
           <div className="mt-5">
             <div className="font-mono text-[10px] uppercase text-ink-faint">Confidence</div>
             <div className="mt-1 font-mono text-4xl text-chronos sm:text-5xl">{conf}</div>
+            {home && (
+              <ConfidenceCaveatNote home={home} confidence={report.confidence} className="mt-2" />
+            )}
           </div>
         </section>
 

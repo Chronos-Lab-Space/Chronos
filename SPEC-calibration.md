@@ -1,8 +1,8 @@
 # Spec: does Chronos' confidence mean anything?
 
-**Status:** Slices 1 and 2 shipped. Slice 3 (using measured bias to caveat
-displayed confidence) is deliberately not started — it changes what a number in
-the product means and needs its own approval.
+**Status:** Slices 1–3 shipped. Slice 3 caveats displayed confidence with the
+measured band rate when that band has enough followed, verdicted runs — it
+never rewrites the engine number.
 **Scope:** Read back the outcome data the product has been collecting since
 outcome tracking shipped, and say — honestly, with denominators — how well
 predicted confidence has matched what actually happened.
@@ -153,10 +153,12 @@ rejected in review.
    calibration data to report. Memory is where the logged outcomes actually
    live. The panel sits above the rest of the page because it frames how much
    to trust everything below it.
-3. **Ask first before anything else.** Using measured bias to caveat displayed
-   confidence ("your 80% calls have landed 65% of the time") is a real idea and
-   a different decision. It changes what a number in the product means, so it
-   needs its own approval.
+3. ~~**Caveat displayed confidence.**~~ *Shipped.* `caveatForConfidence` +
+   `formatConfidenceCaveat` look up the band for a claimed confidence and, only
+   when that band has ≥ `CALIBRATION_MIN_SAMPLE` measured runs, surface the
+   historical rate next to the number on the Decision Report and simulation
+   detail (`ConfidenceCaveatNote`). The engine number is unchanged; empty band
+   → nothing rendered (no invented rate).
 
 ---
 

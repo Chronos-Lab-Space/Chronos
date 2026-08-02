@@ -17,6 +17,29 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.12.0",
+    date: "2026-08-02",
+    tag: "minor",
+    title: "Confidence numbers now carry what they have been worth",
+    summary:
+      "When a confidence band has enough followed, verdicted runs, the Decision Report and simulation detail show that band's historical hit rate next to the claimed number — without changing the engine's confidence. Too little data still means silence, not an invented rate. Full calibration stays on Memory.",
+    highlights: [
+      {
+        label: "caveatForConfidence",
+        detail:
+          "Pure lookup: band for claimed confidence → rate only when n ≥ CALIBRATION_MIN_SAMPLE",
+      },
+      {
+        label: "ConfidenceCaveatNote",
+        detail: "On Decision Report + sim detail; links to /workspace/memory for the full panel",
+      },
+      {
+        label: "Engine untouched",
+        detail: "Ranking, scores, and the displayed confidence value stay engine-owned",
+      },
+    ],
+  },
+  {
     version: "5.11.0",
     date: "2026-08-01",
     tag: "minor",
