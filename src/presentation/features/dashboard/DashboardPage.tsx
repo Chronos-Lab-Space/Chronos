@@ -7,6 +7,7 @@ import { formatRelativeTime } from "../../../domain/workspace/pulse";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { BetaChecklist } from "./components/BetaChecklist";
+import { ConfidenceCaveatNote } from "../memory/components/ConfidenceCaveatNote";
 import { DecisionCardView } from "./components/DecisionCard";
 import { HqPipeline } from "./components/HqPipeline";
 
@@ -129,6 +130,9 @@ export function DashboardPage() {
               />
             </svg>
           </div>
+          {card.confidence != null && (
+            <ConfidenceCaveatNote home={home} confidence={card.confidence} className="mt-2" />
+          )}
           <dl className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3 font-mono text-[10px] uppercase text-ink-faint sm:grid-cols-1 sm:space-y-1.5 sm:gap-0">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:gap-2">
               <dt>Evidence</dt>
@@ -148,7 +152,7 @@ export function DashboardPage() {
 
       {/* Recommendation | Evidence (evidence desktop/tablet) */}
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-        <DecisionCardView card={card} />
+        <DecisionCardView card={card} home={home} />
 
         <section className="hidden rounded-2xl border border-line bg-bg-soft/15 p-5 sm:block">
           <div className="flex items-center justify-between gap-2">

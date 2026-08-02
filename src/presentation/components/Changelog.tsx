@@ -17,6 +17,24 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.12.1",
+    date: "2026-08-02",
+    tag: "patch",
+    title: "HQ shows the same confidence caveat as the report",
+    summary:
+      "The measured band rate that landed next to confidence on the Decision Report now appears on the workspace HQ Decision Card and the decision-confidence rail — same silence when a band is under-sampled, same link to full calibration on Memory.",
+    highlights: [
+      {
+        label: "Decision Card",
+        detail: "ConfidenceCaveatNote under the hero confidence line",
+      },
+      {
+        label: "HQ confidence rail",
+        detail: "Same note under the large Decision confidence figure",
+      },
+    ],
+  },
+  {
     version: "5.12.0",
     date: "2026-08-02",
     tag: "minor",
