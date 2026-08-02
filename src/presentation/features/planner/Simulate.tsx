@@ -6,7 +6,7 @@ import type { SimulationResult, Path, Milestone } from "../../../domain/chronos/
 import {
   createPublicStartupRequest,
   publicStartupSimulator,
-} from "../../../application/planner/publicStartupSimulator";
+} from "../../../composition/publicStartupSimulator";
 import { SIMULATION_STAGES } from "../../../domain/chronos/simulation-stages";
 import { ScrollReveal } from "../../components/ScrollReveal";
 

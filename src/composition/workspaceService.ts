@@ -28,7 +28,7 @@ import { supabaseWorkspaceRepository } from "../infrastructure/repositories/Supa
 // Side effects (analytics, memory) attach via the event bus once per process.
 // This used to run on import of WorkspaceService.ts, which meant any test
 // touching that module started the subscribers too.
-registerProductEventSubscribers();
+registerProductEventSubscribers({ track: trackProductEvent });
 
 /**
  * Playwright E2E runs local-only so a placeholder Supabase URL cannot hang the

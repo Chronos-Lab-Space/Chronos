@@ -29,7 +29,7 @@ describe("outcome learning loop", () => {
     // happen as a side effect of importing WorkspaceService; it now belongs to
     // the composition root, so a test that asserts on those records has to ask
     // for them. Idempotent.
-    registerProductEventSubscribers();
+    registerProductEventSubscribers({ track: () => {} });
   });
 
   /** Mirrors how WorkspaceService builds its outcome map before a run. */

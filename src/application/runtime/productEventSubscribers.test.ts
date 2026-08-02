@@ -1,10 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("../../infrastructure/analytics/productAnalytics", () => ({
-  trackProductEvent: vi.fn(),
-}));
-
-import { trackProductEvent } from "../../infrastructure/analytics/productAnalytics";
 import { eventBus } from "../../core/runtime";
 import {
   registerProductEventSubscribers,
@@ -12,12 +6,14 @@ import {
 } from "./productEventSubscribers";
 
 describe("productEventSubscribers", () => {
+  const track = vi.fn();
+
   beforeEach(() => {
     resetProductEventSubscribersForTests();
-    vi.mocked(trackProductEvent).mockClear();
+    track.mockClear();
     // Fresh bus handlers by re-registering on shared singleton is limited;
     // register once and assert call counts from cleared mock.
-    registerProductEventSubscribers();
+    registerProductEventSubscribers({ track });
   });
 
   it("tracks simulation_started on SimulationStarted", async () => {
@@ -27,7 +23,7 @@ describe("productEventSubscribers", () => {
       objectiveLength: 12,
       constraintCount: 2,
     });
-    expect(trackProductEvent).toHaveBeenCalledWith(
+    expect(track).toHaveBeenCalledWith(
       "simulation_started",
       expect.objectContaining({
         simulationId: "s1",
@@ -46,7 +42,7 @@ describe("productEventSubscribers", () => {
       futuresCount: 3,
       status: "completed",
     });
-    expect(trackProductEvent).toHaveBeenCalledWith(
+    expect(track).toHaveBeenCalledWith(
       "simulation_completed",
       expect.objectContaining({
         simulationId: "s1",

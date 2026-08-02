@@ -204,18 +204,3 @@ export function exportSimulationJson(detail: SimulationDetail): string {
     2
   );
 }
-
-/** Browser download helper (no-op in non-DOM environments). */
-export function downloadTextFile(filename: string, content: string, mime = "text/plain"): void {
-  if (typeof document === "undefined") return;
-  const blob = new Blob([content], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.rel = "noopener";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
