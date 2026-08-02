@@ -187,10 +187,9 @@ SUPABASE_SECRET_KEY=… node scripts/verify-decision-objects-hosted.mjs
 SUPABASE_SECRET_KEY=… node scripts/backfill-decision-objects-hosted.mjs
 ```
 
-**Follow-up (still open):** migration `20260730202201` does **not** appear
-applied on hosted. Evidence 2026-08-02: PostgREST OpenAPI describes
-`save_workspace_home` as *"Atomic upsert of a whole workspace snapshot"* —
-the post-migration comment is *"…snapshot, decisions included."* Data is
-repaired via service-role backfill; until that migration (or an equivalent
-function replace) lands, dual-write can re-create orphans. Apply with the
-usual hosted migration path (`supabase db push` / dashboard SQL for that file).
+**Follow-up — closed 2026-08-02.** Migration `20260730202201` applied on
+hosted via `scripts/apply-decisions-from-lineages-hosted.mjs` (DB password,
+not API secret). Post-apply: `save_workspace_home` comment is *"Atomic upsert
+of a whole workspace snapshot, decisions included."*; counts remain
+0 unlinked / 21 decisions / 49 sims. Version recorded in
+`supabase_migrations.schema_migrations`.
