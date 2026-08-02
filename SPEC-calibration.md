@@ -174,11 +174,14 @@ design — that is the determinism invariant working, and it tells you nothing.
 
 Replay only becomes meaningful when something changed: *what would this
 decision have recommended if it had known what you know now?* That is a real
-feature, it needs the knowledge snapshot in `result.knowledge_used` to diff
-against today's library, and it is a bigger piece of work than this one.
+feature: it needs the knowledge snapshot in `result.knowledge_used` to diff
+against today's library.
 
-Calibration is the half that is nearly free and answers a question the product
-is currently dodging. Do this first.
+**Shipped (knowledge-diff slice):** `deriveKnowledgeDelta` + `KnowledgeDeltaPanel`
+on simulation detail. Pure diff of snapshot vs current library; CTA
+"Re-simulate with current library" runs the existing re-run path (new
+`simulationId`, same determinism). It does **not** fake a time-machine score
+and does not re-rank without a new run.
 
 ---
 

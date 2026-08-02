@@ -17,6 +17,32 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.13.0",
+    date: "2026-08-02",
+    tag: "minor",
+    title: "Knowledge-diff replay, AI usage panel, honest plan/research labels",
+    summary:
+      "Replaying the same inputs is a no-op for ranking — so sim detail now diffs the library stored on a run against today's knowledge and offers re-simulate only when something changed. Settings surfaces hosted ai_usage for signed-in users. Research notes and execution plans label AI vs stub. Ops script verify-ai-usage-hosted.mjs samples the ledger.",
+    highlights: [
+      {
+        label: "KnowledgeDeltaPanel",
+        detail: "deriveKnowledgeDelta → added/removed + re-simulate CTA on completed sims",
+      },
+      {
+        label: "AiUsagePanel",
+        detail: "Read-own ai_usage on workspace settings; fail-open when offline",
+      },
+      {
+        label: "LLM surface honesty",
+        detail: "Plan source AI/stub; research notes titled and captioned by source",
+      },
+      {
+        label: "E2E",
+        detail: "decision-workspace covers knowledge-delta + calibration empty/bands",
+      },
+    ],
+  },
+  {
     version: "5.12.3",
     date: "2026-08-02",
     tag: "patch",

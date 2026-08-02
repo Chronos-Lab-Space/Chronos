@@ -7,6 +7,7 @@ import {
 import { useWorkspace } from "./WorkspaceContext";
 import { SurfaceLoading } from "./SurfaceLoading";
 import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
+import { AiUsagePanel } from "./components/AiUsagePanel";
 
 /** Workspace settings — switch, create, inspect, share. */
 export function WorkspaceSettingsPage() {
@@ -217,6 +218,8 @@ export function WorkspaceSettingsPage() {
           <p className="mt-3 text-sm text-red-400">{localError || error}</p>
         )}
       </section>
+
+      <AiUsagePanel />
 
       {/* Local product analytics (beta instrumentation) */}
       <section className="border border-line p-4 sm:p-5">
