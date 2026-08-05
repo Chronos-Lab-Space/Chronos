@@ -33,6 +33,18 @@ export type BriefStat = {
   caption: string;
 };
 
+/**
+ * Why a future is not the recommendation.
+ *
+ * `disqualified` is not a low score — SimulationEngine ranks hard-constraint
+ * violations last with `score <= 0` and still ships them, so a path scoring
+ * zero was ruled out rather than merely beaten.
+ */
+export type BriefFutureStanding =
+  | { kind: "disqualified" }
+  | { kind: "behind"; points: number }
+  | null;
+
 export type BriefFuture = {
   id: string;
   simulationId: string;
@@ -42,6 +54,8 @@ export type BriefFuture = {
   riskPct: number;
   recommended: boolean;
   chosen: boolean;
+  /** Null for the recommendation itself. */
+  standing: BriefFutureStanding;
 };
 
 export type BriefEvidence = {
@@ -153,16 +167,30 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
   const chosenId = trimmed(report?.result.chosen_future_id);
   const bestName = trimmed(report?.result.best_future);
   const ranked = [...futuresRaw].sort((a, b) => b.score - a.score);
-  const futures: BriefFuture[] = ranked.map((f: FutureRecord, i) => ({
-    id: f.id,
-    simulationId: f.simulation_id,
-    name: f.name,
-    summary: f.summary,
-    scorePct: Math.round(f.score * 100),
-    riskPct: Math.round(f.risk * 100),
-    recommended: bestName ? f.name === bestName : i === 0,
-    chosen: chosenId === f.id,
-  }));
+  const leadPct = ranked.length ? Math.round(ranked[0].score * 100) : 0;
+  const futures: BriefFuture[] = ranked.map((f: FutureRecord, i) => {
+    const scorePct = Math.round(f.score * 100);
+    const recommended = bestName ? f.name === bestName : i === 0;
+    return {
+      id: f.id,
+      simulationId: f.simulation_id,
+      name: f.name,
+      summary: f.summary,
+      scorePct,
+      riskPct: Math.round(f.risk * 100),
+      recommended,
+      chosen: chosenId === f.id,
+      // `recommended` alone is not enough: when best_future names a path that
+      // is no longer in the stored futures, nothing is recommended and the
+      // top-ranked future would be measured against its own score.
+      standing:
+        f.score <= 0
+          ? { kind: "disqualified" }
+          : recommended || i === 0
+            ? null
+            : { kind: "behind", points: leadPct - scorePct },
+    };
+  });
 
   const recommendationText = trimmed(report?.result.recommendation);
   const recommendation =

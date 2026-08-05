@@ -4,6 +4,7 @@ import {
   prepareImportUrl,
   prepareUploadFile,
 } from "../../../application/workspace/KnowledgeImport";
+import { countCitations } from "../../../domain/workspace/citations";
 import {
   renderSimpleMarkdown,
   searchLibrary,
@@ -41,6 +42,10 @@ export function KnowledgePage() {
 
   const counts = useMemo(() => knowledgeCounts(knowledge), [knowledge]);
   const hits = useMemo(() => searchLibrary(knowledge, notes, query), [knowledge, notes, query]);
+  const citations = useMemo(
+    () => countCitations(home?.recentSimulations ?? []),
+    [home?.recentSimulations]
+  );
 
   if (!home) return <SurfaceLoading eyebrow="Knowledge" title="Library" size="lg" />;
 
@@ -280,7 +285,7 @@ export function KnowledgePage() {
           </li>
         ) : (
           hits.map((hit) => (
-            <li key={`${hit.kind}-${hit.id}`}>
+            <li key={`${hit.kind}-${hit.id}`} data-testid={`source-${hit.id}`}>
               <button
                 type="button"
                 onClick={() => setSelected(hit)}
@@ -290,6 +295,17 @@ export function KnowledgePage() {
                   <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
                     {hit.type}
                   </span>
+                  {/* Weight by use, not by recency: a source the runs keep
+                      reaching for is doing more work than a fresh upload. */}
+                  {citations.get(hit.id) ? (
+                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-chronos">
+                      cited {citations.get(hit.id)}×
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+                      not yet used
+                    </span>
+                  )}
                   {query && hit.score > 0 && (
                     <span className="font-mono text-[10px] text-chronos">match {hit.score}</span>
                   )}

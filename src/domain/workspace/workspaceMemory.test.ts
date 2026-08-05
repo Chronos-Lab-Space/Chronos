@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   archiveGoalIfChanged,
   buildActivityFeed,
+  derivePriors,
   listDecisionHistory,
   listPendingDecisions,
 } from "./workspaceMemory";
@@ -96,6 +97,55 @@ describe("workspaceMemory", () => {
     expect(hist[0].pathName).toBe("Beta First");
     expect(hist[0].followed).toBe("yes");
     expect(hist[0].graphSummary).toMatch(/collapsed to “Beta First”/);
+  });
+
+  it("carries the outcome verdict so a run can be read against its prediction", () => {
+    const home = makeHome([
+      baseSim({
+        confidence: 0.74,
+        result: {
+          chosen_future_name: "Big bang release",
+          chosen_at: "2026-05-22T00:00:00.000Z",
+          outcome_followed: "yes",
+          outcome_result: "Support load tripled our estimate.",
+          outcome_verdict: "worse",
+        },
+      }),
+    ]);
+
+    expect(listDecisionHistory(home)[0]).toMatchObject({ confidence: 0.74, verdict: "worse" });
+  });
+
+  it("has no verdict on a decision whose outcome is still unlogged", () => {
+    const home = makeHome([
+      baseSim({
+        result: { chosen_future_name: "Beta First", chosen_at: "2026-05-22T00:00:00.000Z" },
+      }),
+    ]);
+
+    expect(listDecisionHistory(home)[0].verdict).toBeNull();
+  });
+
+  it("counts only decisions with a logged outcome as priors", () => {
+    // A prior is a correction the workspace has actually earned; a decision
+    // still waiting on its outcome has taught it nothing yet.
+    const home = makeHome([
+      baseSim({
+        id: "s1",
+        confidence: 0.74,
+        result: {
+          chosen_future_name: "Big bang release",
+          chosen_at: "2026-05-22T00:00:00.000Z",
+          outcome_verdict: "worse",
+        },
+      }),
+      baseSim({
+        id: "s2",
+        result: { chosen_future_name: "Staged", chosen_at: "2026-06-01T00:00:00.000Z" },
+      }),
+    ]);
+
+    expect(derivePriors(home).map((p) => p.simulationId)).toEqual(["s1"]);
   });
 
   it("builds activity feed with knowledge and sims", () => {

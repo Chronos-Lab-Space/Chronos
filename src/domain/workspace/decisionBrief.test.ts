@@ -219,6 +219,53 @@ describe("deriveDecisionBrief", () => {
     expect(brief?.recommendation).toBeNull();
   });
 
+  it("says how far behind the leader each ranked future is", () => {
+    // The design's ranked list explains why a path lost, not just that it did.
+    const brief = deriveDecisionBrief(
+      home({ sims: [sim({ id: "s1", status: "completed" })], futures: { s1: futures } })
+    );
+
+    expect(brief?.futures.map((f) => f.standing)).toEqual([null, { kind: "behind", points: 11 }]);
+  });
+
+  it("never reports the top-ranked future as behind itself", () => {
+    // best_future can name a path that is not in the stored futures — a rename
+    // between runs is enough. Nothing is then flagged `recommended`, and the
+    // leader must still not be measured against its own score.
+    const brief = deriveDecisionBrief(
+      home({
+        sims: [
+          sim({ id: "s1", status: "completed", result: { best_future: "A path since renamed" } }),
+        ],
+        futures: { s1: futures },
+      })
+    );
+
+    expect(brief?.futures[0].standing).toBeNull();
+  });
+
+  it("marks a future the engine disqualified rather than calling it merely behind", () => {
+    // SimulationEngine ranks constraint-violating paths last with score <= 0
+    // and still ships them; a bare "0%" hides that a constraint killed it.
+    const disqualified: FutureRecord[] = [
+      ...futures,
+      {
+        id: "f3",
+        simulation_id: "s1",
+        name: "Raise a round first",
+        score: 0,
+        risk: 0.9,
+        confidence: 0.1,
+        summary: "Violates the no-raise constraint",
+      },
+    ];
+    const brief = deriveDecisionBrief(
+      home({ sims: [sim({ id: "s1", status: "completed" })], futures: { s1: disqualified } })
+    );
+
+    expect(brief?.futures.at(-1)?.standing).toEqual({ kind: "disqualified" });
+  });
+
   it("recommendation and futures come from the newest completed run, not a newer failed one", () => {
     const brief = deriveDecisionBrief(
       home({

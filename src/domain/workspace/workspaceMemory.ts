@@ -3,7 +3,13 @@
  * decision history, knowledge, and past outcomes.
  */
 import { summarizeSimulationGraph } from "./decisionGraph";
-import type { GoalRecord, OutcomeFollowed, SimulationRecord, WorkspaceHome } from "./types";
+import type {
+  GoalRecord,
+  OutcomeFollowed,
+  OutcomeVerdict,
+  SimulationRecord,
+  WorkspaceHome,
+} from "./types";
 
 export type PendingDecision = {
   simulationId: string;
@@ -22,6 +28,12 @@ export type DecisionHistoryItem = {
   confidence: number | null;
   followed: OutcomeFollowed | null;
   outcomeResult: string | null;
+  /**
+   * How the real outcome landed against the prediction. Paired with
+   * `confidence`, this is the only honest predicted-vs-actual read the
+   * workspace has — free-text results are never interpreted.
+   */
+  verdict: OutcomeVerdict | null;
   href: string;
   /** Open → N branches → collapsed (decision graph stamp). */
   graphSummary: string;
@@ -124,12 +136,31 @@ export function listDecisionHistory(home: WorkspaceHome): DecisionHistoryItem[] 
       followed,
       outcomeResult:
         typeof sim.result.outcome_result === "string" ? sim.result.outcome_result : null,
+      verdict:
+        sim.result.outcome_verdict === "better" ||
+        sim.result.outcome_verdict === "as_expected" ||
+        sim.result.outcome_verdict === "worse"
+          ? sim.result.outcome_verdict
+          : null,
       href: `/workspace/simulations/${sim.id}`,
       graphSummary: summarizeSimulationGraph(sim),
       graphOp: typeof sim.result.graph_op === "string" ? sim.result.graph_op : null,
     });
   }
   return items.sort((a, b) => b.chosenAt.localeCompare(a.chosenAt));
+}
+
+/**
+ * Priors — closed decisions that have already taught this workspace something.
+ *
+ * Only a decision with a logged outcome qualifies: until the real result is
+ * in, a run has produced a prediction, not a correction. Chronos does not
+ * claim which prior moved which score — the causal link is the user's to draw.
+ */
+export function derivePriors(home: WorkspaceHome): DecisionHistoryItem[] {
+  return listDecisionHistory(home).filter(
+    (item) => item.verdict !== null || Boolean(item.outcomeResult?.trim())
+  );
 }
 
 /** Chronological activity for “What changed since last time?” */
