@@ -151,6 +151,13 @@ describe("WorkspaceContextRail", () => {
     expect(screen.getByTestId("rail-memory")).toHaveTextContent(/no outcome logged yet/i);
   });
 
+  it("lists what has recently changed in the workspace", () => {
+    renderRail();
+
+    const activity = screen.getByTestId("rail-activity");
+    expect(within(activity).getByText(/latest run/i)).toBeInTheDocument();
+  });
+
   it("falls back to the newest run when no simulation is active", () => {
     // Dashboard routes have no simulation in view — prior behaviour stands.
     renderRail();

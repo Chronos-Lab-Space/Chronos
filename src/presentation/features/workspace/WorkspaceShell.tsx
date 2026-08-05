@@ -260,7 +260,10 @@ function WorkspaceShellInner() {
               })}
 
               <div className="mt-auto space-y-3 border-t border-line px-1 pt-4 pb-2">
-                <div className="rounded-xl border border-line bg-bg-soft/20 p-3">
+                <div
+                  className="rounded-xl border border-line bg-bg-soft/20 p-3"
+                  data-testid="sidebar-active-decision"
+                >
                   <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
                     Current decision
                   </div>
@@ -273,6 +276,14 @@ function WorkspaceShellInner() {
                       {home?.recentSimulations[0]?.status ?? "Planning"}
                     </span>
                   </div>
+                  {/* The card names the decision; without its confidence it
+                      says nothing about where the decision actually stands. */}
+                  {brief?.confidencePct != null && (
+                    <div className="mt-2 flex items-center justify-between font-mono text-[10px] uppercase text-ink-faint">
+                      <span>Confidence</span>
+                      <span className="tabular-nums text-chronos">{brief.confidencePct}%</span>
+                    </div>
+                  )}
                   <NavLink
                     to="/workspace"
                     end

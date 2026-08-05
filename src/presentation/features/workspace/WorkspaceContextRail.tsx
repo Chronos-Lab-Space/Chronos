@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import { deriveTargets } from "../../../domain/workspace/targets";
 import type { OutcomeVerdict, WorkspaceHome } from "../../../domain/workspace/types";
-import { derivePriors } from "../../../domain/workspace/workspaceMemory";
+import { buildActivityFeed, derivePriors } from "../../../domain/workspace/workspaceMemory";
 
 /** Reads next to the predicted confidence, so it names the comparison. */
 const VERDICT_LABEL: Record<OutcomeVerdict, string> = {
@@ -44,6 +44,7 @@ export function WorkspaceContextRail({
       : [];
   const targets = deriveTargets(goal);
   const priors = derivePriors(home).slice(0, 3);
+  const activity = buildActivityFeed(home, 4);
 
   const tabClass = (active: boolean) =>
     `rounded-md px-2.5 py-1 font-mono text-[10px] uppercase transition ${
@@ -170,6 +171,26 @@ export function WorkspaceContextRail({
                 )}
               </section>
             )}
+
+            <section className="mt-5" data-testid="rail-activity">
+              <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                Recent activity
+              </div>
+              {activity.length === 0 ? (
+                <p className="mt-2 text-sm text-ink-faint">Nothing has happened here yet.</p>
+              ) : (
+                <ul className="mt-2 space-y-2.5">
+                  {activity.map((item) => (
+                    <li key={item.id}>
+                      <div className="text-sm text-ink-dim">{item.title}</div>
+                      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+                        {formatCreatedAt(item.at)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
             <section className="mt-5" data-testid="rail-memory">
               <div className="flex items-center justify-between">

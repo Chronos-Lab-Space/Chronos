@@ -1,3 +1,4 @@
+import { countCitations } from "./citations";
 import type { FutureRecord, KnowledgeRecord, SimulationRecord, WorkspaceHome } from "./types";
 
 /**
@@ -63,6 +64,12 @@ export type BriefEvidence = {
   title: string;
   kind: string;
   addedAt: string;
+  /**
+   * Completed runs that recorded using this source. The design weighted
+   * sources HIGH/MEDIUM, which nothing in the schema backs; use is a number
+   * the workspace really kept.
+   */
+  citedByRuns: number;
 };
 
 export type DecisionBrief = {
@@ -146,7 +153,27 @@ function stageTimestamp(
   }
 }
 
-export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief | null {
+/**
+ * Whole days since the newest attached source, or null when nothing is
+ * attached. `now` is a parameter so the value stays testable and the
+ * derivation stays pure.
+ */
+function daysSinceLastInput(home: WorkspaceHome, now: Date): number | null {
+  const newest = [...home.knowledge, ...home.notes]
+    .map((record) => record.created_at)
+    .sort((a, b) => b.localeCompare(a))[0];
+  if (!newest) return null;
+
+  const at = new Date(newest).getTime();
+  if (Number.isNaN(at)) return null;
+
+  return Math.max(0, Math.floor((now.getTime() - at) / 86_400_000));
+}
+
+export function deriveDecisionBrief(
+  home: WorkspaceHome | null,
+  now: Date = new Date()
+): DecisionBrief | null {
   if (!home) return null;
 
   const goal = home.goal;
@@ -213,6 +240,9 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
     ? report.result.constraints.length
     : 0;
   const risks = Array.isArray(report?.result.risks) ? report.result.risks.length : 0;
+  const disqualified =
+    typeof report?.result.disqualified_count === "number" ? report.result.disqualified_count : 0;
+  const staleDays = daysSinceLastInput(home, now);
   const evidenceCount = home.knowledge.length + home.notes.length;
 
   const stats: BriefStat[] = [
@@ -229,6 +259,14 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
     { label: "FUTURES", value: String(futures.length), caption: "in the latest report" },
     { label: "CONSTRAINTS", value: String(constraints), caption: "applied to the run" },
     { label: "RISKS", value: String(risks), caption: "identified" },
+    // The engine's own count of paths hard constraints removed — the honest
+    // version of the design's "dissent": disagreement the run acted on.
+    { label: "RULED OUT", value: String(disqualified), caption: "futures hard constraints cut" },
+    {
+      label: "STALENESS",
+      value: staleDays == null ? "—" : staleDays === 0 ? "today" : `${staleDays}d`,
+      caption: "since the last source landed",
+    },
     {
       label: "VERSION",
       value: report ? `v${report.version}` : "—",
@@ -236,14 +274,22 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
     },
   ];
 
+  const citations = countCitations(home.recentSimulations);
   const evidence: BriefEvidence[] = [
     ...home.knowledge.map((k: KnowledgeRecord) => ({
       id: k.id,
       title: k.title,
       kind: k.type,
       addedAt: k.created_at,
+      citedByRuns: citations.get(k.id) ?? 0,
     })),
-    ...home.notes.map((n) => ({ id: n.id, title: n.title, kind: "note", addedAt: n.created_at })),
+    ...home.notes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      kind: "note",
+      addedAt: n.created_at,
+      citedByRuns: citations.get(n.id) ?? 0,
+    })),
   ].sort((a, b) => b.addedAt.localeCompare(a.addedAt));
 
   return {

@@ -33,7 +33,7 @@ function workspaceHome(knowledgeUsed: string[][]): WorkspaceHome {
       {
         id: "k1",
         workspace_id: "w1",
-        type: "document",
+        type: "markdown",
         title: "Product roadmap",
         content: "Quarterly plan",
         metadata: {},
@@ -42,7 +42,7 @@ function workspaceHome(knowledgeUsed: string[][]): WorkspaceHome {
       {
         id: "k2",
         workspace_id: "w1",
-        type: "document",
+        type: "markdown",
         title: "Press list",
         content: "Embargo notes",
         metadata: {},

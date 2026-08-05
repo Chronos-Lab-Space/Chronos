@@ -24,7 +24,13 @@ function future(over: Partial<FutureRecord> & Pick<FutureRecord, "id" | "name" |
   } as FutureRecord;
 }
 
-function workspaceHome(futures: FutureRecord[]): WorkspaceHome {
+function workspaceHome(
+  futures: FutureRecord[],
+  evidence: { knowledge: WorkspaceHome["knowledge"]; knowledgeUsed: string[] } = {
+    knowledge: [],
+    knowledgeUsed: [],
+  }
+): WorkspaceHome {
   const simulation: SimulationRecord = {
     id: "s1",
     workspace_id: "w1",
@@ -32,7 +38,11 @@ function workspaceHome(futures: FutureRecord[]): WorkspaceHome {
     title: "How should we launch?",
     status: "completed",
     confidence: 0.72,
-    result: { best_future: "Community first", recommendation: "Community list first." },
+    result: {
+      best_future: "Community first",
+      recommendation: "Community list first.",
+      knowledge_used: evidence.knowledgeUsed.map((id) => ({ id, title: id, type: "document" })),
+    },
     created_at: "2026-07-24T00:00:00.000Z",
     version: 1,
     lineage_id: "s1",
@@ -52,7 +62,7 @@ function workspaceHome(futures: FutureRecord[]): WorkspaceHome {
     goalHistory: [],
     decisions: [],
     recentSimulations: [simulation],
-    knowledge: [],
+    knowledge: evidence.knowledge,
     notes: [],
     futuresBySimulation: { s1: futures },
     timelineBySimulation: {},
@@ -67,6 +77,56 @@ function renderBrief(futures: FutureRecord[]) {
     </MemoryRouter>
   );
 }
+
+describe("DecisionBriefPage evidence", () => {
+  it("weights a source by the runs that used it", () => {
+    home.current = workspaceHome([], {
+      knowledge: [
+        {
+          id: "k1",
+          workspace_id: "w1",
+          type: "markdown",
+          title: "Product roadmap",
+          content: "",
+          metadata: {},
+          created_at: "2026-07-01T00:00:00.000Z",
+        },
+      ],
+      knowledgeUsed: ["k1"],
+    });
+    render(
+      <MemoryRouter>
+        <DecisionBriefPage />
+      </MemoryRouter>
+    );
+
+    expect(within(screen.getByTestId("evidence-k1")).getByText(/cited 1×/i)).toBeInTheDocument();
+  });
+
+  it("marks a source no run has reached for", () => {
+    home.current = workspaceHome([], {
+      knowledge: [
+        {
+          id: "k2",
+          workspace_id: "w1",
+          type: "markdown",
+          title: "Press list",
+          content: "",
+          metadata: {},
+          created_at: "2026-07-01T00:00:00.000Z",
+        },
+      ],
+      knowledgeUsed: [],
+    });
+    render(
+      <MemoryRouter>
+        <DecisionBriefPage />
+      </MemoryRouter>
+    );
+
+    expect(within(screen.getByTestId("evidence-k2")).getByText(/unused/i)).toBeInTheDocument();
+  });
+});
 
 describe("DecisionBriefPage ranked futures", () => {
   it("says how far behind the leader a beaten future is", () => {

@@ -6,6 +6,7 @@ function home(overrides: {
   goal?: boolean;
   sims?: SimulationRecord[];
   futures?: Record<string, FutureRecord[]>;
+  knowledge?: WorkspaceHome["knowledge"];
 }): WorkspaceHome {
   return {
     workspace: {
@@ -30,7 +31,7 @@ function home(overrides: {
     goalHistory: [],
     decisions: [],
     recentSimulations: overrides.sims ?? [],
-    knowledge: [],
+    knowledge: overrides.knowledge ?? [],
     notes: [],
     futuresBySimulation: overrides.futures ?? {},
     timelineBySimulation: {},
@@ -77,6 +78,25 @@ const futures: FutureRecord[] = [
     summary: "Staged opening",
   },
 ];
+
+/** A workspace whose single knowledge source landed at `addedAt`. */
+function homeWithKnowledge(addedAt: string): WorkspaceHome {
+  const base = home({});
+  return {
+    ...base,
+    knowledge: [
+      {
+        id: "k1",
+        workspace_id: "w1",
+        type: "markdown",
+        title: "Roadmap",
+        content: "",
+        metadata: {},
+        created_at: addedAt,
+      },
+    ],
+  };
+}
 
 describe("deriveDecisionBrief", () => {
   it("returns null without a home", () => {
@@ -226,6 +246,82 @@ describe("deriveDecisionBrief", () => {
     );
 
     expect(brief?.futures.map((f) => f.standing)).toEqual([null, { kind: "behind", points: 11 }]);
+  });
+
+  it("weights each evidence row by how many runs actually used it", () => {
+    // The design weighted sources HIGH/MEDIUM, which nothing in the schema
+    // backs. Use counts the workspace really recorded instead.
+    const knowledge = [
+      {
+        id: "k1",
+        workspace_id: "w1",
+        type: "markdown" as const,
+        title: "Roadmap",
+        content: "",
+        metadata: {},
+        created_at: "2026-01-05T00:00:00.000Z",
+      },
+      {
+        id: "k2",
+        workspace_id: "w1",
+        type: "markdown" as const,
+        title: "Press list",
+        content: "",
+        metadata: {},
+        created_at: "2026-01-04T00:00:00.000Z",
+      },
+    ];
+    const cite = (...ids: string[]) => ({
+      knowledge_used: ids.map((id) => ({ id, title: id, type: "document" })),
+    });
+    const brief = deriveDecisionBrief(
+      home({
+        knowledge,
+        sims: [
+          sim({ id: "s2", status: "completed", result: cite("k1") }),
+          sim({ id: "s1", status: "completed", result: cite("k1", "k2") }),
+        ],
+      })
+    );
+
+    expect(brief?.evidence.map((e) => [e.id, e.citedByRuns])).toEqual([
+      ["k1", 2],
+      ["k2", 1],
+    ]);
+  });
+
+  it("counts the futures hard constraints ruled out", () => {
+    const brief = deriveDecisionBrief(
+      home({
+        sims: [sim({ id: "s1", status: "completed", result: { disqualified_count: 3 } })],
+      })
+    );
+
+    expect(brief?.stats.find((s) => s.label === "RULED OUT")?.value).toBe("3");
+  });
+
+  it("measures staleness from the newest input, not from the run", () => {
+    const brief = deriveDecisionBrief(
+      homeWithKnowledge("2026-01-08T00:00:00.000Z"),
+      new Date("2026-01-10T00:00:00.000Z")
+    );
+
+    expect(brief?.stats.find((s) => s.label === "STALENESS")?.value).toBe("2d");
+  });
+
+  it("reports staleness as today when input landed within the day", () => {
+    const brief = deriveDecisionBrief(
+      homeWithKnowledge("2026-01-10T06:00:00.000Z"),
+      new Date("2026-01-10T18:00:00.000Z")
+    );
+
+    expect(brief?.stats.find((s) => s.label === "STALENESS")?.value).toBe("today");
+  });
+
+  it("has no staleness to report before anything has been attached", () => {
+    const brief = deriveDecisionBrief(home({}), new Date("2026-01-10T00:00:00.000Z"));
+
+    expect(brief?.stats.find((s) => s.label === "STALENESS")?.value).toBe("—");
   });
 
   it("never reports the top-ranked future as behind itself", () => {
