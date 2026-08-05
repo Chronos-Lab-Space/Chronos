@@ -1,8 +1,20 @@
 import { render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
-import type { SimulationRecord, WorkspaceHome } from "../../../domain/workspace/types";
+import type { GoalRecord, SimulationRecord, WorkspaceHome } from "../../../domain/workspace/types";
 import { WorkspaceContextRail } from "./WorkspaceContextRail";
+
+function goal(title: string, description = ""): GoalRecord {
+  return {
+    id: "g1",
+    workspace_id: "w1",
+    title,
+    description,
+    status: "active",
+    priority: 1,
+    created_at: "2026-07-01T00:00:00.000Z",
+  };
+}
 
 function sim(over: Partial<SimulationRecord> = {}): SimulationRecord {
   return {
@@ -33,24 +45,44 @@ const latest = sim({
   result: { constraints: ["no raise before launch"] },
 });
 
-function home(): WorkspaceHome {
+const closed = sim({
+  id: "sim-closed",
+  title: "Docs relaunch",
+  confidence: 0.74,
+  created_at: "2026-05-20T00:00:00.000Z",
+  result: {
+    chosen_future_name: "Big bang release",
+    chosen_at: "2026-05-22T00:00:00.000Z",
+    outcome_verdict: "worse",
+    outcome_result: "Support load tripled our estimate.",
+  },
+});
+
+function home(
+  goalRecord: GoalRecord | null = null,
+  sims: SimulationRecord[] = [latest, older]
+): WorkspaceHome {
   return {
     workspace: { id: "w1", owner_id: "u1", name: "Lab", description: "", created_at: "" },
-    goal: null,
+    goal: goalRecord,
     goalHistory: [],
     knowledge: [],
     notes: [],
     // newest first, as the product stores them
-    recentSimulations: [latest, older],
+    recentSimulations: sims,
     futuresBySimulation: {},
     timelineBySimulation: {},
   } as unknown as WorkspaceHome;
 }
 
-function renderRail(activeSimulationId?: string) {
+function renderRail(
+  activeSimulationId?: string,
+  goalRecord: GoalRecord | null = null,
+  sims?: SimulationRecord[]
+) {
   return render(
     <MemoryRouter>
-      <WorkspaceContextRail home={home()} activeSimulationId={activeSimulationId} />
+      <WorkspaceContextRail home={home(goalRecord, sims)} activeSimulationId={activeSimulationId} />
     </MemoryRouter>
   );
 }
@@ -80,6 +112,50 @@ describe("WorkspaceContextRail", () => {
     const related = screen.getByTestId("rail-related");
     expect(within(related).queryByText(/older run/i)).not.toBeInTheDocument();
     expect(within(related).getByText(/latest run/i)).toBeInTheDocument();
+  });
+
+  it("lists the measurable targets named in the objective", () => {
+    renderRail(undefined, goal("Launch the beta", "Reach 1,000 signups at 40% retention"));
+
+    const targets = screen.getByTestId("rail-targets");
+    expect(within(targets).getByText("signups")).toBeInTheDocument();
+    expect(within(targets).getByText("1,000")).toBeInTheDocument();
+    expect(within(targets).getByText("retention")).toBeInTheDocument();
+    expect(within(targets).getByText("40%")).toBeInTheDocument();
+  });
+
+  it("asks for a number when the objective names no target", () => {
+    renderRail(undefined, goal("Launch a beta that earns durable adoption"));
+
+    expect(screen.getByTestId("rail-targets")).toHaveTextContent(/no measurable target/i);
+  });
+
+  it("omits targets entirely when no objective is set", () => {
+    renderRail();
+
+    expect(screen.queryByTestId("rail-targets")).not.toBeInTheDocument();
+  });
+
+  it("puts priors in play with what they predicted and how they landed", () => {
+    renderRail(undefined, null, [latest, closed]);
+
+    const memory = screen.getByTestId("rail-memory");
+    expect(within(memory).getByText(/big bang release/i)).toBeInTheDocument();
+    expect(within(memory).getByText(/74%/)).toBeInTheDocument();
+    expect(within(memory).getByText(/worse than predicted/i)).toBeInTheDocument();
+  });
+
+  it("says memory is empty until an outcome has actually been logged", () => {
+    renderRail();
+
+    expect(screen.getByTestId("rail-memory")).toHaveTextContent(/no outcome logged yet/i);
+  });
+
+  it("lists what has recently changed in the workspace", () => {
+    renderRail();
+
+    const activity = screen.getByTestId("rail-activity");
+    expect(within(activity).getByText(/latest run/i)).toBeInTheDocument();
   });
 
   it("falls back to the newest run when no simulation is active", () => {

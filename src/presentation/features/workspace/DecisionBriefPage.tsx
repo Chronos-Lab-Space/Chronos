@@ -164,8 +164,9 @@ export function DecisionBriefPage() {
             {brief.evidence.slice(0, 6).map((row, i) => (
               <Link
                 key={row.id}
+                data-testid={`evidence-${row.id}`}
                 to="/workspace/knowledge"
-                className={`grid grid-cols-[1fr_auto_auto] items-center gap-4 border-t border-line px-1 py-3 transition hover:bg-bg-soft/20 ${
+                className={`grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 border-t border-line px-1 py-3 transition hover:bg-bg-soft/20 ${
                   i === Math.min(brief.evidence.length, 6) - 1 ? "border-b" : ""
                 }`}
               >
@@ -174,6 +175,14 @@ export function DecisionBriefPage() {
                   {row.kind}
                 </span>
                 <span className="text-[12px] text-ink-faint">{formatDay(row.addedAt)}</span>
+                {/* Weight by use, not by an invented HIGH/MEDIUM grade. */}
+                <span
+                  className={`text-right font-mono text-[10px] uppercase tracking-[0.1em] ${
+                    row.citedByRuns > 0 ? "text-chronos" : "text-ink-faint"
+                  }`}
+                >
+                  {row.citedByRuns > 0 ? `cited ${row.citedByRuns}×` : "unused"}
+                </span>
               </Link>
             ))}
           </div>
@@ -198,6 +207,7 @@ export function DecisionBriefPage() {
             {brief.futures.map((future) => (
               <Link
                 key={future.id}
+                data-testid={`future-${future.id}`}
                 to={`/workspace/simulations/${future.simulationId}`}
                 className={`flex flex-wrap items-baseline gap-x-5 gap-y-1 rounded-xl border px-5 py-4 transition ${
                   future.recommended || future.chosen
@@ -225,6 +235,14 @@ export function DecisionBriefPage() {
                 ) : future.recommended ? (
                   <span className="font-mono text-[10px] tracking-[0.14em] text-chronos">
                     RECOMMENDED
+                  </span>
+                ) : future.standing?.kind === "disqualified" ? (
+                  <span className="font-mono text-[10px] tracking-[0.14em] text-amber-300/80">
+                    BREACHES A CONSTRAINT
+                  </span>
+                ) : future.standing ? (
+                  <span className="font-mono text-[10px] tracking-[0.14em] text-ink-faint">
+                    {future.standing.points} PTS BEHIND
                   </span>
                 ) : null}
               </Link>

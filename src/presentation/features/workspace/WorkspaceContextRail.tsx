@@ -1,7 +1,16 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
-import type { WorkspaceHome } from "../../../domain/workspace/types";
+import { deriveTargets } from "../../../domain/workspace/targets";
+import type { OutcomeVerdict, WorkspaceHome } from "../../../domain/workspace/types";
+import { buildActivityFeed, derivePriors } from "../../../domain/workspace/workspaceMemory";
+
+/** Reads next to the predicted confidence, so it names the comparison. */
+const VERDICT_LABEL: Record<OutcomeVerdict, string> = {
+  better: "better than predicted",
+  as_expected: "as predicted",
+  worse: "worse than predicted",
+};
 
 /**
  * Right context rail — Details (objective, constraints, related sims, outcome)
@@ -33,6 +42,9 @@ export function WorkspaceContextRail({
     active && Array.isArray(active.result.constraints)
       ? (active.result.constraints as string[]).slice(0, 6)
       : [];
+  const targets = deriveTargets(goal);
+  const priors = derivePriors(home).slice(0, 3);
+  const activity = buildActivityFeed(home, 4);
 
   const tabClass = (active: boolean) =>
     `rounded-md px-2.5 py-1 font-mono text-[10px] uppercase transition ${
@@ -128,6 +140,91 @@ export function WorkspaceContextRail({
                     <li key={c} className="flex gap-2">
                       <span className="text-chronos">•</span>
                       <span>{c.replace(/^(hard|soft):\s*/i, "")}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {goal && (
+              <section className="mt-5" data-testid="rail-targets">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                  Targets
+                </div>
+                {targets.length === 0 ? (
+                  <p className="mt-2 text-sm text-ink-faint">
+                    No measurable target in the objective — add a number to hold the run to
+                    something.
+                  </p>
+                ) : (
+                  <dl className="mt-2 space-y-1.5 text-sm">
+                    {targets.map((target) => (
+                      <div
+                        key={`${target.value} ${target.label}`}
+                        className="flex justify-between gap-3"
+                      >
+                        <dt className="capitalize text-ink-faint">{target.label}</dt>
+                        <dd className="tabular-nums text-ink-dim">{target.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </section>
+            )}
+
+            <section className="mt-5" data-testid="rail-activity">
+              <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                Recent activity
+              </div>
+              {activity.length === 0 ? (
+                <p className="mt-2 text-sm text-ink-faint">Nothing has happened here yet.</p>
+              ) : (
+                <ul className="mt-2 space-y-2.5">
+                  {activity.map((item) => (
+                    <li key={item.id}>
+                      <div className="text-sm text-ink-dim">{item.title}</div>
+                      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+                        {formatCreatedAt(item.at)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <section className="mt-5" data-testid="rail-memory">
+              <div className="flex items-center justify-between">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                  Memory in play
+                </div>
+                <Link to="/workspace/memory" className="font-mono text-[10px] text-chronos">
+                  All
+                </Link>
+              </div>
+              {priors.length === 0 ? (
+                <p className="mt-2 text-sm text-ink-faint">
+                  No outcome logged yet — nothing here has been proved right or wrong.
+                </p>
+              ) : (
+                <ul className="mt-2 space-y-2.5 text-sm">
+                  {priors.map((prior) => (
+                    <li key={prior.simulationId}>
+                      <Link to={prior.href} className="block text-ink-dim hover:text-chronos">
+                        {prior.pathName}
+                      </Link>
+                      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+                        {prior.confidence != null ? (
+                          <span className="tabular-nums">
+                            {confidencePercent(prior.confidence)}
+                          </span>
+                        ) : null}
+                        {prior.verdict ? (
+                          <span className={prior.verdict === "worse" ? "text-amber-300/80" : ""}>
+                            {prior.confidence != null ? " · " : ""}
+                            {VERDICT_LABEL[prior.verdict]}
+                          </span>
+                        ) : null}
+                      </div>
                     </li>
                   ))}
                 </ul>

@@ -1,3 +1,4 @@
+import { countCitations } from "./citations";
 import type { FutureRecord, KnowledgeRecord, SimulationRecord, WorkspaceHome } from "./types";
 
 /**
@@ -33,6 +34,18 @@ export type BriefStat = {
   caption: string;
 };
 
+/**
+ * Why a future is not the recommendation.
+ *
+ * `disqualified` is not a low score — SimulationEngine ranks hard-constraint
+ * violations last with `score <= 0` and still ships them, so a path scoring
+ * zero was ruled out rather than merely beaten.
+ */
+export type BriefFutureStanding =
+  | { kind: "disqualified" }
+  | { kind: "behind"; points: number }
+  | null;
+
 export type BriefFuture = {
   id: string;
   simulationId: string;
@@ -42,6 +55,8 @@ export type BriefFuture = {
   riskPct: number;
   recommended: boolean;
   chosen: boolean;
+  /** Null for the recommendation itself. */
+  standing: BriefFutureStanding;
 };
 
 export type BriefEvidence = {
@@ -49,6 +64,12 @@ export type BriefEvidence = {
   title: string;
   kind: string;
   addedAt: string;
+  /**
+   * Completed runs that recorded using this source. The design weighted
+   * sources HIGH/MEDIUM, which nothing in the schema backs; use is a number
+   * the workspace really kept.
+   */
+  citedByRuns: number;
 };
 
 export type DecisionBrief = {
@@ -132,7 +153,27 @@ function stageTimestamp(
   }
 }
 
-export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief | null {
+/**
+ * Whole days since the newest attached source, or null when nothing is
+ * attached. `now` is a parameter so the value stays testable and the
+ * derivation stays pure.
+ */
+function daysSinceLastInput(home: WorkspaceHome, now: Date): number | null {
+  const newest = [...home.knowledge, ...home.notes]
+    .map((record) => record.created_at)
+    .sort((a, b) => b.localeCompare(a))[0];
+  if (!newest) return null;
+
+  const at = new Date(newest).getTime();
+  if (Number.isNaN(at)) return null;
+
+  return Math.max(0, Math.floor((now.getTime() - at) / 86_400_000));
+}
+
+export function deriveDecisionBrief(
+  home: WorkspaceHome | null,
+  now: Date = new Date()
+): DecisionBrief | null {
   if (!home) return null;
 
   const goal = home.goal;
@@ -153,16 +194,30 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
   const chosenId = trimmed(report?.result.chosen_future_id);
   const bestName = trimmed(report?.result.best_future);
   const ranked = [...futuresRaw].sort((a, b) => b.score - a.score);
-  const futures: BriefFuture[] = ranked.map((f: FutureRecord, i) => ({
-    id: f.id,
-    simulationId: f.simulation_id,
-    name: f.name,
-    summary: f.summary,
-    scorePct: Math.round(f.score * 100),
-    riskPct: Math.round(f.risk * 100),
-    recommended: bestName ? f.name === bestName : i === 0,
-    chosen: chosenId === f.id,
-  }));
+  const leadPct = ranked.length ? Math.round(ranked[0].score * 100) : 0;
+  const futures: BriefFuture[] = ranked.map((f: FutureRecord, i) => {
+    const scorePct = Math.round(f.score * 100);
+    const recommended = bestName ? f.name === bestName : i === 0;
+    return {
+      id: f.id,
+      simulationId: f.simulation_id,
+      name: f.name,
+      summary: f.summary,
+      scorePct,
+      riskPct: Math.round(f.risk * 100),
+      recommended,
+      chosen: chosenId === f.id,
+      // `recommended` alone is not enough: when best_future names a path that
+      // is no longer in the stored futures, nothing is recommended and the
+      // top-ranked future would be measured against its own score.
+      standing:
+        f.score <= 0
+          ? { kind: "disqualified" }
+          : recommended || i === 0
+            ? null
+            : { kind: "behind", points: leadPct - scorePct },
+    };
+  });
 
   const recommendationText = trimmed(report?.result.recommendation);
   const recommendation =
@@ -185,6 +240,9 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
     ? report.result.constraints.length
     : 0;
   const risks = Array.isArray(report?.result.risks) ? report.result.risks.length : 0;
+  const disqualified =
+    typeof report?.result.disqualified_count === "number" ? report.result.disqualified_count : 0;
+  const staleDays = daysSinceLastInput(home, now);
   const evidenceCount = home.knowledge.length + home.notes.length;
 
   const stats: BriefStat[] = [
@@ -201,6 +259,14 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
     { label: "FUTURES", value: String(futures.length), caption: "in the latest report" },
     { label: "CONSTRAINTS", value: String(constraints), caption: "applied to the run" },
     { label: "RISKS", value: String(risks), caption: "identified" },
+    // The engine's own count of paths hard constraints removed — the honest
+    // version of the design's "dissent": disagreement the run acted on.
+    { label: "RULED OUT", value: String(disqualified), caption: "futures hard constraints cut" },
+    {
+      label: "STALENESS",
+      value: staleDays == null ? "—" : staleDays === 0 ? "today" : `${staleDays}d`,
+      caption: "since the last source landed",
+    },
     {
       label: "VERSION",
       value: report ? `v${report.version}` : "—",
@@ -208,14 +274,22 @@ export function deriveDecisionBrief(home: WorkspaceHome | null): DecisionBrief |
     },
   ];
 
+  const citations = countCitations(home.recentSimulations);
   const evidence: BriefEvidence[] = [
     ...home.knowledge.map((k: KnowledgeRecord) => ({
       id: k.id,
       title: k.title,
       kind: k.type,
       addedAt: k.created_at,
+      citedByRuns: citations.get(k.id) ?? 0,
     })),
-    ...home.notes.map((n) => ({ id: n.id, title: n.title, kind: "note", addedAt: n.created_at })),
+    ...home.notes.map((n) => ({
+      id: n.id,
+      title: n.title,
+      kind: "note",
+      addedAt: n.created_at,
+      citedByRuns: citations.get(n.id) ?? 0,
+    })),
   ].sort((a, b) => b.addedAt.localeCompare(a.addedAt));
 
   return {

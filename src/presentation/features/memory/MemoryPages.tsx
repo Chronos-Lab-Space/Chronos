@@ -3,11 +3,19 @@ import { Link, useSearchParams } from "react-router-dom";
 import { compareSimulations, groupByLineage, versionLabel } from "../../../domain/workspace/memory";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
 import { summarizeSimulationGraph } from "../../../domain/workspace/decisionGraph";
+import type { OutcomeVerdict } from "../../../domain/workspace/types";
 import { listDecisionHistory } from "../../../domain/workspace/workspaceMemory";
 import { learningMemoryStore } from "../../../infrastructure/memory/LearningMemoryStore";
 import { useWorkspace } from "../workspace/WorkspaceContext";
 import { SurfaceLoading } from "../workspace/SurfaceLoading";
 import { CalibrationPanel } from "./components/CalibrationPanel";
+
+/** Sits under the predicted number, so it names what the comparison is against. */
+const VERDICT_LABEL: Record<OutcomeVerdict, string> = {
+  better: "better than predicted",
+  as_expected: "as predicted",
+  worse: "worse than predicted",
+};
 
 /**
  * Persistent memory — leave and come back to:
@@ -143,7 +151,7 @@ export function MemoryPage() {
         ) : (
           <ul className="mt-4 space-y-3">
             {decisions.map((d) => (
-              <li key={d.simulationId}>
+              <li key={d.simulationId} data-testid={`memory-decision-${d.simulationId}`}>
                 <Link
                   to={d.href}
                   className="block rounded-2xl border border-line px-4 py-4 transition hover:border-chronos/40"
@@ -163,8 +171,21 @@ export function MemoryPage() {
                     </div>
                     <div className="text-right font-mono text-[11px] text-ink-faint">
                       <div>{formatCreatedAt(d.chosenAt)}</div>
+                      {/* Predicted beside actual: the number is only worth
+                          anything next to how the decision really landed. */}
                       {d.confidence != null && (
-                        <div className="mt-1 text-chronos">{confidencePercent(d.confidence)}</div>
+                        <div className="mt-1 tabular-nums text-chronos">
+                          predicted {confidencePercent(d.confidence)}
+                        </div>
+                      )}
+                      {d.verdict && (
+                        <div
+                          className={`mt-0.5 uppercase tracking-[0.1em] ${
+                            d.verdict === "worse" ? "text-amber-300/80" : "text-ink-dim"
+                          }`}
+                        >
+                          {VERDICT_LABEL[d.verdict]}
+                        </div>
                       )}
                     </div>
                   </div>
