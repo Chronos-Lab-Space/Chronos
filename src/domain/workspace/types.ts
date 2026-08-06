@@ -83,6 +83,12 @@ export type SimulationResultPayload = {
   outcome_result_at?: string | null;
   /** Optional: did it beat, match, or miss the prediction? Weights future priors. */
   outcome_verdict?: OutcomeVerdict | null;
+  /**
+   * When the user asked to be reminded to log this outcome. null or absent
+   * means no review. Lives in the payload, not a column — no migration, and
+   * anonymous (remote: null) workspaces persist it identically.
+   */
+  review_at?: string | null;
   [key: string]: unknown;
 };
 
