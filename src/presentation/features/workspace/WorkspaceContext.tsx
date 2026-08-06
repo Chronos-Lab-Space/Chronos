@@ -25,6 +25,7 @@ import { localWorkspaceStore } from "../../../infrastructure/repositories/LocalW
 import type { UserPreferences } from "../../../domain/workspace/betaChecklist";
 import { DEFAULT_PREFERENCES } from "../../../domain/workspace/betaChecklist";
 import { upgradeLegacyContextDismissal } from "../../../domain/workspace/contextPrompt";
+import type { ReviewHorizonId } from "../../../domain/workspace/outcomeReview";
 import type {
   KnowledgeType,
   OutcomeFollowed,
@@ -95,7 +96,11 @@ type WorkspaceContextValue = {
   rerunSimulation: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
   /** Decision-graph rollback: fork next version from N0 Open. */
   rebranchFromOpen: (parentSimulationId: string, constraints?: string[]) => Promise<string | null>;
-  chooseBestPath: (simulationId: string, futureId: string) => Promise<void>;
+  chooseBestPath: (
+    simulationId: string,
+    futureId: string,
+    reviewHorizon?: ReviewHorizonId
+  ) => Promise<void>;
   recordOutcomeFollowed: (simulationId: string, followed: OutcomeFollowed) => Promise<void>;
   recordOutcomeResult: (
     simulationId: string,
@@ -434,9 +439,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         const sim = next.recentSimulations[0];
         return sim?.id ?? null;
       },
-      chooseBestPath: async (simulationId, futureId) => {
+      chooseBestPath: async (simulationId, futureId, reviewHorizon) => {
         const saved = await withOwner((id) =>
-          serviceFor(id).chooseBestPath(id, simulationId, futureId)
+          serviceFor(id).chooseBestPath(id, simulationId, futureId, reviewHorizon)
         );
         trackProductEvent("path_chosen", { simulationId, futureId });
 
