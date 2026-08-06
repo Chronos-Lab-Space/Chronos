@@ -56,11 +56,6 @@ It is the right first slice because:
 generation is a larger surface with its own review and safety questions; it should
 not be the slice that establishes the pattern.
 
-> **Superseded.** `roadmap.build` and `cap-roadmap` were retired entirely — the
-> capability resolved to a handler that returned nothing, so the plan advertised
-> a step Chronos could not take. The reasoning above still holds for code
-> generation as a surface; it no longer describes anything in the registry.
-
 ---
 
 ## The pattern to copy
@@ -141,8 +136,7 @@ reports `source: "ai"` for stub output.
 
 ## Later slices (not this one)
 
-- Code generation (the `roadmap.build` capability that once held its place is
-  retired — see above)
+- `roadmap.build` / code generation
 - Task-shaped endpoint (`SPEC-ai-proxy.md` §"What the client is *not* trusted
   with") so the function owns the prompt
 - Multi-capability task graphs where one handler's output feeds another's input
