@@ -1,5 +1,9 @@
 # Spec: anonymous workspace, optional sign-in
 
+**Status:** Shipped — slices 1 and 2. `chronos.anon.owner`, `OptionalAuthRoute`,
+and the claim-on-sign-in re-key are live. Slice 3 (sample decision) is
+superseded — see "Sample decision" below.
+
 Today a public-beta visitor must create an account, name a workspace, set a goal,
 and attach a source before Chronos does the thing Chronos is for. This spec
 removes the account from that list and makes sign-in what it should be: how you
