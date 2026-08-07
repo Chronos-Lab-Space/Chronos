@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import type { DecisionStatus, DecisionWithVersions } from "../../../domain/workspace/decision";
 import { groupDecisionsWithVersions } from "../../../domain/workspace/decision";
 import { confidencePercent, formatCreatedAt } from "../../../domain/workspace/seed";
+import type { SimulationRecord } from "../../../domain/workspace/types";
+import { compareVersions } from "../../../domain/workspace/versionComparison";
 import { allTags, setTags, tagsFor } from "../../../infrastructure/tags/decisionTagsStore";
 import { SurfaceLoading } from "./SurfaceLoading";
 import { useWorkspace } from "./WorkspaceContext";
@@ -149,6 +151,8 @@ function DecisionRow({
         </div>
       </div>
 
+      {versions.length >= 2 && <VersionCompare versions={versions} />}
+
       <ul className="divide-y divide-line">
         {versions.map((version) => (
           <li key={version.id}>
@@ -239,6 +243,79 @@ function TagEditor({
         className="w-16 border-b border-transparent bg-transparent font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint placeholder:text-ink-faint focus:border-chronos/40 focus:outline-none"
       />
     </div>
+  );
+}
+
+/** Newest-first order guarantees these exist: `versions.length >= 2` at the call site. */
+function VersionCompare({ versions }: { versions: readonly SimulationRecord[] }) {
+  const [open, setOpen] = useState(false);
+  const [aId, setAId] = useState(versions[1]?.id ?? versions[0]?.id);
+  const [bId, setBId] = useState(versions[0]?.id);
+
+  const a = versions.find((v) => v.id === aId) ?? versions[1] ?? versions[0];
+  const b = versions.find((v) => v.id === bId) ?? versions[0];
+  const rows = a && b ? compareVersions(a, b) : [];
+
+  return (
+    <div className="border-b border-line px-5 py-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint hover:text-chronos"
+      >
+        {open ? "Hide comparison" : "Compare versions"}
+      </button>
+      {open && a && b && (
+        <div className="mt-3">
+          <div className="flex flex-wrap gap-3">
+            <VersionSelect versions={versions} value={a.id} onChange={setAId} label="Version A" />
+            <VersionSelect versions={versions} value={b.id} onChange={setBId} label="Version B" />
+          </div>
+          <table className="mt-3 w-full text-left text-sm" data-testid="version-compare-table">
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label} className="border-t border-line">
+                  <td className="py-1.5 pr-3 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+                    {row.label}
+                  </td>
+                  <td className="py-1.5 pr-3 text-ink">{row.a}</td>
+                  <td className="py-1.5 text-ink">{row.b}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VersionSelect({
+  versions,
+  value,
+  onChange,
+  label,
+}: {
+  versions: readonly SimulationRecord[];
+  value: string | undefined;
+  onChange: (id: string) => void;
+  label: string;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-xs text-ink-dim">
+      {label}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-md border border-line bg-bg px-2 py-1 text-xs text-ink"
+      >
+        {versions.map((v) => (
+          <option key={v.id} value={v.id}>
+            v{v.version}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
