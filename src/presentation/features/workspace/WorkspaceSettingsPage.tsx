@@ -3,10 +3,13 @@ import { useMemo, useState } from "react";
 import {
   formatDurationMs,
   getProductAnalyticsSnapshot,
+  trackProductEvent,
 } from "../../../infrastructure/analytics/productAnalytics";
 import { useWorkspace } from "./WorkspaceContext";
 import { SurfaceLoading } from "./SurfaceLoading";
 import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
+import { deriveCalibration } from "../../../domain/workspace/calibration";
+import { exportWorkspaceCsv, exportWorkspaceJson } from "../../../domain/workspace/dataExport";
 import { AiUsagePanel } from "./components/AiUsagePanel";
 
 /** Workspace settings — switch, create, inspect, share. */
@@ -221,6 +224,41 @@ export function WorkspaceSettingsPage() {
 
       <AiUsagePanel />
 
+      {/* Export data */}
+      <section className="border border-line p-4 sm:p-5">
+        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
+          Export data
+        </div>
+        <p className="mt-2 text-sm text-ink-dim">
+          Every decision, its versions, and the calibration read on them — as JSON for a full
+          record, or CSV for a spreadsheet.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const json = exportWorkspaceJson(home, deriveCalibration(home));
+              downloadFile(json, `${home.workspace.id}-decisions.json`, "application/json");
+              trackProductEvent("report_exported", { format: "json", scope: "workspace" });
+            }}
+            className="rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
+          >
+            Download JSON
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const csv = exportWorkspaceCsv(home);
+              downloadFile(csv, `${home.workspace.id}-decisions.csv`, "text/csv");
+              trackProductEvent("report_exported", { format: "csv", scope: "workspace" });
+            }}
+            className="rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos"
+          >
+            Download CSV
+          </button>
+        </div>
+      </section>
+
       {/* Local product analytics (beta instrumentation) */}
       <section className="border border-line p-4 sm:p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
@@ -246,6 +284,20 @@ export function WorkspaceSettingsPage() {
       </section>
     </div>
   );
+}
+
+function downloadFile(content: string, filename: string, mimeType: string): void {
+  if (typeof document === "undefined") return;
+  const blob = new Blob([content], { type: `${mimeType};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function Row({ label, value }: { label: string; value: string }) {

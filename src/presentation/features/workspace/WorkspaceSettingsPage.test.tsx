@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -52,5 +53,18 @@ describe("WorkspaceSettingsPage access", () => {
     renderPage("22222222-2222-4222-8222-222222222222");
 
     expect(screen.queryByTestId("settings-requires-account")).not.toBeInTheDocument();
+  });
+});
+
+describe("WorkspaceSettingsPage export", () => {
+  it("offers a JSON and a CSV download that do not throw", async () => {
+    URL.createObjectURL = vi.fn(() => "blob:mock");
+    URL.revokeObjectURL = vi.fn();
+    renderPage("22222222-2222-4222-8222-222222222222");
+
+    await userEvent.click(screen.getByRole("button", { name: "Download JSON" }));
+    await userEvent.click(screen.getByRole("button", { name: "Download CSV" }));
+
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
   });
 });
