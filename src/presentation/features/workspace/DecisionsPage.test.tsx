@@ -124,3 +124,79 @@ describe("DecisionsPage tagging", () => {
     expect(screen.queryByTestId("decision-tag-filters")).not.toBeInTheDocument();
   });
 });
+
+function versionSim(
+  id: string,
+  version: number,
+  confidence: number,
+  chosenPathName?: string
+): SimulationRecord {
+  return {
+    id,
+    workspace_id: "w1",
+    goal_id: null,
+    title: "Raise or bootstrap?",
+    status: "completed",
+    confidence,
+    result: chosenPathName ? { chosen_future_name: chosenPathName } : {},
+    created_at: "2026-07-24T00:00:00.000Z",
+    version,
+    lineage_id: "v1",
+    parent_simulation_id: version > 1 ? "v1" : null,
+    decision_id: "v1",
+  };
+}
+
+function homeWithVersions(sims: SimulationRecord[]): WorkspaceHome {
+  return {
+    workspace: { id: "w1", owner_id: "user-1", name: "Lab", description: "", created_at: "" },
+    goal: null,
+    goalHistory: [],
+    decisions: [
+      {
+        id: "v1",
+        workspace_id: "w1",
+        title: "Raise or bootstrap?",
+        description: "",
+        goal_id: null,
+        created_at: "2026-07-24T00:00:00.000Z",
+      },
+    ],
+    recentSimulations: sims,
+    knowledge: [],
+    notes: [],
+    futuresBySimulation: {},
+    timelineBySimulation: {},
+  };
+}
+
+function renderPageWithVersions(sims: SimulationRecord[]) {
+  state.home = homeWithVersions(sims);
+  return render(
+    <MemoryRouter>
+      <DecisionsPage />
+    </MemoryRouter>
+  );
+}
+
+describe("DecisionsPage version comparison", () => {
+  it("offers no comparison toggle for a decision with only one version", () => {
+    renderPageWithVersions([versionSim("v1", 1, 0.6)]);
+    expect(screen.queryByRole("button", { name: /compare versions/i })).not.toBeInTheDocument();
+  });
+
+  it("shows a comparison table for a decision with two or more versions", async () => {
+    renderPageWithVersions([
+      versionSim("v2", 2, 0.8, "Raise"),
+      versionSim("v1", 1, 0.6, "Bootstrap"),
+    ]);
+
+    await userEvent.click(screen.getByRole("button", { name: /compare versions/i }));
+
+    const table = screen.getByTestId("version-compare-table");
+    expect(within(table).getByText("v1")).toBeInTheDocument();
+    expect(within(table).getByText("v2")).toBeInTheDocument();
+    expect(within(table).getByText("Bootstrap")).toBeInTheDocument();
+    expect(within(table).getByText("Raise")).toBeInTheDocument();
+  });
+});
