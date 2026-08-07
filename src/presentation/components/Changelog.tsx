@@ -17,6 +17,38 @@ export type Release = {
  */
 export const releases: Release[] = [
   {
+    version: "5.15.0",
+    date: "2026-08-07",
+    tag: "minor",
+    title: "Outcome review loop, decision registry upgrades, and a privacy fix",
+    summary:
+      "A review date can now be set when saving a path, and the workspace home chases it once it arrives — closing the loop calibration needs to reach sample size. The Decisions registry gained tags, filtering, version-to-version comparison, and a JSON/CSV export. An opt-in browser notification fires from the open tab when a review is due. Also fixes an anonymous workspace's decision content being sent to Supabase's knowledge table via a shared learning-memory store that never checked which service was calling it.",
+    highlights: [
+      {
+        label: "Outcome review loop",
+        detail:
+          "Review horizon at save time (2w/1m/3m/never); due decisions surface on the Decision Brief",
+      },
+      {
+        label: "Decisions registry",
+        detail: "Device-local tags + filter, side-by-side version comparison, JSON/CSV export",
+      },
+      {
+        label: "Due-review notification",
+        detail: "Opt-in, tab-local browser notification — not a push channel, and says so",
+      },
+      {
+        label: "Anonymous data leak fixed",
+        detail:
+          "LearningMemoryStore's Supabase dual-write is now an injected dependency the anonymous singleton never receives, instead of an env-only check every caller shared",
+      },
+      {
+        label: "Design-fidelity pass",
+        detail: "Five decision-workspace design gaps closed; sidebar stage label fixed",
+      },
+    ],
+  },
+  {
     version: "5.14.0",
     date: "2026-08-02",
     tag: "minor",
