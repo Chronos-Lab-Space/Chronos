@@ -1,5 +1,10 @@
 # Spec: the first LLM-backed capability
 
+**Status:** Shipped. `cap-plan` runs through `application/agent-os` on the
+`planChosenPath` → post-collapse path, labels `source: "ai" | "stub"`, and
+fails open to the stub. `roadmap.build` / `cap-roadmap` are superseded — see
+below.
+
 Follows `SPEC-platform-ai.md` ("Later slices → Agent runtime calling `AI.reason`")
 and `SPEC-ai-proxy.md` (how a hosted key is reached). Those cover the *provider*.
 This covers the *seam*: how an LLM becomes a task capability without touching the
