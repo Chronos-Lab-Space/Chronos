@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const useWorkspace = vi.fn();
 vi.mock("./WorkspaceContext", () => ({
@@ -66,5 +66,46 @@ describe("WorkspaceSettingsPage export", () => {
     await userEvent.click(screen.getByRole("button", { name: "Download CSV" }));
 
     expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("WorkspaceSettingsPage notification toggle", () => {
+  const originalNotification = (globalThis as { Notification?: unknown }).Notification;
+
+  afterEach(() => {
+    (globalThis as { Notification?: unknown }).Notification = originalNotification;
+    localStorage.clear();
+  });
+
+  function stubNotification(permission: NotificationPermission) {
+    (globalThis as { Notification?: unknown }).Notification = {
+      permission,
+      requestPermission: vi.fn(async () => permission),
+    };
+  }
+
+  it("is absent when the browser has no Notification API", () => {
+    // `in` checks key presence, not value — the key has to go, not just its value.
+    delete (globalThis as { Notification?: unknown }).Notification;
+    renderPage("22222222-2222-4222-8222-222222222222");
+
+    expect(screen.queryByText(/browser notifications/i)).not.toBeInTheDocument();
+  });
+
+  it("requests permission and enables on click", async () => {
+    stubNotification("granted");
+    renderPage("22222222-2222-4222-8222-222222222222");
+
+    await userEvent.click(screen.getByRole("button", { name: /notify me when a review is due/i }));
+
+    expect(await screen.findByRole("button", { name: /turn off/i })).toBeInTheDocument();
+  });
+
+  it("disables the button and explains a browser-level block", () => {
+    stubNotification("denied");
+    renderPage("22222222-2222-4222-8222-222222222222");
+
+    expect(screen.getByRole("button", { name: /notify me when a review is due/i })).toBeDisabled();
+    expect(screen.getByText(/blocked for this site/i)).toBeInTheDocument();
   });
 });
