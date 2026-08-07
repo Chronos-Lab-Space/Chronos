@@ -89,4 +89,15 @@ describe("WorkspaceShell active-decision card", () => {
     const card = screen.getByTestId("sidebar-active-decision");
     expect(within(card).queryByText(/%/)).not.toBeInTheDocument();
   });
+
+  it("shows the pipeline stage label, not the raw simulation status", () => {
+    renderShell([sim({ id: "s1", status: "completed", confidence: 0.72 })]);
+
+    const card = screen.getByTestId("sidebar-active-decision");
+    // A completed, unchosen run sits at "Evaluating" in the six-stage pipeline —
+    // the same vocabulary StepperBand and the Decision Brief already use, not
+    // the raw SimulationRecord.status ("completed").
+    expect(within(card).getByText("Evaluating")).toBeInTheDocument();
+    expect(within(card).queryByText("completed")).not.toBeInTheDocument();
+  });
 });
