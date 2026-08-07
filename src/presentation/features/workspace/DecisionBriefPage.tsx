@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
 import { deriveOutcomeReview } from "../../../domain/workspace/outcomeReview";
 import { toParagraphs } from "../../../domain/workspace/prose";
+import { notifyIfDueCountChanged } from "../../../infrastructure/notifications/outcomeReviewNotifier";
 import { OutcomeReviewBanner } from "./components/OutcomeReviewBanner";
 import { useWorkspace } from "./WorkspaceContext";
 
@@ -36,6 +38,14 @@ export function DecisionBriefPage() {
   // time-dependent function that reads the clock itself cannot be pinned by a
   // test.
   const review = deriveOutcomeReview(home, new Date());
+
+  // No-op unless the visitor opted in from Settings and the browser already
+  // granted permission -- see outcomeReviewNotifier.ts. This is the one place
+  // the brief's own due queue is read, so it is also the one place that can
+  // notice it changed.
+  useEffect(() => {
+    notifyIfDueCountChanged(review.due.length);
+  }, [review.due.length]);
 
   if (!brief?.goalTitle) {
     return (

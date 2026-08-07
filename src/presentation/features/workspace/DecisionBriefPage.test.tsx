@@ -14,6 +14,11 @@ vi.mock("./WorkspaceContext", () => ({
   useWorkspace: () => ({ home: home.current }),
 }));
 
+const notifyIfDueCountChanged = vi.hoisted(() => vi.fn());
+vi.mock("../../../infrastructure/notifications/outcomeReviewNotifier", () => ({
+  notifyIfDueCountChanged,
+}));
+
 function future(over: Partial<FutureRecord> & Pick<FutureRecord, "id" | "name" | "score">) {
   return {
     simulation_id: "s1",
@@ -159,5 +164,14 @@ describe("DecisionBriefPage ranked futures", () => {
     const row = screen.getByTestId("future-f1");
     expect(within(row).getByText(/recommended/i)).toBeInTheDocument();
     expect(within(row).queryByText(/pts behind/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("DecisionBriefPage due-review notification", () => {
+  it("tells the notifier the current due count on every render", () => {
+    notifyIfDueCountChanged.mockClear();
+    renderBrief([future({ id: "f1", name: "Community first", score: 0.72 })]);
+
+    expect(notifyIfDueCountChanged).toHaveBeenCalledWith(0);
   });
 });

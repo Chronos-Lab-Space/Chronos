@@ -5,6 +5,13 @@ import {
   getProductAnalyticsSnapshot,
   trackProductEvent,
 } from "../../../infrastructure/analytics/productAnalytics";
+import {
+  isNotificationSupported,
+  isOutcomeReviewNotifyEnabled,
+  notificationPermission,
+  requestNotificationPermission,
+  setOutcomeReviewNotifyEnabled,
+} from "../../../infrastructure/notifications/outcomeReviewNotifier";
 import { useWorkspace } from "./WorkspaceContext";
 import { SurfaceLoading } from "./SurfaceLoading";
 import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
@@ -259,6 +266,8 @@ export function WorkspaceSettingsPage() {
         </div>
       </section>
 
+      <NotificationToggle />
+
       {/* Local product analytics (beta instrumentation) */}
       <section className="border border-line p-4 sm:p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
@@ -298,6 +307,59 @@ function downloadFile(content: string, filename: string, mimeType: string): void
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Opt-in browser notification for decisions due for review.
+ *
+ * Deliberately not called "reminders" or "push" in the copy — there is no
+ * push infrastructure. This can only fire while Chronos is open in a tab;
+ * see outcomeReviewNotifier.ts.
+ */
+function NotificationToggle() {
+  const [enabled, setEnabled] = useState(() => isOutcomeReviewNotifyEnabled());
+  const [permission, setPermission] = useState(() => notificationPermission());
+
+  if (!isNotificationSupported()) return null;
+
+  const onToggle = async () => {
+    if (enabled) {
+      setOutcomeReviewNotifyEnabled(false);
+      setEnabled(false);
+      return;
+    }
+    const granted = await requestNotificationPermission();
+    setPermission(granted);
+    if (granted === "granted") {
+      setOutcomeReviewNotifyEnabled(true);
+      setEnabled(true);
+    }
+  };
+
+  return (
+    <section className="border border-line p-4 sm:p-5">
+      <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-chronos">
+        Browser notifications
+      </div>
+      <p className="mt-2 text-sm text-ink-dim">
+        A notification from this tab when a decision is due for review — only while Chronos is open
+        in your browser. There is no email or push beyond that.
+      </p>
+      <button
+        type="button"
+        onClick={() => void onToggle()}
+        disabled={permission === "denied"}
+        className="mt-4 rounded-full border border-line px-4 py-2 text-sm text-ink transition hover:border-chronos/50 hover:text-chronos disabled:opacity-50"
+      >
+        {enabled ? "Turn off" : "Notify me when a review is due"}
+      </button>
+      {permission === "denied" && (
+        <p className="mt-3 text-xs text-ink-faint">
+          Notifications are blocked for this site in your browser settings.
+        </p>
+      )}
+    </section>
+  );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
