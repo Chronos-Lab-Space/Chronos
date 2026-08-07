@@ -12,6 +12,11 @@ import {
   type LearningMemoryPort,
   noopLearningMemory,
 } from "../../domain/workspace/productLearning";
+import {
+  DEFAULT_REVIEW_HORIZON,
+  type ReviewHorizonId,
+  reviewAtFor,
+} from "../../domain/workspace/outcomeReview";
 import { snapshotKnowledgeUsed } from "../../domain/workspace/simulationReport";
 import { archiveGoalIfChanged } from "../../domain/workspace/workspaceMemory";
 import type {
@@ -833,7 +838,8 @@ export class WorkspaceService {
   async chooseBestPath(
     ownerId: string,
     simulationId: string,
-    futureId: string
+    futureId: string,
+    reviewHorizon: ReviewHorizonId = DEFAULT_REVIEW_HORIZON
   ): Promise<WorkspaceHome> {
     const home = await this.require(ownerId);
     const sim = home.recentSimulations.find((s) => s.id === simulationId);
@@ -851,6 +857,9 @@ export class WorkspaceService {
         chosen_future_name: future.name,
         chosen_summary: future.summary,
         chosen_at: chosenAt,
+        // Same write as the decision itself: there is no state where a path is
+        // saved but its review date is not.
+        review_at: reviewAtFor(reviewHorizon, new Date(chosenAt)),
         // Keep engine ranking; user choice is explicit
         best_future: future.name,
         // Decision graph: N1 → N2 collapse

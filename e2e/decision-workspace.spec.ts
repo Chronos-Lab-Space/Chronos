@@ -239,6 +239,53 @@ test.describe("Decision Workspace (authenticated)", () => {
     await expect(page.getByTestId("decision-row")).toContainText(/executed/i);
   });
 
+  test("saving a decision records a review date and the brief chases it", async ({ page }) => {
+    await enableE2EAuth(page);
+    await page.goto("/workspace");
+
+    await page.getByLabel(/what are you deciding/i).fill("Launch an outcome review beta");
+    await page.getByRole("button", { name: /simulate/i }).click();
+    await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i, { timeout: 20_000 });
+
+    // Land on the DecisionReportCard's own Save decision button — this
+    // guarantees the horizon picker Task 3 added is the one in play, rather
+    // than reaching the timeline's alternate "choose this path" affordance.
+    await expect(page.getByTestId("decision-report")).toBeVisible({ timeout: 10_000 });
+
+    // Prove the picker is interactive, not just relying on its default. The
+    // radio input itself is visually hidden (sr-only) behind its pill label,
+    // so target the label text a user actually clicks.
+    await page.getByText("3 months", { exact: true }).click();
+    await expect(page.getByRole("radio", { name: "3 months" })).toBeChecked();
+    await page.getByRole("button", { name: /^save decision$/i }).click();
+    await expect(page.getByRole("button", { name: /^save decision$/i })).toBeHidden();
+
+    // The review date is three months out, so nothing is due yet.
+    await page.goto("/workspace");
+    await expect(page.getByTestId("decision-brief")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("outcome-review-banner")).toBeHidden();
+
+    // Move the stored review date into the past — the same thing waiting
+    // three months would do, without waiting three months.
+    await page.evaluate(() => {
+      for (const key of Object.keys(localStorage)) {
+        const raw = localStorage.getItem(key);
+        if (!raw || !raw.includes("review_at")) continue;
+        localStorage.setItem(
+          key,
+          raw.replace(/"review_at":"[^"]*"/g, '"review_at":"2020-01-01T00:00:00.000Z"')
+        );
+      }
+    });
+
+    await page.reload();
+    const banner = page.getByTestId("outcome-review-banner");
+    await expect(banner).toBeVisible();
+    await banner.getByRole("link", { name: /log outcome/i }).click();
+    await expect(page).toHaveURL(/\/workspace\/simulations\/.+#outcome/);
+    await expect(page.getByText("Did you follow this recommendation?")).toBeVisible();
+  });
+
   test("an anonymous visitor gets a workspace, and is told it is device-only", async ({ page }) => {
     // Deliberately replaces "workspace still requires login". The workspace is
     // local-first: no account needed to run the decision loop, and signing in is

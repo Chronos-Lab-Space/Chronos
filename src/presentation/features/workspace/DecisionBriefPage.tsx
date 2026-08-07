@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { deriveDecisionBrief } from "../../../domain/workspace/decisionBrief";
+import { deriveOutcomeReview } from "../../../domain/workspace/outcomeReview";
 import { toParagraphs } from "../../../domain/workspace/prose";
+import { OutcomeReviewBanner } from "./components/OutcomeReviewBanner";
 import { useWorkspace } from "./WorkspaceContext";
 
 /**
@@ -30,6 +32,10 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 export function DecisionBriefPage() {
   const { home } = useWorkspace();
   const brief = deriveDecisionBrief(home);
+  // `now` is read here and injected, never inside the derivation — a
+  // time-dependent function that reads the clock itself cannot be pinned by a
+  // test.
+  const review = deriveOutcomeReview(home, new Date());
 
   if (!brief?.goalTitle) {
     return (
@@ -55,6 +61,7 @@ export function DecisionBriefPage() {
 
   return (
     <div className="mx-auto max-w-4xl pb-16" data-testid="decision-brief">
+      <OutcomeReviewBanner items={review.due} />
       <Eyebrow>DECISION</Eyebrow>
       <h1 className="mt-3 font-serif text-4xl leading-tight text-ink sm:text-5xl">
         {brief.goalTitle}
