@@ -62,7 +62,7 @@ export function computeKnowledgeCoverage(home: WorkspaceHome): number {
 }
 
 function computeSimulationConfidence(latest: SimulationRecord | null): number {
-  if (!latest || latest.status !== "completed" || latest.confidence == null) return 0;
+  if (latest?.status !== "completed" || latest.confidence == null) return 0;
   return Math.round(Math.max(0, Math.min(1, latest.confidence)) * 100);
 }
 
