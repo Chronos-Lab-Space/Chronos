@@ -20,10 +20,14 @@ import {
   loadUserPreferences,
   saveUserPreferences,
 } from "../infrastructure/auth/userPreferencesStore";
-import { learningMemoryStore } from "../infrastructure/memory/LearningMemoryStore";
+import {
+  LearningMemoryStore,
+  learningMemoryStore,
+} from "../infrastructure/memory/LearningMemoryStore";
 import { localWorkspaceStore } from "../infrastructure/repositories/LocalWorkspaceStore";
 import { supabaseAccountCloud } from "../infrastructure/repositories/SupabaseAccountCloud";
 import { supabaseWorkspaceRepository } from "../infrastructure/repositories/SupabaseWorkspaceRepository";
+import { isSupabaseConfigured, supabase } from "../infrastructure/supabase/client";
 
 // Side effects (analytics, memory) attach via the event bus once per process.
 // This used to run on import of WorkspaceService.ts, which meant any test
@@ -38,11 +42,26 @@ const cloudStore: WorkspaceCloudStore | null = isE2EAuthEnabled()
   ? null
   : (supabaseWorkspaceRepository as WorkspaceCloudStore);
 
+/**
+ * The signed-in path's own learning-memory instance — cloud dual-write
+ * injected here, never inferred from env alone, so an authenticated user's
+ * memory store cannot accidentally become the anonymous one's prototype.
+ * Same E2E guard as `cloudStore`.
+ */
+const authenticatedLearningMemoryStore =
+  cloudStore === null
+    ? learningMemoryStore
+    : new LearningMemoryStore(
+        isSupabaseConfigured
+          ? { upsertKnowledge: async (rows) => await supabase.from("knowledge").upsert(rows) }
+          : null
+      );
+
 /** Signed-in product singleton: local + cloud dual-write, learning retained. */
 export const workspaceService = new WorkspaceService({
   local: localWorkspaceStore,
   remote: cloudStore,
-  memory: learningMemoryStore,
+  memory: authenticatedLearningMemoryStore,
 });
 
 /**
@@ -52,7 +71,9 @@ export const workspaceService = new WorkspaceService({
  * conditional: with no cloud store constructed, there is no code path that can
  * write anonymous data to Supabase — no flag to forget to check.
  *
- * Learning memory is local-only anyway, so anonymous visitors keep theirs.
+ * Learning memory shares the same guarantee: `learningMemoryStore` is
+ * constructed with no cloud writer, so its dual-write is a no-op here too —
+ * anonymous visitors keep their memory, but it never leaves the browser.
  *
  * See SPEC-anonymous-workspace.md.
  */
