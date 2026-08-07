@@ -82,6 +82,7 @@ export type DecisionReport = {
   outcomeFollowedAt: string | null;
   outcomeResult: string | null;
   outcomeResultAt: string | null;
+  reviewAt: string | null;
 };
 
 export function buildDecisionReport(
@@ -198,6 +199,7 @@ export function buildDecisionReport(
       typeof simulation.result.outcome_result_at === "string"
         ? simulation.result.outcome_result_at
         : null,
+    reviewAt: typeof simulation.result.review_at === "string" ? simulation.result.review_at : null,
   };
 }
 

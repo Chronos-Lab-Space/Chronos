@@ -461,9 +461,9 @@ export function SimulationDetailPage() {
           home={home}
           onSaveDecision={
             !chosenId && futures[0]
-              ? async () => {
+              ? async (reviewHorizon) => {
                   const id = activeFutureId ?? futures[0]!.id;
-                  await chooseBestPath(sim.id, id);
+                  await chooseBestPath(sim.id, id, reviewHorizon);
                   setSelectedFutureId(id);
                 }
               : undefined

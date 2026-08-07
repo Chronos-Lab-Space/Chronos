@@ -1,12 +1,18 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   exportDecisionReportMarkdown,
   type DecisionReport,
 } from "../../../../domain/workspace/decisionReport";
+import {
+  DEFAULT_REVIEW_HORIZON,
+  type ReviewHorizonId,
+} from "../../../../domain/workspace/outcomeReview";
 import { confidencePercent } from "../../../../domain/workspace/seed";
 import type { WorkspaceHome } from "../../../../domain/workspace/types";
 import { trackProductEvent } from "../../../../infrastructure/analytics/productAnalytics";
 import { ConfidenceCaveatNote } from "../../memory/components/ConfidenceCaveatNote";
+import { ReviewHorizonPicker } from "./ReviewHorizonPicker";
 
 type Props = {
   report: DecisionReport;
@@ -17,7 +23,7 @@ type Props = {
   /** Optional outcome-tracking block rendered after save decision */
   outcomeSlot?: React.ReactNode;
   /** Decide hard-gate actions */
-  onSaveDecision?: () => void;
+  onSaveDecision?: (reviewHorizon: ReviewHorizonId) => void;
   onCompare?: () => void;
   onRerun?: () => void;
   saveBusy?: boolean;
@@ -40,6 +46,18 @@ export function DecisionReportCard({
   saveBusy,
 }: Props) {
   const conf = confidencePercent(report.confidence);
+  const [reviewHorizon, setReviewHorizon] = useState<ReviewHorizonId>(DEFAULT_REVIEW_HORIZON);
+
+  // Read back rather than remembered: after a reload the component state is
+  // gone but the payload still carries the date.
+  const reviewAtDisplay =
+    report.reviewAt && !Number.isNaN(new Date(report.reviewAt).getTime())
+      ? new Date(report.reviewAt).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : null;
 
   const markExported = () => {
     trackProductEvent("report_exported", {
@@ -295,14 +313,25 @@ export function DecisionReportCard({
           )}
           <div className="mt-4 flex flex-wrap gap-2">
             {!report.pathSaved && onSaveDecision ? (
-              <button
-                type="button"
-                onClick={onSaveDecision}
-                disabled={saveBusy}
-                className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
-              >
-                {saveBusy ? "Saving…" : "Save decision"}
-              </button>
+              <div>
+                <ReviewHorizonPicker
+                  value={reviewHorizon}
+                  onChange={setReviewHorizon}
+                  disabled={saveBusy}
+                />
+                <button
+                  type="button"
+                  onClick={() => onSaveDecision(reviewHorizon)}
+                  disabled={saveBusy}
+                  className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-bg transition hover:bg-chronos disabled:opacity-50"
+                >
+                  {saveBusy ? "Saving…" : "Save decision"}
+                </button>
+              </div>
+            ) : reviewAtDisplay ? (
+              <div className="font-mono text-[11px] text-ink-faint">
+                Review scheduled for {reviewAtDisplay}
+              </div>
             ) : null}
             {onCompare ? (
               <button
@@ -325,7 +354,11 @@ export function DecisionReportCard({
           </div>
         </section>
 
-        {outcomeSlot ? <section className="px-5 py-5 sm:px-6">{outcomeSlot}</section> : null}
+        {outcomeSlot ? (
+          <section id="outcome" className="scroll-mt-20 px-5 py-5 sm:px-6">
+            {outcomeSlot}
+          </section>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap gap-2 border-t border-line px-5 py-4 sm:px-6">
