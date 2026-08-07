@@ -245,7 +245,7 @@ export function caveatForConfidence(
   if (!Number.isFinite(confidence)) return null;
   const definition = bandFor(confidence);
   const band = calibration.bands.find((b) => b.label === definition.label);
-  if (!band || !band.hasEnoughData || band.rate == null) return null;
+  if (!band?.hasEnoughData || band.rate == null) return null;
   return {
     bandLabel: band.label,
     rate: band.rate,

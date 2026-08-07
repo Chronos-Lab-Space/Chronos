@@ -314,7 +314,7 @@ function Repl({
             <button
               type="button"
               onClick={onEvaluate}
-              disabled={!engine || engine.phase !== "forked"}
+              disabled={engine?.phase !== "forked"}
               className="rounded-md border border-accent-2/40 bg-accent-2/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-accent-2 transition hover:bg-accent-2/20 disabled:cursor-not-allowed disabled:opacity-40"
             >
               02 · evaluate
@@ -322,7 +322,7 @@ function Repl({
             <button
               type="button"
               onClick={onCollapse}
-              disabled={!engine || engine.phase !== "evaluated"}
+              disabled={engine?.phase !== "evaluated"}
               className="rounded-md border border-accent-warm/40 bg-accent-warm/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] text-accent-warm transition hover:bg-accent-warm/20 disabled:cursor-not-allowed disabled:opacity-40"
             >
               03 · collapse

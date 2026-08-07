@@ -225,7 +225,7 @@ describe("beta sanity: SimulationEngine invariants", () => {
     expect(empty.tasks.some((t) => t.status === "failed")).toBe(true);
 
     const weird = engine.run(
-      input("🚀".repeat(500) + ' <script>alert(1)</script> "; DROP TABLE futures; --')
+      input(`${"🚀".repeat(500)} <script>alert(1)</script> "; DROP TABLE futures; --`)
     );
     expect(weird.futures.length).toBeGreaterThan(0);
     expect(weird.best.score).toBeGreaterThanOrEqual(0);
