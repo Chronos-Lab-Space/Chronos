@@ -273,7 +273,7 @@ function WorkspaceShellInner() {
                   <div className="mt-2 flex items-center gap-2">
                     <span className="inline-flex h-1.5 w-1.5 rounded-full bg-chronos" />
                     <span className="font-mono text-[10px] uppercase text-ink-faint">
-                      {home?.recentSimulations[0]?.status ?? "Planning"}
+                      {brief?.stages.find((s) => s.state === "current")?.label ?? "Planning"}
                     </span>
                   </div>
                   {/* The card names the decision; without its confidence it
