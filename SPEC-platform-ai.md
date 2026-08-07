@@ -217,9 +217,20 @@ Domain owns contracts; infrastructure owns HTTP. Application depends on `AIPort`
 
 ## Later slices (not this PR)
 
+> **All four shipped, none as a dedicated adapter class.** `ai-generate`
+> (`SPEC-ai-proxy.md`) is the server-side proxy this list anticipated, and its
+> `AI_UPSTREAM=openai` path (`supabase/functions/_shared/openaiCompatible.ts`)
+> already covers "any OpenAI-compatible host" — Groq, Together, OpenRouter,
+> Cerebras, self-hosted, and others — by base URL + model name, not by a new
+> client-side class per provider. `stripReasoning()` in that shared module
+> already strips Qwen's `<think>` blocks specifically. A hosted key must stay
+> server-side regardless (`ProxyAIProvider`'s own docstring: "a browser-held
+> provider key would ship in `dist/` on the first build"), so a per-provider
+> browser adapter was never the right shape for this one. `VITE_AI_SIM_ENRICH`
+> shipped in `createAIPort.ts`; the agent runtime calling `AI.reason` shipped
+> as `cap-plan` (`SPEC-llm-capability.md`, marked shipped).
+
 - OpenAI / OpenRouter / Qwen adapters  
 - `VITE_AI_SIM_ENRICH` optional thesis draft  
 - Agent runtime calling `AI.reason`  
 - Server-side proxy if browser CORS blocks Ollama  
-
-**Next after ship:** optional enrich flag or OpenRouter adapter.
