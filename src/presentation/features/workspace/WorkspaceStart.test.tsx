@@ -241,6 +241,25 @@ describe("WorkspaceStart", () => {
     expect(screen.getByText(/could not start the simulation/i)).toBeInTheDocument();
   });
 
+  it("fills the field from an example rather than submitting it", async () => {
+    render(<Shell />);
+
+    await userEvent.click(screen.getByRole("button", { name: /hire a co-founder or stay solo/i }));
+
+    expect(decisionField()).toHaveValue("Hire a co-founder or stay solo");
+    expect(runSimulation).not.toHaveBeenCalled();
+  });
+
+  it("hides the examples once the visitor has typed their own", async () => {
+    render(<Shell />);
+
+    await userEvent.type(decisionField(), "Launch the beta in September");
+
+    expect(
+      screen.queryByRole("button", { name: /hire a co-founder or stay solo/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps a thrown failure readable after the screen gives way", async () => {
     runSimulation.mockImplementation(async () => {
       throw new Error("Simulation engine unavailable");

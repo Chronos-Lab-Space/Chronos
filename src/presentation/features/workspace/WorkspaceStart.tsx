@@ -7,6 +7,19 @@ import { useWorkspace } from "./WorkspaceContext";
 const DEFAULT_WORKSPACE_NAME = "My workspace";
 
 /**
+ * Prefills only — never auto-submitted. A blank text field is the highest-
+ * friction part of this screen for a visitor who doesn't yet have their own
+ * decision in mind; these give them something to start from or edit rather
+ * than stare at a placeholder. Chosen to span the catalog's actual domains
+ * (funding, hiring, go-to-market) so none of them trips the scope guard.
+ */
+const EXAMPLE_OBJECTIVES = [
+  "Raise a seed round or bootstrap to $50k MRR",
+  "Hire a co-founder or stay solo",
+  "Launch on Product Hunt now or wait for more traction",
+];
+
+/**
  * First screen a visitor meets. One field, one action, then a ranked result.
  * The wizard this replaced asked for a welcome, a workspace name, and a
  * source before the decision — the product's own docstring recorded that as
@@ -118,6 +131,20 @@ export function WorkspaceStart() {
           <p id="decision-error" role="alert" className="mt-2 text-sm text-ink-dim">
             {localError}
           </p>
+        )}
+        {!decision.trim() && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {EXAMPLE_OBJECTIVES.map((example) => (
+              <button
+                key={example}
+                type="button"
+                onClick={() => setDecision(example)}
+                className="rounded-full border border-line px-3 py-1 text-xs text-ink-dim transition hover:border-chronos/40 hover:text-ink"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
         )}
         <button
           type="submit"
