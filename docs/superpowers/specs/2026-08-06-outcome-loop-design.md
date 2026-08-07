@@ -1,7 +1,7 @@
 # Design: close the outcome loop
 
 **Date:** 2026-08-06
-**Status:** Approved (design). Implementation plan not yet written.
+**Status:** Shipped.
 **Depends on:** [SPEC-calibration.md](../../../SPEC-calibration.md) slices 1–3 (shipped)
 
 ---
