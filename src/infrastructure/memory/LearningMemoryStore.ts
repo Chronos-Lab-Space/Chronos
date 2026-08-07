@@ -1,7 +1,17 @@
 import type { LearningMemoryRecord } from "../../domain/workspace/productLearning";
-import { isSupabaseConfigured, supabase } from "../supabase/client";
 
 const STORAGE_KEY = "chronos.learning.memory.v1";
+
+/**
+ * The cloud side of the dual-write, injected rather than reached for globally.
+ * Composition decides who gets one — the security boundary lives at
+ * construction, not inside an env check that runs the same for every caller.
+ */
+export type KnowledgeCloudWriter = {
+  upsertKnowledge(
+    rows: readonly Record<string, unknown>[]
+  ): Promise<{ error: { message: string } | null }>;
+};
 
 type StoreShape = {
   byWorkspace: Record<string, LearningMemoryRecord[]>;
@@ -44,9 +54,14 @@ function titleFor(record: LearningMemoryRecord): string {
 
 /**
  * Durable product learning memory.
- * Local: always. Cloud: best-effort upsert into public.knowledge (type=note).
+ * Local: always. Cloud: best-effort upsert into public.knowledge (type=note),
+ * and only when a writer is injected — the anonymous-workspace singleton gets
+ * none, which is what makes "anonymous data never reaches Supabase" structural
+ * rather than a flag someone could forget to check. See SPEC-anonymous-workspace.md.
  */
 export class LearningMemoryStore {
+  constructor(private readonly cloud: KnowledgeCloudWriter | null = null) {}
+
   append(workspaceId: string, records: readonly LearningMemoryRecord[]): number {
     if (!workspaceId || records.length === 0) return 0;
     try {
@@ -102,7 +117,7 @@ export class LearningMemoryStore {
 
   /** Best-effort cloud dual-write — never throws to callers. */
   private async dualWriteKnowledge(records: readonly LearningMemoryRecord[]): Promise<void> {
-    if (!isSupabaseConfigured || records.length === 0) return;
+    if (!this.cloud || records.length === 0) return;
     try {
       const rows = records.map((r) => ({
         id: r.id,
@@ -118,7 +133,7 @@ export class LearningMemoryStore {
         },
         created_at: r.createdAt,
       }));
-      const { error } = await supabase.from("knowledge").upsert(rows);
+      const { error } = await this.cloud.upsertKnowledge(rows);
       if (error) {
         console.warn("[learning] Supabase dual-write failed", error.message);
       }
@@ -128,4 +143,5 @@ export class LearningMemoryStore {
   }
 }
 
+/** Anonymous-safe default: no cloud writer, so nothing can leave the browser. */
 export const learningMemoryStore = new LearningMemoryStore();
