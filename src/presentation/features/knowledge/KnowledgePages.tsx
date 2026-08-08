@@ -16,9 +16,21 @@ import { useWorkspace } from "../workspace/WorkspaceContext";
 import { MarkdownNoteEditor } from "./components/MarkdownNoteEditor";
 import { SurfaceLoading } from "../workspace/SurfaceLoading";
 
+/** The design's `1d ago` column. */
+function formatAge(iso: string): string {
+  const at = new Date(iso).getTime();
+  if (Number.isNaN(at)) return "—";
+  const days = Math.floor((Date.now() - at) / 86_400_000);
+  if (days <= 0) return "today";
+  return `${days}d ago`;
+}
+
 /**
  * Phase 3 — Knowledge Library (RAG-lite).
  * Upload PDF/MD/TXT · Import website/GitHub README · Notes markdown · keyword search.
+ *
+ * The imported design shows this surface as a bare source table; upload, import
+ * and search are kept because the table has to be filled from somewhere.
  */
 export function KnowledgePage() {
   const { home, addKnowledge, error } = useWorkspace();
@@ -103,13 +115,15 @@ export function KnowledgePage() {
     <div className="ws-cascade">
       <div className="header-enter flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-            Knowledge
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Knowledge · {knowledge.length + notes.length} sources
           </div>
-          <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">Library</h1>
-          <p className="mt-3 max-w-lg font-serif text-lg leading-relaxed text-ink-dim">
-            RAG-lite context for simulations — files, URLs, and notes. Search by keyword across
-            title and content.
+          <h1 className="mt-[18px] font-serif text-[30px] leading-[1.15] text-ink sm:text-[38px]">
+            Everything this decision is standing on
+          </h1>
+          <p className="mt-3.5 max-w-[58ch] font-serif text-[18px] leading-[1.55] text-ink-dim">
+            Sources are weighted by how often the simulations actually leaned on them — not by how
+            recently they landed.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -268,9 +282,9 @@ export function KnowledgePage() {
         </div>
       )}
 
-      <ul className="mt-8 divide-y divide-line border-y border-line">
+      <ul className="mt-10 flex flex-col">
         {hits.length === 0 ? (
-          <li className="py-6 text-sm text-ink-dim">
+          <li className="border-y border-line-soft py-6 text-sm text-ink-dim">
             {query ? (
               "No matches."
             ) : (
@@ -284,39 +298,48 @@ export function KnowledgePage() {
             )}
           </li>
         ) : (
-          hits.map((hit) => (
-            <li key={`${hit.kind}-${hit.id}`} data-testid={`source-${hit.id}`}>
-              <button
-                type="button"
-                onClick={() => setSelected(hit)}
-                className="flex w-full flex-col items-start gap-1 py-4 text-left transition hover:text-chronos"
+          hits.map((hit, i) => {
+            const cited = citations.get(hit.id) ?? 0;
+            return (
+              <li
+                key={`${hit.kind}-${hit.id}`}
+                data-testid={`source-${hit.id}`}
+                className={`border-t border-line-soft ${i === hits.length - 1 ? "border-b" : ""}`}
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                <button
+                  type="button"
+                  onClick={() => setSelected(hit)}
+                  className="grid w-full grid-cols-[1fr_auto_auto] items-center gap-5 px-1 py-4 text-left transition hover:bg-bg-soft/16 sm:grid-cols-[1fr_130px_90px_120px]"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[13.5px] text-ink">{hit.title}</span>
+                    {hit.content ? (
+                      <span className="mt-0.5 block truncate text-[12px] text-ink-faint">
+                        {snippet(hit.content)}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="hidden text-[12px] capitalize text-ink-faint sm:block">
                     {hit.type}
                   </span>
+                  <span className="text-[12px] text-ink-faint">{formatAge(hit.created_at)}</span>
                   {/* Weight by use, not by recency: a source the runs keep
                       reaching for is doing more work than a fresh upload. */}
-                  {citations.get(hit.id) ? (
-                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-chronos">
-                      cited {citations.get(hit.id)}×
-                    </span>
-                  ) : (
-                    <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
-                      not yet used
-                    </span>
-                  )}
-                  {query && hit.score > 0 && (
-                    <span className="font-mono text-[10px] text-chronos">match {hit.score}</span>
-                  )}
-                </div>
-                <span className="text-[15px] text-ink">{hit.title}</span>
-                {hit.content ? (
-                  <span className="text-sm text-ink-dim">{snippet(hit.content)}</span>
-                ) : null}
-              </button>
-            </li>
-          ))
+                  <span
+                    className={`text-right font-mono text-[10.5px] uppercase tracking-[0.1em] ${
+                      cited > 0 ? "text-chronos" : "text-ink-faint"
+                    }`}
+                  >
+                    {query && hit.score > 0
+                      ? `match ${hit.score}`
+                      : cited > 0
+                        ? `cited ${cited}×`
+                        : "not yet used"}
+                  </span>
+                </button>
+              </li>
+            );
+          })
         )}
       </ul>
 

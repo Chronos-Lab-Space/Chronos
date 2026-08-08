@@ -35,13 +35,15 @@ export function MemoryPage() {
   return (
     <div className="space-y-12">
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Memory
+        <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+          Memory · {decisions.length} closed {decisions.length === 1 ? "decision" : "decisions"}
         </div>
-        <h1 className="mt-2 font-serif text-4xl leading-tight text-ink sm:text-5xl">History</h1>
-        <p className="mt-3 max-w-xl font-serif text-lg leading-relaxed text-ink-dim">
-          Chronos keeps durable memory across sessions: goals, simulations, decisions, knowledge,
-          outcomes, and learned preferences from ranked futures.
+        <h1 className="mt-[18px] font-serif text-[30px] leading-[1.15] text-ink sm:text-[38px]">
+          What Chronos has learned
+        </h1>
+        <p className="mt-3.5 max-w-[58ch] font-serif text-[18px] leading-[1.55] text-ink-dim">
+          Each closed decision leaves a correction behind. These are the priors now shaping the
+          current recommendation.
         </p>
         <div className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
           {home.workspace.name} · {home.recentSimulations.length} runs · {decisions.length}{" "}
@@ -137,9 +139,11 @@ export function MemoryPage() {
 
       {/* Decision history + outcomes */}
       <section>
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+        {/* A heading, not a label: this is the section the page is really about
+            once the framing above it has been read. */}
+        <h2 className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
           Decision history
-        </div>
+        </h2>
         {decisions.length === 0 ? (
           <p className="mt-4 text-sm text-ink-dim">
             No saved paths yet.{" "}

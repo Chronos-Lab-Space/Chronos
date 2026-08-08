@@ -146,7 +146,7 @@ test.describe("Decision Workspace (authenticated)", () => {
     const currentStage = page.locator('[aria-current="step"]');
     await expect(currentStage).toContainText(/learned/i);
     // Recommendation deep-links to the simulation report
-    await page.getByRole("link", { name: /review in simulation/i }).click();
+    await page.getByRole("link", { name: /collapse to this future/i }).click();
     await expect(page).toHaveURL(/\/workspace\/simulations\/[a-z0-9-]+/i, {
       timeout: 10_000,
     });
