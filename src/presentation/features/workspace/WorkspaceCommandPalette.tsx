@@ -51,14 +51,14 @@ export function WorkspaceCommandPalette({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-[90] flex items-start justify-center bg-black/60 px-4 pt-[14vh] backdrop-blur-[2px]"
+      className="fixed inset-0 z-[90] flex items-start justify-center bg-black/[0.62] px-4 pt-[14vh] backdrop-blur-[3px]"
     >
       <div
         role="dialog"
         aria-label="Command palette"
-        className="w-[600px] max-w-[92vw] overflow-hidden rounded-2xl border border-line-strong bg-bg shadow-2xl"
+        className="w-[620px] max-w-[92vw] overflow-hidden rounded-2xl border border-line-strong bg-[#141414] shadow-[0_30px_80px_rgba(0,0,0,0.5)]"
       >
-        <div className="flex items-center gap-3 border-b border-line px-4 py-3.5">
+        <div className="flex items-center gap-3 border-b border-line px-[18px] py-4">
           <span className="font-mono text-[13px] text-chronos">›</span>
           <input
             // biome-ignore lint/a11y/noAutofocus: a command palette exists to be typed into the moment it opens
@@ -100,23 +100,25 @@ export function WorkspaceCommandPalette({
               }}
               onClick={() => run(command)}
               onMouseMove={() => setActive(i)}
-              className={`flex w-full items-center gap-3.5 rounded-xl px-3 py-2.5 text-left ${
+              className={`flex w-full items-center gap-3.5 rounded-xl px-3 py-[11px] text-left ${
                 i === active ? "bg-chronos/15" : ""
               }`}
             >
-              <span className="w-[46px] shrink-0 font-mono text-[9px] uppercase tracking-[0.14em] text-ink-faint">
+              <span className="w-[62px] shrink-0 font-mono text-[9.5px] uppercase tracking-[0.14em] text-ink-faint">
                 {command.kind}
               </span>
-              <span className="min-w-0 flex-1 truncate text-[14px] text-ink">{command.label}</span>
+              <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">
+                {command.label}
+              </span>
               <span className="shrink-0 truncate text-[12px] text-ink-faint">{command.hint}</span>
             </button>
           ))}
         </div>
 
-        <div className="flex gap-5 border-t border-line px-4 py-2.5 font-mono text-[9px] uppercase tracking-[0.12em] text-ink-faint">
+        <div className="flex gap-[22px] border-t border-line px-[18px] py-[11px] font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-faint/75">
           <span>↑↓ navigate</span>
           <span>↵ run</span>
-          <span className="hidden sm:inline">try: run simulation · show memory</span>
+          <span className="hidden sm:inline">try: run simulation · show memory · advance</span>
         </div>
       </div>
     </div>
