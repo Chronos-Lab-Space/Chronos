@@ -375,6 +375,47 @@ const PATHS: Record<string, PathTemplate[]> = {
       ],
       risks: ["Retention is the killer", "Monetization is uncertain", "Algorithm changes sink you"],
     },
+    {
+      name: "Niche community subscription",
+      thesis:
+        "Charge from day one for a smaller, deeply engaged audience. No free tier to subsidize.",
+      milestones: [
+        {
+          month: 1,
+          title: "Invite-only launch",
+          description: "150 hand-picked members. Scarcity and word-of-mouth only.",
+        },
+        {
+          month: 3,
+          title: "Waitlist to 2,000",
+          description: "Referral-gated signups. Community moderates itself.",
+        },
+        {
+          month: 6,
+          title: "Paid from day one",
+          description: "$15/mo, no free tier. Churn under 4% monthly.",
+        },
+        { month: 9, title: "1,200 paying members", description: "$18k MRR. CAC near zero." },
+        {
+          month: 12,
+          title: "Creator/expert tier launches",
+          description: "$40/mo tier with direct access. ARPU jumps.",
+        },
+        {
+          month: 18,
+          title: "$400k ARR",
+          description: "Small but durable. Expansion via adjacent niches.",
+        },
+      ],
+      arrRange: [250_000, 700_000],
+      probRange: [0.1, 0.2],
+      highlights: ["Revenue from day one", "Low CAC, high retention", "Defensible community moat"],
+      risks: [
+        "Ceiling is low without new niches",
+        "Founder-dependent culture",
+        "Hard to pay for growth",
+      ],
+    },
   ],
   "b2b-saas": [
     {
@@ -464,6 +505,55 @@ const PATHS: Record<string, PathTemplate[]> = {
       highlights: ["Massive TAM", "Network effects", "High exit multiples"],
       risks: ["Capital-intensive", "Liquidity is hard", "Incumbents have data"],
     },
+    {
+      name: "Demand-first marketplace",
+      thesis:
+        "Aggregate fragmented demand into one concierge front door. Route to supply, no subsidy.",
+      milestones: [
+        {
+          month: 1,
+          title: "Concierge MVP",
+          description: "Manually match requests to suppliers by hand.",
+        },
+        {
+          month: 3,
+          title: "First 200 bookings",
+          description: "Take a lead-gen fee, not a transaction cut.",
+        },
+        {
+          month: 6,
+          title: "Self-serve booking ships",
+          description: "Automates the manual matching that proved demand.",
+        },
+        {
+          month: 9,
+          title: "500 bookings/mo",
+          description: "Fee holds; repeat-booking rate rising.",
+        },
+        {
+          month: 12,
+          title: "Supply onboarding opens up",
+          description: "Suppliers apply to join instead of being recruited.",
+        },
+        {
+          month: 18,
+          title: "$90k/mo booking fees",
+          description: "Profitable per booking; GMV capped by curation.",
+        },
+      ],
+      arrRange: [500_000, 1_400_000],
+      probRange: [0.09, 0.18],
+      highlights: [
+        "Revenue per booking from day one",
+        "No supply subsidy burn",
+        "Curated quality bar",
+      ],
+      risks: [
+        "GMV ceiling from manual curation",
+        "Slower to scale than open marketplaces",
+        "Concierge cost doesn't disappear quickly",
+      ],
+    },
   ],
   fintech: [
     {
@@ -494,6 +584,55 @@ const PATHS: Record<string, PathTemplate[]> = {
       highlights: ["High LTV", "Regulatory moat", "Multiple revenue streams"],
       risks: ["Regulatory risk", "Capital intensive", "Credit risk"],
     },
+    {
+      name: "Fintech infrastructure",
+      thesis:
+        "Sell the picks and shovels to other fintechs and platforms. Partner-bank the regulatory load.",
+      milestones: [
+        {
+          month: 1,
+          title: "API-first MVP",
+          description: "One primitive done well: KYC, ledgering, or card issuing.",
+        },
+        {
+          month: 3,
+          title: "Partner bank signed",
+          description: "Regulatory risk sits with the partner, not the startup.",
+        },
+        {
+          month: 6,
+          title: "First 3 platform customers",
+          description: "Other startups embed the API instead of building it.",
+        },
+        {
+          month: 9,
+          title: "Usage-based pricing live",
+          description: "Per-transaction fee. Revenue tracks customer volume.",
+        },
+        {
+          month: 12,
+          title: "20 platform customers",
+          description: "Net revenue retention above 120% as customers scale.",
+        },
+        {
+          month: 18,
+          title: "$1.6M ARR",
+          description: "Usage-based, concentrated in a few large accounts.",
+        },
+      ],
+      arrRange: [1_000_000, 2_400_000],
+      probRange: [0.07, 0.14],
+      highlights: [
+        "No direct consumer regulatory exposure",
+        "Usage-based revenue scales with customers",
+        "High switching costs once embedded",
+      ],
+      risks: [
+        "Revenue concentrated in few large accounts",
+        "Partner bank dependency",
+        "Platform customers could build it themselves",
+      ],
+    },
   ],
   health: [
     {
@@ -519,6 +658,54 @@ const PATHS: Record<string, PathTemplate[]> = {
       probRange: [0.08, 0.16],
       highlights: ["Reimbursement-backed", "Sticky workflow", "High switching costs"],
       risks: ["Long sales cycles", "Regulatory burden", "Clinical validation required"],
+    },
+    {
+      name: "Direct-to-consumer health",
+      thesis: "Skip reimbursement entirely. Sell straight to employers and self-pay consumers.",
+      milestones: [
+        {
+          month: 1,
+          title: "Launch self-pay app",
+          description: "No insurance billing, no CPT code, no clinic sales cycle.",
+        },
+        {
+          month: 3,
+          title: "First employer pilot",
+          description: "One 200-employee company adds it as a benefit.",
+        },
+        {
+          month: 6,
+          title: "3 employer contracts",
+          description: "Per-employee-per-month pricing. Predictable revenue.",
+        },
+        {
+          month: 9,
+          title: "8,000 covered lives",
+          description: "Mix of employer and self-pay users.",
+        },
+        {
+          month: 12,
+          title: "Benefits broker channel",
+          description: "Brokers start bundling it into open enrollment.",
+        },
+        {
+          month: 18,
+          title: "$1.1M ARR",
+          description: "Employer contracts renew; self-pay churns faster.",
+        },
+      ],
+      arrRange: [700_000, 1_600_000],
+      probRange: [0.09, 0.17],
+      highlights: [
+        "No CPT code or reimbursement dependency",
+        "Faster sales cycle than clinics",
+        "Employer channel compounds",
+      ],
+      risks: [
+        "Self-pay churn is high",
+        "Employer budgets are seasonal",
+        "No regulatory moat once it works",
+      ],
     },
   ],
 };
