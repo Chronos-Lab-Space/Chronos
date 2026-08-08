@@ -98,15 +98,14 @@ function WorkspaceShellInner() {
   const brief = deriveDecisionBrief(home);
   // Simulation detail is where a decision is actually worked — compare futures,
   // collapse, log the outcome — so it is the surface the rail's "don't navigate
-  // away for context" argument is really about.
+  // away for context" argument is really about. It describes that run; on every
+  // other surface it falls back to the newest one.
   const activeSimulationId =
     location.pathname.match(/^\/workspace\/simulations\/([^/]+)$/)?.[1] ?? undefined;
-  const showContextRail =
-    ready &&
-    (location.pathname === "/workspace" ||
-      location.pathname === "/workspace/" ||
-      location.pathname === "/workspace/hq" ||
-      Boolean(activeSimulationId));
+  // The design carries the rail across every workspace screen, not just the
+  // decision surfaces: the objective and constraints are the thing you are
+  // reading knowledge and memory *against*.
+  const showContextRail = ready && location.pathname.startsWith("/workspace");
 
   // Live counts for the sidebar — same numbers the pages report.
   const sourcesCount = home ? home.knowledge.length + home.notes.length : null;

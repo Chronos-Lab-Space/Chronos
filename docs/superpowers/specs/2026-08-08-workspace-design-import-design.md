@@ -21,6 +21,8 @@ derivations, and records the three places where the design and the codebase disa
 | 3 | Mobile | **Unchanged.** New design applies at `lg` and above; the existing tab bar, More drawer and stacked layout stand below it. |
 | 4 | Stepper interaction | **Non-interactive.** The prototype's `setStep(i)` fabricates lifecycle state. Stages stay derived; visuals identical, `aria-current="step"` retained. |
 | 5 | Safety banners | **Retained.** Anonymous and sync-error banners are restyled, not removed — deleting them regresses `SPEC-anonymous-workspace.md`. |
+| 6 | Context rail scope | **Every workspace screen.** The design carries the rail across all five; it previously appeared only on the decision, HQ and simulation-detail routes. |
+| 7 | Simulation result layout | **Deferred — not implemented.** The design replaces the result page with a two-column future-graph + selected-future card. `SPEC.md` declares the nine-section `DecisionReportCard` order "authoritative for UI + markdown export", so adopting the design's layout means reopening that contract. Only the simulation header was restyled. |
 
 ## Assumptions (locked unless reopened)
 
@@ -143,4 +145,4 @@ look tested. What does get covered:
 ## Out of scope
 
 Mobile redesign; new routes; engine, scorer or schema changes; the public marketing surfaces;
-the `Reports` nav item.
+the `Reports` nav item; the simulation result layout (decision 7).
