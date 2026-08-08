@@ -47,11 +47,10 @@ const DEFAULT_OUTPUT_TOKENS = 280;
 /**
  * Prepended to every client `system`, never overridable.
  *
- * `system` and `prompt` arrive from a bundle any signed-in user can edit,
- * so this endpoint is an authenticated relay bounded by quota rather than
- * by shape. This preamble is the cheap part of that bound; the caps and
- * the ledger are the rest. SPEC-ai-proxy.md names the task-shaped
- * endpoint that would close the free-text surface entirely.
+ * `system` arrives from a bundle any signed-in user can edit, so this
+ * endpoint is an authenticated relay bounded by quota rather than by
+ * shape. This preamble is the cheap part of that bound; the caps, the
+ * task-shaped body, and the ledger are the rest.
  */
 const SERVER_PREAMBLE = [
   "You are a writing assistant embedded in a decision-analysis product.",
@@ -103,43 +102,32 @@ function parseBody(raw: unknown): ParsedBody | string {
     maxTokens = Math.min(Math.floor(n), MAX_OUTPUT_TOKENS);
   }
 
-  // Preferred: task-shaped — function owns the prompt (SPEC-ai-proxy later slice).
-  if (body.task != null) {
-    if (!isAITaskKind(body.task)) {
-      return `Unknown task "${String(body.task)}". Allowed: sim.recommendation, plan.steps, research.findings.`;
-    }
-    const fields =
-      typeof body.fields === "object" && body.fields !== null && !Array.isArray(body.fields)
-        ? (body.fields as Record<string, unknown>)
-        : {};
-    const built = buildTaskMessages({ task: body.task, fields, maxTokens });
-    if (typeof built === "string") return built;
-    if (built.prompt.length > MAX_PROMPT_CHARS) {
-      return `Built prompt exceeds ${MAX_PROMPT_CHARS} characters.`;
-    }
-    if (built.system.length > MAX_SYSTEM_CHARS) {
-      return `Built system exceeds ${MAX_SYSTEM_CHARS} characters.`;
-    }
-    return {
-      system: built.system,
-      prompt: built.prompt,
-      maxTokens: Math.min(built.maxTokens, MAX_OUTPUT_TOKENS),
-    };
+  // Task-shaped only — the function owns the prompt. Free-text `prompt`
+  // bodies were retired once the one live client (ProxyAIProvider)
+  // moved to generateTask; see SPEC-ai-proxy.md "Later slices".
+  if (body.task == null) {
+    return "`task`+`fields` is required.";
   }
-
-  // Legacy free-text relay — still accepted so old clients fail open.
-  const prompt = typeof body.prompt === "string" ? body.prompt.trim() : "";
-  if (!prompt) return "`task`+`fields` or `prompt` is required.";
-  if (prompt.length > MAX_PROMPT_CHARS) {
-    return `\`prompt\` exceeds ${MAX_PROMPT_CHARS} characters.`;
+  if (!isAITaskKind(body.task)) {
+    return `Unknown task "${String(body.task)}". Allowed: sim.recommendation, plan.steps, research.findings.`;
   }
-
-  const system = typeof body.system === "string" ? body.system.trim() : "";
-  if (system.length > MAX_SYSTEM_CHARS) {
-    return `\`system\` exceeds ${MAX_SYSTEM_CHARS} characters.`;
+  const fields =
+    typeof body.fields === "object" && body.fields !== null && !Array.isArray(body.fields)
+      ? (body.fields as Record<string, unknown>)
+      : {};
+  const built = buildTaskMessages({ task: body.task, fields, maxTokens });
+  if (typeof built === "string") return built;
+  if (built.prompt.length > MAX_PROMPT_CHARS) {
+    return `Built prompt exceeds ${MAX_PROMPT_CHARS} characters.`;
   }
-
-  return { system, prompt, maxTokens };
+  if (built.system.length > MAX_SYSTEM_CHARS) {
+    return `Built system exceeds ${MAX_SYSTEM_CHARS} characters.`;
+  }
+  return {
+    system: built.system,
+    prompt: built.prompt,
+    maxTokens: Math.min(built.maxTokens, MAX_OUTPUT_TOKENS),
+  };
 }
 
 function startOfMonthISO(now: Date): string {

@@ -89,13 +89,15 @@ export class ProxyAIProvider implements AIPort {
     }
   }
 
-  async generate(req: GenerateRequest): Promise<GenerateResult> {
-    // Legacy free-text relay — prefer generateTask for product call sites.
-    return this.postJson({
-      prompt: req.prompt,
-      ...(req.system ? { system: req.system } : {}),
-      ...(req.maxTokens != null ? { maxTokens: req.maxTokens } : {}),
-    });
+  async generate(_req: GenerateRequest): Promise<GenerateResult> {
+    // The ai-generate function only accepts task-shaped bodies now that
+    // its one live caller (SimulationEngine) uses generateTask — see
+    // SPEC-ai-proxy.md "Later slices".
+    throw new AICapabilityError(
+      this.id,
+      "generate",
+      "The ai-generate proxy requires a task-shaped request — use generateTask."
+    );
   }
 
   async generateTask(req: TaskGenerateRequest): Promise<GenerateResult> {
@@ -172,23 +174,24 @@ export class ProxyAIProvider implements AIPort {
     );
   }
 
-  async reason(req: ReasonRequest): Promise<GenerateResult> {
-    const system = [
-      req.system,
-      "Reason step by step. Be concise and decision-oriented.",
-      req.schemaHint ? `Structure hint: ${req.schemaHint}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n");
-    return this.generate({ ...req, system });
+  async reason(_req: ReasonRequest): Promise<GenerateResult> {
+    // No task kind exists for free-form reasoning yet — same task-shaped
+    // constraint as generate().
+    throw new AICapabilityError(
+      this.id,
+      "reason",
+      "The ai-generate proxy requires a task-shaped request — use generateTask."
+    );
   }
 
-  async code(req: CodeRequest): Promise<GenerateResult> {
-    const lang = req.language ? `Language: ${req.language}.` : "";
-    const system = [req.system, "You are a careful coding assistant.", lang]
-      .filter(Boolean)
-      .join(" ");
-    return this.generate({ ...req, system });
+  async code(_req: CodeRequest): Promise<GenerateResult> {
+    // No task kind exists for code generation — retired, see
+    // SPEC-llm-capability.md.
+    throw new AICapabilityError(
+      this.id,
+      "code",
+      "The ai-generate proxy requires a task-shaped request — use generateTask."
+    );
   }
 }
 
