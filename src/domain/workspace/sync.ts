@@ -31,6 +31,9 @@ export function mergeWorkspaceHomes(remote: WorkspaceHome, local: WorkspaceHome)
     workspace,
     goal,
     goalHistory,
+    // Higher of the two — a merge must never look older than either input,
+    // or the next persist() would wrongly refuse as a stale write.
+    version: Math.max(remote.version ?? 1, local.version ?? 1),
     recentSimulations: mergeById(
       remote.recentSimulations,
       local.recentSimulations,
