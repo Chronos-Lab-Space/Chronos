@@ -48,7 +48,10 @@ describe("createAIPortFromEnv", () => {
         proxyUrl: "https://example.supabase.co/functions/v1/ai-generate",
         getAccessToken: async () => "token",
       });
-      const result = await port.generate({ prompt: "p" });
+      const result = await port.generateTask({
+        task: "sim.recommendation",
+        fields: { objective: "x" },
+      });
 
       expect(result.text).toBe("ok");
       const [url, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];

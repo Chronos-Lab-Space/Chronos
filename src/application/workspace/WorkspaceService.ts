@@ -2,6 +2,7 @@ import type { SimulationConstraint, SimulationEngineOutput } from "../simulation
 import { planner } from "../../core/planner/planner";
 import { eventBus, runtime } from "../../core/runtime";
 import { attachDecisions, decisionIdForSimulation } from "../../domain/workspace/decision";
+import { WorkspaceConflictError } from "../../domain/workspace/errors";
 import { sanitizeWorkspaceHomeIds } from "../../domain/workspace/persistedIds";
 import {
   deriveOutcomeLearning,
@@ -235,10 +236,11 @@ export class WorkspaceService {
       decisions: [],
       knowledge: [],
       notes: [],
+      version: 1,
       ...emptyRelations(),
     };
 
-    return this.persist(ownerId, home);
+    return this.persist(ownerId, home, { skipConflictCheck: true });
   }
 
   async setGoal(
@@ -1095,8 +1097,22 @@ export class WorkspaceService {
     return loaded;
   }
 
-  private async persist(ownerId: string, home: WorkspaceHome): Promise<WorkspaceHome> {
-    const normalized = this.normalize(home);
+  private async persist(
+    ownerId: string,
+    home: WorkspaceHome,
+    options?: { skipConflictCheck?: boolean }
+  ): Promise<WorkspaceHome> {
+    if (!options?.skipConflictCheck) {
+      const stored = this.local.get(ownerId, home.workspace.id);
+      // Someone else (another tab/device) already wrote a newer version of
+      // this same workspace since `home` was read — refuse to clobber it.
+      if (stored && (stored.version ?? 1) !== (home.version ?? 1)) {
+        throw new WorkspaceConflictError(home.workspace.id);
+      }
+    }
+    // New workspaces start at version 1 as-is; only existing ones bump.
+    const nextVersion = options?.skipConflictCheck ? (home.version ?? 1) : (home.version ?? 1) + 1;
+    const normalized = this.normalize({ ...home, version: nextVersion });
     this.local.save(ownerId, normalized);
     if (this.remote) {
       try {

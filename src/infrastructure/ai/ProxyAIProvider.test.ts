@@ -29,6 +29,8 @@ function headersOf(fetchImpl: ReturnType<typeof vi.fn>): Record<string, string> 
   return call[1].headers as Record<string, string>;
 }
 
+const TASK_REQ = { task: "sim.recommendation" as const, fields: { objective: "x" } };
+
 describe("ProxyAIProvider", () => {
   it("maps the proxy response and sends the session token", async () => {
     const fetchImpl = vi.fn(async () =>
@@ -40,7 +42,7 @@ describe("ProxyAIProvider", () => {
     );
     const ai = providerWith(fetchImpl);
 
-    const r = await ai.generate({ prompt: "hi", system: "be brief", maxTokens: 280 });
+    const r = await ai.generateTask({ ...TASK_REQ, maxTokens: 280 });
 
     expect(r.text).toBe("Ship the staged beta.");
     expect(r.model).toBe("claude-opus-5");
@@ -54,30 +56,41 @@ describe("ProxyAIProvider", () => {
     expect(headersOf(fetchImpl).Authorization).toBe("Bearer session-token");
 
     const body = bodyOf(fetchImpl);
-    expect(body.prompt).toBe("hi");
-    expect(body.system).toBe("be brief");
+    expect(body.task).toBe("sim.recommendation");
+    expect(body.fields).toEqual({ objective: "x" });
     expect(body.maxTokens).toBe(280);
   });
 
-  it("never forwards temperature or model — both are 400s or server-owned", async () => {
+  it("sends only task, fields, and maxTokens — the function owns the prompt", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ text: "ok", model: "claude-opus-5" }));
     const ai = providerWith(fetchImpl);
 
-    // The exact request SimulationEngine.maybeEnrichRecommendation builds:
-    // it still carries temperature because the Ollama adapter uses it.
-    await ai.generate({ prompt: "p", system: "s", temperature: 0.4, maxTokens: 280 });
+    await ai.generateTask(TASK_REQ);
 
     const body = bodyOf(fetchImpl);
-    expect(body).not.toHaveProperty("temperature");
-    expect(body).not.toHaveProperty("model");
-    expect(Object.keys(body).sort()).toEqual(["maxTokens", "prompt", "system"]);
+    expect(Object.keys(body).sort()).toEqual(["fields", "task"]);
+  });
+
+  it("rejects free-text generate — the proxy requires a task-shaped request", async () => {
+    const ai = providerWith(vi.fn());
+    await expect(ai.generate({ prompt: "hi" })).rejects.toBeInstanceOf(AICapabilityError);
+  });
+
+  it("rejects reason and code — no task kind exists for either yet", async () => {
+    const ai = providerWith(vi.fn());
+    await expect(ai.reason({ prompt: "p", schemaHint: "{a:1}" })).rejects.toBeInstanceOf(
+      AICapabilityError
+    );
+    await expect(ai.code({ prompt: "p", language: "ts" })).rejects.toBeInstanceOf(
+      AICapabilityError
+    );
   });
 
   it("throws without a session, before any request goes out", async () => {
     const fetchImpl = vi.fn(async () => jsonResponse({ text: "should not happen" }));
     const ai = providerWith(fetchImpl, null);
 
-    await expect(ai.generate({ prompt: "x" })).rejects.toBeInstanceOf(AIProviderError);
+    await expect(ai.generateTask(TASK_REQ)).rejects.toBeInstanceOf(AIProviderError);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
@@ -88,7 +101,7 @@ describe("ProxyAIProvider", () => {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
-    await expect(ai.generate({ prompt: "x" })).rejects.toBeInstanceOf(AIProviderError);
+    await expect(ai.generateTask(TASK_REQ)).rejects.toBeInstanceOf(AIProviderError);
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
@@ -98,12 +111,12 @@ describe("ProxyAIProvider", () => {
     );
     const ai = providerWith(fetchImpl);
 
-    await expect(ai.generate({ prompt: "x" })).rejects.toMatchObject({
+    await expect(ai.generateTask(TASK_REQ)).rejects.toMatchObject({
       name: "AIProviderError",
       provider: "proxy",
       status: 429,
     });
-    await expect(providerWith(fetchImpl).generate({ prompt: "x" })).rejects.toThrow(
+    await expect(providerWith(fetchImpl).generateTask(TASK_REQ)).rejects.toThrow(
       /Monthly AI allowance reached/
     );
   });
@@ -112,7 +125,7 @@ describe("ProxyAIProvider", () => {
     const fetchImpl = vi.fn(async () => new Response("upstream down", { status: 502 }));
     const ai = providerWith(fetchImpl);
 
-    await expect(ai.generate({ prompt: "x" })).rejects.toMatchObject({
+    await expect(ai.generateTask(TASK_REQ)).rejects.toMatchObject({
       name: "AIProviderError",
       status: 502,
     });
@@ -124,7 +137,7 @@ describe("ProxyAIProvider", () => {
     });
     const ai = providerWith(fetchImpl);
 
-    await expect(ai.generate({ prompt: "x" })).rejects.toMatchObject({
+    await expect(ai.generateTask(TASK_REQ)).rejects.toMatchObject({
       name: "AIProviderError",
       provider: "proxy",
     });
@@ -138,7 +151,7 @@ describe("ProxyAIProvider", () => {
     );
     const ai = providerWith(fetchImpl);
 
-    const r = await ai.generate({ prompt: "x" });
+    const r = await ai.generateTask(TASK_REQ);
     expect(r.text).toBe("");
     expect(r.usage).toEqual({ promptTokens: undefined, completionTokens: undefined });
   });
@@ -146,19 +159,6 @@ describe("ProxyAIProvider", () => {
   it("does not support embeddings", async () => {
     const ai = providerWith(vi.fn());
     await expect(ai.embed({ input: "x" })).rejects.toBeInstanceOf(AICapabilityError);
-  });
-
-  it("reason and code route through generate with a system preamble", async () => {
-    const fetchImpl = vi.fn(async () => jsonResponse({ text: "ok", model: "claude-opus-5" }));
-    const ai = providerWith(fetchImpl);
-
-    await ai.reason({ prompt: "p", schemaHint: "{a:1}" });
-    expect(String(bodyOf(fetchImpl).system)).toContain("Reason step by step");
-    expect(String(bodyOf(fetchImpl).system)).toContain("{a:1}");
-
-    fetchImpl.mockClear();
-    await ai.code({ prompt: "p", language: "ts" });
-    expect(String(bodyOf(fetchImpl).system)).toContain("Language: ts.");
   });
 });
 
@@ -184,7 +184,7 @@ describe("ProxyAIProvider failure reporting", () => {
       jsonResponse({ error: "service_disabled", message: "AI provider is switched off." }, 503)
     );
 
-    await expect(providerReporting(fetchImpl, onFailure).generate({ prompt: "x" })).rejects.toThrow(
+    await expect(providerReporting(fetchImpl, onFailure).generateTask(TASK_REQ)).rejects.toThrow(
       AIProviderError
     );
 
@@ -199,7 +199,7 @@ describe("ProxyAIProvider failure reporting", () => {
       throw new TypeError("fetch failed");
     });
 
-    await expect(providerReporting(fetchImpl, onFailure).generate({ prompt: "x" })).rejects.toThrow(
+    await expect(providerReporting(fetchImpl, onFailure).generateTask(TASK_REQ)).rejects.toThrow(
       AIProviderError
     );
 
@@ -219,7 +219,7 @@ describe("ProxyAIProvider failure reporting", () => {
     const fetchImpl = vi.fn();
 
     await expect(
-      providerReporting(fetchImpl, onFailure, null).generate({ prompt: "x" })
+      providerReporting(fetchImpl, onFailure, null).generateTask(TASK_REQ)
     ).rejects.toThrow(AIProviderError);
 
     expect(onFailure).not.toHaveBeenCalled();
@@ -229,7 +229,7 @@ describe("ProxyAIProvider failure reporting", () => {
     const onFailure = vi.fn();
     const fetchImpl = vi.fn(async () => jsonResponse({ text: "ok", model: "m" }));
 
-    await providerReporting(fetchImpl, onFailure).generate({ prompt: "x" });
+    await providerReporting(fetchImpl, onFailure).generateTask(TASK_REQ);
 
     expect(onFailure).not.toHaveBeenCalled();
   });
@@ -242,7 +242,7 @@ describe("ProxyAIProvider failure reporting", () => {
 
     // The engine catches AIProviderError and keeps deterministic prose.
     // A monitoring bug must not escape as a different error and break that.
-    await expect(providerReporting(fetchImpl, onFailure).generate({ prompt: "x" })).rejects.toThrow(
+    await expect(providerReporting(fetchImpl, onFailure).generateTask(TASK_REQ)).rejects.toThrow(
       AIProviderError
     );
   });

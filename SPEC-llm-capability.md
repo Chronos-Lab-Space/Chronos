@@ -148,8 +148,12 @@ reports `source: "ai"` for stub output.
 
 - Code generation (the `roadmap.build` capability that once held its place is
   retired — see above)
-- Task-shaped endpoint (`SPEC-ai-proxy.md` §"What the client is *not* trusted
-  with") so the function owns the prompt
-- Multi-capability task graphs where one handler's output feeds another's input
-- Usage surfacing from `ai_usage` (needs the migration applied first — see
-  `SPEC-ai-proxy.md` deploy-order note)
+- ~~Task-shaped endpoint~~ **Shipped (5.14.0)** — see `SPEC-ai-proxy.md`.
+- ~~Multi-capability task graphs where one handler's output feeds another's
+  input~~ **Shipped (#112):** `application/agent-os/runCapabilityChain.ts` is
+  the generic runner; `researchDecision` → `planChosenPath` is the live
+  instance (`researchContext` field), wired in `WorkspaceContext.chooseBestPath`
+  off the latest research note. Prose only — never on the ranking path.
+- ~~Usage surfacing from `ai_usage`~~ **Shipped (5.13.0)** —
+  `infrastructure/queries/AiUsageQueries.ts` + settings `AiUsagePanel`, per
+  `SPEC-ai-proxy.md`'s own "Later slices" entry above.

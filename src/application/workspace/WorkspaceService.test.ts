@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventBus, runtime } from "../../core/runtime";
+import { WorkspaceConflictError } from "../../domain/workspace/errors";
 import { LocalWorkspaceStore } from "../../infrastructure/repositories/LocalWorkspaceStore";
 import { MAX_RETAINED_SIMULATIONS, WorkspaceService } from "./WorkspaceService";
 
@@ -64,6 +65,63 @@ describe("workspace payload bounds", () => {
     for (const key of Object.keys(loaded?.futuresBySimulation ?? {})) {
       expect(keptIds.has(key)).toBe(true);
     }
+  });
+});
+
+describe("concurrent tab writes", () => {
+  const ownerId = "user-conflict-1";
+  let store: LocalWorkspaceStore;
+  let service: WorkspaceService;
+
+  beforeEach(() => {
+    localStorage.clear();
+    store = new LocalWorkspaceStore();
+    service = new WorkspaceService({ local: store, remote: null });
+  });
+
+  it("rejects a stale write instead of overwriting a newer one from another tab", async () => {
+    let releaseTabA: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      releaseTabA = resolve;
+    });
+    const remote = {
+      list: async () => [],
+      load: async () => null,
+      save: async () => {},
+      // Blocks tab A's write between its read (require) and its write
+      // (persist) so tab B has a window to land a write first — the same
+      // shape as a slow network round-trip in a real second tab.
+      deleteKnowledge: async () => {
+        await gate;
+      },
+    };
+    const tabA = new WorkspaceService({ local: store, remote });
+    await tabA.createWorkspace(ownerId, "Shared Lab", "");
+    const withKnowledge = await tabA.addKnowledge(ownerId, { type: "note", title: "K1" });
+    const knowledgeId = withKnowledge.knowledge[0].id;
+
+    const deletePromise = tabA.deleteKnowledge(ownerId, knowledgeId);
+
+    // Tab B is a second, independent service instance sharing the same
+    // localStorage-backed store — exactly what two open tabs look like.
+    const tabB = new WorkspaceService({ local: store, remote: null });
+    await tabB.addNote(ownerId, "From tab B", "");
+
+    releaseTabA();
+    await expect(deletePromise).rejects.toBeInstanceOf(WorkspaceConflictError);
+
+    const final = await tabB.load(ownerId);
+    expect(final?.notes.some((n) => n.title === "From tab B")).toBe(true);
+    // Tab A's rejected delete must not have gone through either.
+    expect(final?.knowledge.some((k) => k.id === knowledgeId)).toBe(true);
+  });
+
+  it("bumps the version on every successful persist", async () => {
+    const created = await service.createWorkspace(ownerId, "Version Lab", "");
+    expect(created.version).toBe(1);
+
+    const afterNote = await service.addNote(ownerId, "First note", "");
+    expect(afterNote.version).toBe(2);
   });
 });
 

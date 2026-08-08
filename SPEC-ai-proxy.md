@@ -469,12 +469,12 @@ Everything above the Edge Function row runs in CI. The Edge Function rows need D
 ## Later slices
 
 - ~~Task-shaped endpoint (`{task, fields}`)~~ **Shipped (5.14.0):**
-  `generateTask` + Edge Function `task`/`fields` body; free-text `prompt` still
-  accepted for old clients. Templates: `sim.recommendation`, `plan.steps`,
-  `research.findings` (mirror in `src/domain/ai/taskPrompts.ts` and
-  `supabase/functions/_shared/taskPrompts.ts`).
+  `generateTask` + Edge Function `task`/`fields` body. Templates:
+  `sim.recommendation`, `plan.steps`, `research.findings` (mirror in
+  `src/domain/ai/taskPrompts.ts` and `supabase/functions/_shared/taskPrompts.ts`).
 - ~~Usage panel~~ **Shipped (5.13.0)** — settings `AiUsagePanel`.
+- ~~Reject free-text bodies once all clients use `generateTask`~~ **Shipped
+  (5.15.0):** the Edge Function 400s without `task`+`fields`; `ProxyAIProvider.generate`/`reason`/`code` throw `AICapabilityError` — only `generateTask` reaches the upstream.
 - In-browser inference (WebGPU) for a genuinely key-free, request-free path — no proxy, no quota, no third party seeing the prompt. Costs a large model download and rules out most mobile, so it is an option, not a replacement.
 - `embed` via the proxy, once retrieval over knowledge actually needs vectors.
 - Prompt caching, if the stable prefix ever clears 512 tokens.
-- Optionally reject free-text bodies once all clients use `generateTask`.

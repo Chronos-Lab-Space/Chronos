@@ -46,6 +46,7 @@ function normalizeHome(home: WorkspaceHome): WorkspaceHome {
     }),
     knowledge: home.knowledge ?? [],
     notes: home.notes ?? [],
+    version: typeof home.version === "number" && home.version > 0 ? home.version : 1,
   };
 }
 

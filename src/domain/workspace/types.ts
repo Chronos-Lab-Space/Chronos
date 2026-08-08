@@ -182,4 +182,12 @@ export type WorkspaceHome = {
   notes: readonly NoteRecord[];
   futuresBySimulation: Record<string, readonly FutureRecord[]>;
   timelineBySimulation: Record<string, readonly TimelineNodeRecord[]>;
+  /**
+   * Bumped on every successful persist; guards concurrent writes (multiple
+   * tabs/devices) from silently overwriting each other. See
+   * WorkspaceService.persist. Optional so existing fixtures/older records
+   * (like SimulationRecord.version) don't all need updating; treat a missing
+   * value as 1.
+   */
+  version?: number;
 };
