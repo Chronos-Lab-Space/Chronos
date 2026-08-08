@@ -113,19 +113,21 @@ export function DecisionReportCard({
     >
       <div className="border-b border-line bg-chronos/10 px-5 py-3 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-chronos">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-chronos">
             Decision report
           </div>
-          <div className="font-mono text-[10px] uppercase text-ink-faint">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
             {report.pathSaved ? "Path saved" : "Engine recommendation"}
           </div>
         </div>
       </div>
 
-      <div className="divide-y divide-line">
+      <div className="divide-y divide-line-soft">
         {/* 1 · Goal */}
-        <section className="px-5 py-5 sm:px-6">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">Goal</div>
+        <section className="px-5 py-7 sm:px-6">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Goal
+          </div>
           <p className="mt-3 font-serif text-xl text-ink sm:text-2xl">{report.decisionTitle}</p>
           <p className="mt-2 text-[15px] text-ink-dim">{report.objective}</p>
           {report.objectiveDescription ? (
@@ -134,14 +136,16 @@ export function DecisionReportCard({
         </section>
 
         {/* 2 · Simulation summary */}
-        <section className="px-5 py-5 sm:px-6" data-testid="simulation-summary">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">Simulation summary</div>
+        <section className="px-5 py-7 sm:px-6" data-testid="simulation-summary">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Simulation summary
+          </div>
           <p className="mt-3 text-[15px] text-ink">{summaryLine || "Simulation completed"}</p>
         </section>
 
         {/* 3 · Evidence */}
-        <section className="px-5 py-5 sm:px-6" data-testid="decision-evidence">
-          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
+        <section className="px-5 py-7 sm:px-6" data-testid="decision-evidence">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-chronos">
             Evidence
           </div>
           <dl className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -158,7 +162,7 @@ export function DecisionReportCard({
               value={String(report.evidence.strategiesGenerated)}
             />
           </dl>
-          <div className="mt-5 font-mono text-[10px] uppercase text-ink-faint">
+          <div className="mt-5 font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
             Evaluation criteria
           </div>
           <ul className="mt-2 flex flex-wrap gap-2">
@@ -183,7 +187,9 @@ export function DecisionReportCard({
                   key={c.id}
                   className="rounded-full border border-line px-3 py-1.5 text-sm text-ink"
                 >
-                  <span className="font-mono text-[10px] uppercase text-ink-faint">{c.type}</span>{" "}
+                  <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+                    {c.type}
+                  </span>{" "}
                   {c.title}
                 </span>
               ))}
@@ -192,10 +198,12 @@ export function DecisionReportCard({
         </section>
 
         {/* 4 · Recommendation */}
-        <section className="px-5 py-6 sm:px-6">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">Recommendation</div>
+        <section className="px-5 py-8 sm:px-6">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Recommendation
+          </div>
           <h2
-            className={`mt-3 font-serif text-ink ${compact ? "text-2xl" : "text-3xl sm:text-4xl"}`}
+            className={`mt-3 font-serif leading-[1.24] tracking-[-0.01em] text-ink ${compact ? "text-2xl" : "text-[26px] sm:text-[34px]"}`}
           >
             {report.recommended}
             <span className="ml-2 text-chronos" aria-hidden>
@@ -205,14 +213,18 @@ export function DecisionReportCard({
           {report.narrative.map((paragraph) => (
             <p
               key={paragraph}
-              className="mt-3 max-w-2xl font-serif text-[15px] leading-relaxed text-ink-dim"
+              className="mt-4 max-w-[60ch] text-pretty font-serif text-[18px] leading-[1.6] text-ink-dim"
             >
               {paragraph}
             </p>
           ))}
           <div className="mt-5">
-            <div className="font-mono text-[10px] uppercase text-ink-faint">Confidence</div>
-            <div className="mt-1 font-mono text-4xl text-chronos sm:text-5xl">{conf}</div>
+            <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+              Confidence
+            </div>
+            <div className="mt-1 font-serif leading-[0.9] text-chronos text-[48px] sm:text-[56px]">
+              {conf}
+            </div>
             {home && (
               <ConfidenceCaveatNote home={home} confidence={report.confidence} className="mt-2" />
             )}
@@ -220,8 +232,8 @@ export function DecisionReportCard({
         </section>
 
         {/* 5 · Why */}
-        <section className="px-5 py-5 sm:px-6">
-          <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-chronos">
+        <section className="px-5 py-7 sm:px-6">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-chronos">
             Why this was chosen
           </div>
           <ul className="mt-3 space-y-2">
@@ -250,8 +262,10 @@ export function DecisionReportCard({
         </section>
 
         {/* 6 · Expected value */}
-        <section className="px-5 py-5 sm:px-6" data-testid="expected-value">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">Expected value</div>
+        <section className="px-5 py-7 sm:px-6" data-testid="expected-value">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Expected value
+          </div>
           {report.expectedValue.rows.length ? (
             <dl className="mt-4 space-y-2">
               {report.expectedValue.rows.map((row) => (
@@ -269,15 +283,19 @@ export function DecisionReportCard({
           )}
           {report.expectedValue.reason ? (
             <p className="mt-4 text-sm text-ink-dim">
-              <span className="font-mono text-[10px] uppercase text-ink-faint">Reason · </span>
+              <span className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+                Reason ·{" "}
+              </span>
               {report.expectedValue.reason}
             </p>
           ) : null}
         </section>
 
         {/* 7 · Risks */}
-        <section className="px-5 py-5 sm:px-6">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">Risks</div>
+        <section className="px-5 py-7 sm:px-6">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Risks
+          </div>
           <ul className="mt-4 space-y-2">
             {(report.risks.length ? report.risks : ["No major risks flagged."]).map((r) => (
               <li key={r} className="flex gap-3 text-[15px] text-ink-dim">
@@ -289,8 +307,10 @@ export function DecisionReportCard({
         </section>
 
         {/* 8 · Next actions */}
-        <section className="px-5 py-5 sm:px-6">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">Next actions</div>
+        <section className="px-5 py-7 sm:px-6">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Next actions
+          </div>
           <ul className="mt-4 space-y-2">
             {report.nextActions.map((a) => (
               <li key={a} className="flex gap-3 text-[15px] text-ink">
@@ -302,8 +322,10 @@ export function DecisionReportCard({
         </section>
 
         {/* 9 · Save decision (hard-gate) */}
-        <section className="px-5 py-5 sm:px-6" data-testid="save-decision">
-          <div className="font-mono text-[10px] uppercase text-ink-faint">Save decision</div>
+        <section className="px-5 py-7 sm:px-6" data-testid="save-decision">
+          <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+            Save decision
+          </div>
           {report.pathSaved ? (
             <p className="mt-3 text-sm text-chronos">Path saved to workspace memory.</p>
           ) : (
@@ -355,7 +377,7 @@ export function DecisionReportCard({
         </section>
 
         {outcomeSlot ? (
-          <section id="outcome" className="scroll-mt-20 px-5 py-5 sm:px-6">
+          <section id="outcome" className="scroll-mt-20 px-5 py-7 sm:px-6">
             {outcomeSlot}
           </section>
         ) : null}
@@ -389,7 +411,9 @@ export function DecisionReportCard({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-line px-3 py-3">
-      <dt className="font-mono text-[10px] uppercase text-ink-faint">{label}</dt>
+      <dt className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+        {label}
+      </dt>
       <dd className="mt-1 font-mono text-2xl text-chronos">{value}</dd>
     </div>
   );

@@ -13,17 +13,46 @@ import { isAnonymousOwnerId } from "../../../domain/workspace/anonymousOwner";
 
 type NavItem = { to: string; label: string; short: string; end?: boolean; icon: string };
 
-/** Desktop sidebar — matches docs/images/workspace-desktop-mock.png */
+/**
+ * Desktop sidebar — the imported workspace design splits nav into the decision
+ * loop itself and the surfaces around it. The design's `Reports` item is
+ * omitted: nothing routes there, and a dead nav item reads as a broken product.
+ */
 const navItems: NavItem[] = [
   { to: "/workspace", label: "Current Decision", short: "Home", end: true, icon: "⌂" },
-  { to: "/workspace/hq", label: "Workspace HQ", short: "HQ", icon: "▦" },
   { to: "/workspace/decisions", label: "Decisions", short: "Decs", icon: "◈" },
   { to: "/workspace/knowledge", label: "Knowledge", short: "Know", icon: "☰" },
   { to: "/workspace/simulations", label: "Simulations", short: "Sims", icon: "⬡" },
   { to: "/workspace/timeline", label: "Timeline", short: "Time", icon: "▤" },
   { to: "/workspace/memory", label: "Memory", short: "Mem", icon: "▣" },
+];
+
+/** Below the divider in the design — supporting surfaces, not the loop. */
+const secondaryNavItems: NavItem[] = [
+  { to: "/workspace/hq", label: "Workspace HQ", short: "HQ", icon: "▦" },
   { to: "/workspace/settings", label: "Settings", short: "Set", icon: "⚙" },
 ];
+
+/** 24-hour clock for the header's sync stamp, matching the design's `SYNCED 10:42`. */
+function formatSyncTime(at: Date): string {
+  return at.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+/**
+ * The design's `Window · 17 days left`. A decision only has a window once a path
+ * is saved with a review horizon, so this is null until then — the row is hidden
+ * rather than showing an invented deadline.
+ */
+function reviewWindowLabel(reviewAt: string | null | undefined, now: Date): string | null {
+  if (!reviewAt) return null;
+  const due = new Date(reviewAt).getTime();
+  if (Number.isNaN(due)) return null;
+
+  const days = Math.ceil((due - now.getTime()) / 86_400_000);
+  if (days < 0) return `${Math.abs(days)}d overdue`;
+  if (days === 0) return "due today";
+  return `${days} day${days === 1 ? "" : "s"} left`;
+}
 
 /** Mobile tab bar — matches docs/images/workspace-mobile-mock.png: Home · Sims · + · Timeline · More */
 const mobilePrimary = [
@@ -55,6 +84,10 @@ function WorkspaceShellInner() {
     useWorkspace();
   const [moreOpen, setMoreOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // The design's `SYNCED 10:42`. Nothing in the workspace record stores a sync
+  // time, so this is when data last actually landed — blank until it does,
+  // rather than claiming a sync that never happened.
+  const [syncedAt, setSyncedAt] = useState<Date | null>(null);
 
   // Not `isWorkspaceOnboarded` directly: the entry screen saves the goal
   // before its run finishes, and swapping on that alone unmounted it mid-submit.
@@ -65,15 +98,14 @@ function WorkspaceShellInner() {
   const brief = deriveDecisionBrief(home);
   // Simulation detail is where a decision is actually worked — compare futures,
   // collapse, log the outcome — so it is the surface the rail's "don't navigate
-  // away for context" argument is really about.
+  // away for context" argument is really about. It describes that run; on every
+  // other surface it falls back to the newest one.
   const activeSimulationId =
     location.pathname.match(/^\/workspace\/simulations\/([^/]+)$/)?.[1] ?? undefined;
-  const showContextRail =
-    ready &&
-    (location.pathname === "/workspace" ||
-      location.pathname === "/workspace/" ||
-      location.pathname === "/workspace/hq" ||
-      Boolean(activeSimulationId));
+  // The design carries the rail across every workspace screen, not just the
+  // decision surfaces: the objective and constraints are the thing you are
+  // reading knowledge and memory *against*.
+  const showContextRail = ready && location.pathname.startsWith("/workspace");
 
   // Live counts for the sidebar — same numbers the pages report.
   const sourcesCount = home ? home.knowledge.length + home.notes.length : null;
@@ -91,6 +123,15 @@ function WorkspaceShellInner() {
     "/workspace/simulations": simsCount,
     "/workspace/memory": memoryCount,
   };
+
+  const reviewWindow = reviewWindowLabel(
+    brief?.reportSimulation?.result.review_at,
+    syncedAt ?? new Date()
+  );
+
+  useEffect(() => {
+    if (!loading && home && !remoteError) setSyncedAt(new Date());
+  }, [loading, home, remoteError]);
 
   const handleSignOut = async () => {
     await authService.signOut();
@@ -112,18 +153,21 @@ function WorkspaceShellInner() {
   }, []);
 
   return (
-    <div className="workspace-shell-enter min-h-dvh bg-bg pb-[5.25rem] lg:pb-0">
+    // Desktop is an app shell with its own scroll regions, per the design: the
+    // header and stage band stay put while content and rail scroll
+    // independently. Below `lg` the page scrolls normally under the tab bar.
+    <div className="workspace-shell-enter flex min-h-dvh flex-col bg-bg pb-[5.25rem] lg:h-dvh lg:min-h-0 lg:overflow-hidden lg:pb-0">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-3 sm:px-4 lg:px-5">
-          <div className="flex min-w-0 items-center gap-2.5">
+      <header className="sticky top-0 z-40 shrink-0 border-b border-line bg-bg/95 backdrop-blur-xl lg:static">
+        <div className="flex h-14 items-center gap-3 px-3 sm:px-4 lg:h-[62px] lg:gap-8 lg:px-6">
+          <div className="flex min-w-0 items-center gap-2.5 lg:w-[236px] lg:shrink-0">
             <ChronosCMark size={22} className="chronos-brand-mark shrink-0 text-ink" />
             <div className="min-w-0">
               <div className="flex items-baseline gap-1.5">
-                <span className="font-chronos-wordmark text-[18px] leading-none text-ink sm:text-[20px]">
+                <span className="font-chronos-wordmark text-[18px] leading-none text-ink sm:text-[20px] lg:text-[24px] lg:font-semibold">
                   Chronos
                 </span>
-                <span className="hidden font-mono text-[9px] uppercase tracking-[0.2em] text-ink-faint sm:inline">
+                <span className="hidden font-mono text-[9px] uppercase tracking-[0.18em] text-accent-2 sm:inline">
                   Lab
                 </span>
               </div>
@@ -134,14 +178,19 @@ function WorkspaceShellInner() {
             <button
               type="button"
               onClick={() => setPaletteOpen(true)}
-              className="mx-auto hidden min-w-0 flex-1 max-w-xl cursor-text items-center gap-3 rounded-full border border-line bg-bg-soft/25 py-2 pl-3 pr-4 text-left text-sm text-ink-faint transition hover:border-chronos/50 md:flex"
+              className="mx-auto hidden min-w-0 max-w-xl flex-1 cursor-text items-center gap-3 rounded-full border border-line-strong bg-bg-soft/25 py-2 pl-3 pr-4 text-left text-sm text-ink-faint transition hover:border-ink-faint md:flex lg:h-[34px] lg:max-w-[520px] lg:py-0"
             >
-              <span className="shrink-0 font-mono text-[10px]">⌘K</span>
-              <span className="truncate">Search, ask, or run a command…</span>
+              <span className="shrink-0 font-mono text-[10px] tracking-[0.06em]">⌘K</span>
+              <span className="truncate lg:text-[13px]">Search, ask, or run a command…</span>
             </button>
           )}
 
-          <div className="ml-auto flex shrink-0 items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2 lg:gap-3.5">
+            {ready && syncedAt && (
+              <span className="hidden font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint lg:inline">
+                Synced {formatSyncTime(syncedAt)}
+              </span>
+            )}
             {ready && (
               <button
                 type="button"
@@ -165,7 +214,7 @@ function WorkspaceShellInner() {
             ) : (
               <>
                 <div
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-line font-mono text-[10px] text-chronos"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-line-strong bg-chronos/15 font-mono text-[10px] text-accent-2 lg:h-[27px] lg:w-[27px]"
                   title={ownerId ?? "You"}
                 >
                   {initials}
@@ -188,7 +237,7 @@ function WorkspaceShellInner() {
         <div
           role="status"
           data-testid="workspace-notice"
-          className="flex items-center justify-center gap-3 border-b border-chronos/25 bg-chronos/10 px-4 py-2 text-center text-[13px] text-ink-dim"
+          className="flex shrink-0 items-center justify-center gap-3 border-b border-chronos/25 bg-chronos/10 px-4 py-2 text-center text-[13px] text-ink-dim"
         >
           <span>{notice}</span>
           <button
@@ -205,7 +254,7 @@ function WorkspaceShellInner() {
         <div
           role="status"
           data-testid="anonymous-banner"
-          className="border-b border-chronos/25 bg-chronos/5 px-4 py-2 text-center text-[13px] text-ink-dim"
+          className="shrink-0 border-b border-chronos/25 bg-chronos/5 px-4 py-2 text-center text-[13px] text-ink-dim"
         >
           Saved on this device only — clearing your browser data loses it.{" "}
           <Link to="/login" className="text-chronos underline-offset-2 hover:underline">
@@ -217,7 +266,7 @@ function WorkspaceShellInner() {
       {remoteError && (
         <div
           role="status"
-          className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-[13px] text-amber-100/90"
+          className="shrink-0 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-[13px] text-amber-100/90"
         >
           Cloud sync failed — decisions are saved on this device.{" "}
           <span className="font-mono text-[11px] text-ink-faint">
@@ -226,12 +275,12 @@ function WorkspaceShellInner() {
         </div>
       )}
 
-      <div className="mx-auto flex max-w-[1600px]">
+      <div className="flex flex-1 lg:min-h-0">
         {/* Desktop left nav */}
         {ready && (
-          <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-[220px] shrink-0 border-r border-line lg:flex lg:flex-col">
-            <nav className="flex h-full flex-col gap-0.5 p-3" aria-label="Workspace">
-              <div className="mb-2 px-3 pt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+          <aside className="hidden w-[236px] shrink-0 border-r border-line lg:flex lg:flex-col lg:overflow-y-auto">
+            <nav className="flex h-full flex-col gap-[3px] px-3.5 py-[22px]" aria-label="Workspace">
+              <div className="px-2.5 pb-3 font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
                 Workspace
               </div>
               {navItems.map((item) => {
@@ -242,64 +291,84 @@ function WorkspaceShellInner() {
                     to={item.to}
                     end={item.end}
                     className={({ isActive }) =>
-                      `workspace-nav-active flex items-center justify-between rounded-lg px-3 py-2.5 text-[13px] transition ${
+                      `workspace-nav-active flex items-center justify-between rounded-lg px-[11px] py-[9px] text-[13.5px] transition ${
                         isActive
-                          ? "bg-chronos/15 font-medium text-chronos"
-                          : "text-ink-dim hover:bg-bg-soft/30 hover:text-ink"
+                          ? "bg-chronos/15 text-ink"
+                          : "text-ink-faint hover:bg-bg-soft/28 hover:text-ink"
                       }`
                     }
                   >
                     <span>{item.label}</span>
                     {item.to === "/workspace" ? (
-                      <span className="blink h-[5px] w-[5px] rounded-full bg-chronos" aria-hidden />
+                      <span
+                        className="chpulse h-[5px] w-[5px] rounded-full bg-chronos"
+                        aria-hidden
+                      />
                     ) : count != null && count > 0 ? (
-                      <span className="font-mono text-[10px] text-ink-faint">{count}</span>
+                      <span className="font-mono text-[10px] text-ink-faint/75">{count}</span>
                     ) : null}
                   </NavLink>
                 );
               })}
 
-              <div className="mt-auto space-y-3 border-t border-line px-1 pt-4 pb-2">
+              <div className="mx-2.5 my-4 h-px bg-line" />
+
+              {secondaryNavItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    `workspace-nav-active rounded-lg px-[11px] py-[9px] text-[13.5px] transition ${
+                      isActive
+                        ? "bg-chronos/15 text-ink"
+                        : "text-ink-faint hover:bg-bg-soft/28 hover:text-ink"
+                    }`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+
+              <div className="mt-auto">
                 <div
-                  className="rounded-xl border border-line bg-bg-soft/20 p-3"
+                  className="rounded-xl border border-line bg-bg-soft/16 p-3.5"
                   data-testid="sidebar-active-decision"
                 >
-                  <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
-                    Current decision
+                  <div className="mb-2.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint/75">
+                    Active decision
                   </div>
-                  <div className="mt-1.5 line-clamp-2 text-sm text-ink">
+                  <div className="mb-3.5 line-clamp-2 font-serif text-[18px] leading-[1.25] text-ink">
                     {home?.goal?.title ?? "No goal yet"}
                   </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="inline-flex h-1.5 w-1.5 rounded-full bg-chronos" />
-                    <span className="font-mono text-[10px] uppercase text-ink-faint">
-                      {brief?.stages.find((s) => s.state === "current")?.label ?? "Planning"}
-                    </span>
-                  </div>
-                  {/* The card names the decision; without its confidence it
-                      says nothing about where the decision actually stands. */}
-                  {brief?.confidencePct != null && (
-                    <div className="mt-2 flex items-center justify-between font-mono text-[10px] uppercase text-ink-faint">
-                      <span>Confidence</span>
-                      <span className="tabular-nums text-chronos">{brief.confidencePct}%</span>
+                  <div className="flex flex-col gap-[7px] text-[12px]">
+                    <div className="flex justify-between">
+                      <span className="text-ink-faint">State</span>
+                      <span className="text-chronos">
+                        {brief?.stages.find((s) => s.state === "current")?.label ?? "Planning"}
+                      </span>
                     </div>
-                  )}
-                  <NavLink
-                    to="/workspace"
-                    end
-                    className="mt-3 inline-flex font-mono text-[10px] uppercase tracking-[0.12em] text-chronos"
-                  >
-                    View decision brief →
-                  </NavLink>
-                </div>
-                <div className="px-2 pb-1">
-                  <div className="flex items-center gap-2 text-ink-dim">
-                    <ChronosCMark size={16} className="text-ink-faint" />
-                    <div>
-                      <div className="text-[11px] text-ink-dim">Chronos Lab</div>
-                      <div className="font-mono text-[9px] text-ink-faint">
-                        Decision infrastructure
+                    {/* The card names the decision; without its confidence it
+                        says nothing about where the decision actually stands. */}
+                    {brief?.confidencePct != null && (
+                      <div className="flex justify-between">
+                        <span className="text-ink-faint">Confidence</span>
+                        <span className="tabular-nums">{brief.confidencePct}%</span>
                       </div>
+                    )}
+                    {reviewWindow && (
+                      <div className="flex justify-between">
+                        <span className="text-ink-faint">Window</span>
+                        <span className="tabular-nums">{reviewWindow}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 px-2.5 pb-0.5 pt-4">
+                  <ChronosCMark size={16} className="shrink-0 text-ink-faint opacity-85" />
+                  <div>
+                    <div className="text-[11px] text-accent-2">Chronos Lab</div>
+                    <div className="font-mono text-[9px] tracking-[0.04em] text-ink-faint">
+                      Decision infrastructure
                     </div>
                   </div>
                 </div>
@@ -308,9 +377,9 @@ function WorkspaceShellInner() {
           </aside>
         )}
 
-        <main className="min-w-0 flex-1 overflow-x-hidden px-3 py-4 sm:px-5 sm:py-6 lg:px-6">
+        <main className="flex min-w-0 flex-1 flex-col">
           {error && (
-            <div className="workspace-banner-enter mb-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-[13px] text-ink-dim">
+            <div className="workspace-banner-enter mx-3 mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 px-4 py-3 text-[13px] text-ink-dim sm:mx-5 lg:mx-14">
               {error}
             </div>
           )}
@@ -326,7 +395,7 @@ function WorkspaceShellInner() {
               </p>
             </div>
           ) : !ready ? (
-            <div key="entry" className="page-enter">
+            <div key="entry" className="page-enter px-3 py-4 sm:px-5 sm:py-6 lg:px-14">
               <WorkspaceStart />
               {loading ? (
                 <p className="mt-4 text-center font-mono text-[10px] uppercase text-ink-faint">
@@ -336,22 +405,28 @@ function WorkspaceShellInner() {
             </div>
           ) : (
             <>
+              {/* The band spans content and rail together, per the design. */}
               {brief && <WorkspaceStageBand stages={brief.stages} />}
-              <div key={routeKey} className="page-enter">
-                {loading ? (
-                  <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                    Syncing workspace…
-                  </p>
+              <div className="flex flex-1 lg:min-h-0">
+                <div
+                  key={routeKey}
+                  className="page-enter min-w-0 flex-1 overflow-x-hidden px-3 py-4 sm:px-5 sm:py-6 lg:overflow-y-auto lg:px-14 lg:pb-16 lg:pt-[42px]"
+                >
+                  {loading ? (
+                    <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+                      Syncing workspace…
+                    </p>
+                  ) : null}
+                  <Outlet />
+                </div>
+
+                {showContextRail && home ? (
+                  <WorkspaceContextRail home={home} activeSimulationId={activeSimulationId} />
                 ) : null}
-                <Outlet />
               </div>
             </>
           )}
         </main>
-
-        {showContextRail && home ? (
-          <WorkspaceContextRail home={home} activeSimulationId={activeSimulationId} />
-        ) : null}
       </div>
 
       {paletteOpen && ready ? (

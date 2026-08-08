@@ -345,13 +345,16 @@ export function SimulationDetailPage() {
   return (
     <div className="space-y-10">
       <div>
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-faint">
-          Simulation · {home.workspace.name}
+        <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
+          Simulation · run v{sim.version}
+          {futures.length ? ` · ${futures.length} futures` : ""}
         </div>
-        <h1 className="mt-2 font-serif text-3xl text-ink">{sim.title}</h1>
-        <p className="mt-2 max-w-2xl text-sm text-ink-dim">
-          Decision graph: open → branches → compare → collapse. Re-branch from open to explore again
-          without losing prior branches in Memory.
+        <h1 className="mt-[18px] font-serif text-[30px] leading-[1.15] text-ink sm:text-[38px]">
+          {sim.title}
+        </h1>
+        <p className="mt-3.5 max-w-[60ch] font-serif text-[18px] leading-[1.55] text-ink-dim">
+          Every branch is a path this decision could take. Select one to read its narrative, its
+          score, and where it breaks.
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <StatusPill status={sim.status} />

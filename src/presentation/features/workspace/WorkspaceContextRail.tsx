@@ -12,9 +12,16 @@ const VERDICT_LABEL: Record<OutcomeVerdict, string> = {
   worse: "worse than predicted",
 };
 
+const SECTION_LABEL = "font-mono text-[9.5px] uppercase tracking-[0.16em] text-ink-faint/75";
+
 /**
- * Right context rail — Details (objective, constraints, related sims, outcome)
- * and Notes (real workspace notes) as tabs, per the decision-workspace design.
+ * Right context rail — Details (objective, constraints, targets, priors,
+ * activity, outcome) and Notes (real workspace notes) as tabs, per the
+ * imported workspace design.
+ *
+ * `Related simulations` has no counterpart in that design but is kept: the
+ * rail exists so a decision can be worked without navigating away for context,
+ * and jumping between runs is part of that.
  */
 export function WorkspaceContextRail({
   home,
@@ -31,7 +38,6 @@ export function WorkspaceContextRail({
 }) {
   const [tab, setTab] = useState<"details" | "notes">("details");
   const goal = home.goal;
-  const knowledge = home.knowledge.slice(0, 6);
   const active =
     (activeSimulationId ? home.recentSimulations.find((s) => s.id === activeSimulationId) : null) ??
     home.recentSimulations[0];
@@ -46,21 +52,23 @@ export function WorkspaceContextRail({
   const priors = derivePriors(home).slice(0, 3);
   const activity = buildActivityFeed(home, 4);
 
-  const tabClass = (active: boolean) =>
-    `rounded-md px-2.5 py-1 font-mono text-[10px] uppercase transition ${
-      active ? "bg-chronos/15 text-chronos" : "text-ink-faint hover:text-ink"
+  const tabClass = (isActive: boolean) =>
+    `cursor-pointer pb-[3px] font-mono text-[9.5px] uppercase tracking-[0.14em] transition ${
+      isActive
+        ? "border-b border-chronos text-ink"
+        : "border-b border-transparent text-ink-faint/75"
     }`;
 
   return (
     <aside
-      className="workspace-context-rail hidden w-[280px] shrink-0 border-l border-line xl:block"
+      className="workspace-context-rail hidden w-[316px] shrink-0 border-l border-line px-6 py-[26px] xl:block xl:overflow-y-auto"
       aria-label="Context"
     >
-      <div className="sticky top-14 flex h-[calc(100dvh-3.5rem)] flex-col overflow-y-auto p-4">
-        <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+      <div className="mb-[22px] flex items-center justify-between">
+        <div className="font-mono text-[9.5px] uppercase tracking-[0.2em] text-ink-faint/75">
           Context
         </div>
-        <div className="mt-3 flex gap-1 border-b border-line pb-2">
+        <div className="flex gap-4">
           <button
             type="button"
             onClick={() => setTab("details")}
@@ -76,249 +84,210 @@ export function WorkspaceContextRail({
             Notes
           </button>
         </div>
+      </div>
 
-        {tab === "notes" ? (
-          <div className="mt-4 flex flex-1 flex-col">
-            {home.notes.length === 0 ? (
-              <p className="text-sm text-ink-faint">
-                No notes yet — capture the conversation around this decision.
+      {tab === "notes" ? (
+        <div className="flex flex-col gap-[22px]">
+          {home.notes.length === 0 ? (
+            <p className="text-[12.5px] text-ink-faint">
+              No notes yet — capture the conversation around this decision.
+            </p>
+          ) : (
+            home.notes.slice(0, 8).map((note) => (
+              <div key={note.id} className="border-l-2 border-line-strong pl-3.5">
+                <p className="font-serif text-[16px] leading-[1.55] text-ink-dim">
+                  {note.content.length > 160 ? `${note.content.slice(0, 160)}…` : note.content}
+                </p>
+                <div className="mt-[9px] font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-faint/75">
+                  {note.title} · {formatCreatedAt(note.created_at)}
+                </div>
+              </div>
+            ))
+          )}
+          <Link
+            to="/workspace/notes"
+            className="rounded-xl border border-dashed border-line-strong p-3.5 text-[12.5px] text-ink-faint/75 transition hover:border-chronos/45 hover:text-ink"
+          >
+            Write a note…
+          </Link>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-[30px]">
+          <section>
+            <div className="mb-2.5 flex items-center justify-between">
+              <div className={SECTION_LABEL}>Objective</div>
+              <Link to="/workspace" className="font-mono text-[9.5px] uppercase text-chronos">
+                Update
+              </Link>
+            </div>
+            <p className="font-serif text-[16px] leading-[1.5] text-ink-dim">
+              {goal?.description?.trim() || goal?.title || "No objective set."}
+            </p>
+          </section>
+
+          <section>
+            <div className="mb-3 flex items-center justify-between">
+              <div className={SECTION_LABEL}>
+                Constraints{constraints.length > 0 ? ` · ${constraints.length}` : ""}
+              </div>
+              <Link
+                to="/workspace/simulations?new=1"
+                className="font-mono text-[9.5px] uppercase text-chronos"
+              >
+                Edit
+              </Link>
+            </div>
+            {constraints.length === 0 ? (
+              <p className="text-[12.5px] text-ink-faint">None on this run.</p>
+            ) : (
+              <ul className="flex flex-col gap-[9px] text-[12.5px]">
+                {constraints.map((c) => (
+                  <li key={c} className="flex gap-2.5">
+                    <span className="text-chronos">✓</span>
+                    <span className="text-ink-dim">{c.replace(/^(hard|soft):\s*/i, "")}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {goal && (
+            <section data-testid="rail-targets">
+              <div className={`mb-3 ${SECTION_LABEL}`}>Targets</div>
+              {targets.length === 0 ? (
+                <p className="text-[12.5px] text-ink-faint">
+                  No measurable target in the objective — add a number to hold the run to something.
+                </p>
+              ) : (
+                <dl className="flex flex-col gap-[9px] text-[12.5px]">
+                  {targets.map((target) => (
+                    <div
+                      key={`${target.value} ${target.label}`}
+                      className="flex justify-between gap-3"
+                    >
+                      <dt className="capitalize text-ink-faint">{target.label}</dt>
+                      <dd className="tabular-nums text-ink">{target.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </section>
+          )}
+
+          <section data-testid="rail-memory">
+            <div className="mb-3 flex items-center justify-between">
+              <div className={SECTION_LABEL}>Memory in play</div>
+              <Link
+                to="/workspace/memory"
+                className="font-mono text-[9.5px] uppercase text-chronos"
+              >
+                All
+              </Link>
+            </div>
+            {priors.length === 0 ? (
+              <p className="text-[12.5px] text-ink-faint">
+                No outcome logged yet — nothing here has been proved right or wrong.
               </p>
             ) : (
-              <ul className="space-y-4">
-                {home.notes.slice(0, 8).map((note) => (
-                  <li key={note.id} className="border-l-2 border-line-strong pl-3">
-                    <p className="text-sm leading-relaxed text-ink-dim">
-                      {note.content.length > 160 ? `${note.content.slice(0, 160)}…` : note.content}
-                    </p>
-                    <div className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-ink-faint">
-                      {note.title} · {formatCreatedAt(note.created_at)}
+              <ul className="flex flex-col gap-3 text-[12.5px]">
+                {priors.map((prior) => (
+                  <li key={prior.simulationId}>
+                    <Link to={prior.href} className="text-ink-dim transition hover:text-chronos">
+                      {prior.pathName}
+                    </Link>
+                    <span className="text-ink-faint">
+                      {prior.confidence != null ? (
+                        <>
+                          {" — "}
+                          <span className="tabular-nums">
+                            {confidencePercent(prior.confidence)}
+                          </span>
+                        </>
+                      ) : null}
+                      {prior.verdict ? (
+                        <span className={prior.verdict === "worse" ? "text-amber-300/80" : ""}>
+                          {prior.confidence != null ? ", " : " — "}
+                          {VERDICT_LABEL[prior.verdict]}
+                        </span>
+                      ) : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section data-testid="rail-activity">
+            <div className={`mb-3 ${SECTION_LABEL}`}>Recent activity</div>
+            {activity.length === 0 ? (
+              <p className="text-[12.5px] text-ink-faint">Nothing has happened here yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-[13px] text-[12.5px]">
+                {activity.map((item) => (
+                  <li key={item.id}>
+                    <div className="text-ink-dim">{item.title}</div>
+                    <div className="mt-[3px] font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint/75">
+                      {formatCreatedAt(item.at)}
                     </div>
                   </li>
                 ))}
               </ul>
             )}
-            <Link
-              to="/workspace/notes"
-              className="mt-4 inline-flex rounded-xl border border-dashed border-line-strong px-3 py-2 text-[12px] text-ink-faint transition hover:border-chronos/40 hover:text-ink"
-            >
-              Write a note…
-            </Link>
-          </div>
-        ) : (
-          <>
-            <section className="mt-4">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                  Objective
-                </div>
-                <Link to="/workspace" className="font-mono text-[10px] text-chronos">
-                  Update
-                </Link>
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-ink-dim">
-                {goal?.description?.trim() || goal?.title || "No objective set."}
-              </p>
-            </section>
+          </section>
 
-            <section className="mt-5">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                  Constraints
-                </div>
-                <Link
-                  to="/workspace/simulations?new=1"
-                  className="font-mono text-[10px] text-chronos"
-                >
-                  Edit
-                </Link>
-              </div>
-              {constraints.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-faint">None on this run.</p>
-              ) : (
-                <ul className="mt-2 space-y-1.5 text-sm text-ink-dim">
-                  {constraints.map((c) => (
-                    <li key={c} className="flex gap-2">
-                      <span className="text-chronos">•</span>
-                      <span>{c.replace(/^(hard|soft):\s*/i, "")}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            {goal && (
-              <section className="mt-5" data-testid="rail-targets">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                  Targets
-                </div>
-                {targets.length === 0 ? (
-                  <p className="mt-2 text-sm text-ink-faint">
-                    No measurable target in the objective — add a number to hold the run to
-                    something.
-                  </p>
-                ) : (
-                  <dl className="mt-2 space-y-1.5 text-sm">
-                    {targets.map((target) => (
-                      <div
-                        key={`${target.value} ${target.label}`}
-                        className="flex justify-between gap-3"
-                      >
-                        <dt className="capitalize text-ink-faint">{target.label}</dt>
-                        <dd className="tabular-nums text-ink-dim">{target.value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
-              </section>
+          <section data-testid="rail-related">
+            <div className="mb-3 flex items-center justify-between">
+              <div className={SECTION_LABEL}>Related simulations</div>
+              <Link
+                to="/workspace/simulations"
+                className="font-mono text-[9.5px] uppercase text-chronos"
+              >
+                View all →
+              </Link>
+            </div>
+            {related.length === 0 ? (
+              <p className="text-[12.5px] text-ink-faint">No completed runs yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {related.map((s) => (
+                  <li key={s.id}>
+                    <Link
+                      to={`/workspace/simulations/${s.id}`}
+                      className="flex items-center justify-between gap-2 rounded-lg border border-line px-2.5 py-2 text-[12.5px] transition hover:border-chronos/45"
+                    >
+                      <span className="min-w-0 truncate text-ink">{s.title}</span>
+                      <span className="shrink-0 font-mono text-[10px] text-chronos">
+                        {s.confidence != null ? confidencePercent(s.confidence) : "—"}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
+          </section>
 
-            <section className="mt-5" data-testid="rail-activity">
-              <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                Recent activity
-              </div>
-              {activity.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-faint">Nothing has happened here yet.</p>
-              ) : (
-                <ul className="mt-2 space-y-2.5">
-                  {activity.map((item) => (
-                    <li key={item.id}>
-                      <div className="text-sm text-ink-dim">{item.title}</div>
-                      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
-                        {formatCreatedAt(item.at)}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="mt-5" data-testid="rail-memory">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                  Memory in play
-                </div>
-                <Link to="/workspace/memory" className="font-mono text-[10px] text-chronos">
-                  All
-                </Link>
-              </div>
-              {priors.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-faint">
-                  No outcome logged yet — nothing here has been proved right or wrong.
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-2.5 text-sm">
-                  {priors.map((prior) => (
-                    <li key={prior.simulationId}>
-                      <Link to={prior.href} className="block text-ink-dim hover:text-chronos">
-                        {prior.pathName}
-                      </Link>
-                      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
-                        {prior.confidence != null ? (
-                          <span className="tabular-nums">
-                            {confidencePercent(prior.confidence)}
-                          </span>
-                        ) : null}
-                        {prior.verdict ? (
-                          <span className={prior.verdict === "worse" ? "text-amber-300/80" : ""}>
-                            {prior.confidence != null ? " · " : ""}
-                            {VERDICT_LABEL[prior.verdict]}
-                          </span>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="mt-5">
-              <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                Knowledge pulse
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-line bg-bg-soft/20 px-3 py-2">
-                  <div className="font-mono text-[10px] text-ink-faint">Sources</div>
-                  <div className="mt-0.5 font-mono text-lg text-chronos">
-                    {home.knowledge.length + home.notes.length}
-                  </div>
-                </div>
-                <div className="rounded-xl border border-line bg-bg-soft/20 px-3 py-2">
-                  <div className="font-mono text-[10px] text-ink-faint">Sims</div>
-                  <div className="mt-0.5 font-mono text-lg text-chronos">
-                    {home.recentSimulations.length}
-                  </div>
-                </div>
-              </div>
-              {knowledge.length > 0 ? (
-                <ul className="mt-3 space-y-1.5">
-                  {knowledge.slice(0, 3).map((k) => (
-                    <li key={k.id} className="truncate text-xs text-ink-dim">
-                      {k.title}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </section>
-
-            <section className="mt-5" data-testid="rail-related">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                  Related simulations
-                </div>
-                <Link to="/workspace/simulations" className="font-mono text-[10px] text-chronos">
-                  View all →
-                </Link>
-              </div>
-              {related.length === 0 ? (
-                <p className="mt-2 text-sm text-ink-faint">No completed runs yet.</p>
-              ) : (
-                <ul className="mt-2 space-y-2">
-                  {related.map((s) => (
-                    <li key={s.id}>
-                      <Link
-                        to={`/workspace/simulations/${s.id}`}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-line/80 px-2.5 py-2 text-xs transition hover:border-chronos/40"
-                      >
-                        <span className="min-w-0 truncate text-ink">{s.title}</span>
-                        <span className="shrink-0 font-mono text-[10px] text-chronos">
-                          {s.confidence != null ? confidencePercent(s.confidence) : "—"}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-
-            <section className="mt-auto border-t border-line pt-4">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">
-                  Outcome tracking
-                </div>
-                <span className="rounded-full border border-line px-2 py-0.5 font-mono text-[9px] uppercase text-ink-faint">
-                  {active?.result.outcome_followed ? "In progress" : "Not started"}
-                </span>
-              </div>
-              <p className="mt-2 text-xs leading-relaxed text-ink-dim">
-                Track real-world outcome once a path is chosen to improve future recommendations.
-              </p>
-              {active ? (
-                <Link
-                  to={`/workspace/simulations/${active.id}`}
-                  className="mt-3 inline-flex rounded-full border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-dim transition hover:border-chronos/40 hover:text-chronos"
-                >
-                  Log outcome
-                </Link>
-              ) : null}
-              {active ? (
-                <p className="mt-2 font-mono text-[10px] text-ink-faint">
-                  Latest {formatCreatedAt(active.created_at)}
-                </p>
-              ) : null}
-            </section>
-          </>
-        )}
-      </div>
+          <section className="border-t border-line-soft pt-[22px]">
+            <div className="mb-2.5 flex items-center justify-between">
+              <div className={SECTION_LABEL}>Outcome</div>
+              <span className="rounded-[3px] border border-line-strong px-1.5 py-0.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-faint">
+                {active?.result.outcome_followed ? "In progress" : "Not started"}
+              </span>
+            </div>
+            <p className="mb-3.5 text-[12.5px] leading-[1.6] text-ink-faint">
+              Log what actually happens after launch. Chronos re-weights the models that got it
+              wrong.
+            </p>
+            {active ? (
+              <Link
+                to={`/workspace/simulations/${active.id}`}
+                className="block rounded-full border border-line-strong py-[9px] text-center text-[12.5px] text-ink-dim transition hover:border-chronos/45 hover:text-ink"
+              >
+                Log outcome
+              </Link>
+            ) : null}
+          </section>
+        </div>
+      )}
     </aside>
   );
 }
