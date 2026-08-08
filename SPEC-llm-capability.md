@@ -154,5 +154,6 @@ reports `source: "ai"` for stub output.
   the generic runner; `researchDecision` → `planChosenPath` is the live
   instance (`researchContext` field), wired in `WorkspaceContext.chooseBestPath`
   off the latest research note. Prose only — never on the ranking path.
-- Usage surfacing from `ai_usage` (needs the migration applied first — see
-  `SPEC-ai-proxy.md` deploy-order note)
+- ~~Usage surfacing from `ai_usage`~~ **Shipped (5.13.0)** —
+  `infrastructure/queries/AiUsageQueries.ts` + settings `AiUsagePanel`, per
+  `SPEC-ai-proxy.md`'s own "Later slices" entry above.
