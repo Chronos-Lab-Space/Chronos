@@ -22,7 +22,7 @@ derivations, and records the three places where the design and the codebase disa
 | 4 | Stepper interaction | **Non-interactive.** The prototype's `setStep(i)` fabricates lifecycle state. Stages stay derived; visuals identical, `aria-current="step"` retained. |
 | 5 | Safety banners | **Retained.** Anonymous and sync-error banners are restyled, not removed — deleting them regresses `SPEC-anonymous-workspace.md`. |
 | 6 | Context rail scope | **Every workspace screen.** The design carries the rail across all five; it previously appeared only on the decision, HQ and simulation-detail routes. |
-| 7 | Simulation result layout | **Deferred — not implemented.** The design replaces the result page with a two-column future-graph + selected-future card. `SPEC.md` declares the nine-section `DecisionReportCard` order "authoritative for UI + markdown export", so adopting the design's layout means reopening that contract. Only the simulation header was restyled. |
+| 7 | Simulation result layout | **Contract kept, design language applied.** The design replaces the result page with a two-column future-graph + selected-future card. Rejected: it drops sections `SPEC.md` requires (Evidence, Expected value, Next actions, the Save-decision hard gate), and its metric grid (`COST/MO`, `SIGNUPS D+30`, `RETENTION`) is launch-specific fiction with no engine equivalent. The nine-section order is also authoritative for markdown export, so changing the UI alone would desync the two. `DecisionReportCard` instead takes the design's type scale, eyebrows, dividers and prose measure with its structure untouched. |
 
 ## Assumptions (locked unless reopened)
 
